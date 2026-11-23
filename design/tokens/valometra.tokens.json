@@ -1,0 +1,197 @@
+{
+  "$description": "Charte graphique Valometra — source unique des design tokens (format W3C Design Tokens). Toute valeur visuelle se modifie ici, puis `uv run python design/build_tokens.py`.",
+  "$extensions": {
+    "valometra": {
+      "version": "1.0.0",
+      "prefixe_css": "vm"
+    }
+  },
+
+  "color": {
+    "$type": "color",
+    "ardoise": {
+      "$description": "Primaire : confiance, structure. Marque = 800.",
+      "50":  { "$value": "#F1F5FA" },
+      "100": { "$value": "#E3ECF5" },
+      "200": { "$value": "#C3D5E9" },
+      "300": { "$value": "#8FB0D4" },
+      "400": { "$value": "#5487BD" },
+      "500": { "$value": "#2F6AA3" },
+      "600": { "$value": "#245A8F" },
+      "700": { "$value": "#1A426B" },
+      "800": { "$value": "#12304F" },
+      "900": { "$value": "#0B1F33" }
+    },
+    "cuivre": {
+      "$description": "Accent : valeur, action principale. Marque = 500 (seule teinte cuivre lisible en texte sur blanc).",
+      "50":  { "$value": "#FBF1EA" },
+      "100": { "$value": "#F6DCC9" },
+      "200": { "$value": "#EDBB97" },
+      "300": { "$value": "#E3955F" },
+      "400": { "$value": "#D27838" },
+      "500": { "$value": "#A9531E" },
+      "600": { "$value": "#8A4218" },
+      "700": { "$value": "#6B3313" }
+    },
+    "pierre": {
+      "$description": "Neutres chauds : fonds, textes, bordures.",
+      "0":   { "$value": "#FFFFFF" },
+      "50":  { "$value": "#F7F6F3" },
+      "100": { "$value": "#EEECE7" },
+      "200": { "$value": "#DDD9D1" },
+      "300": { "$value": "#BDB8AE" },
+      "400": { "$value": "#9A958B" },
+      "500": { "$value": "#75706A" },
+      "600": { "$value": "#5E5A52" },
+      "700": { "$value": "#403D38" },
+      "800": { "$value": "#2B2925" },
+      "900": { "$value": "#1A1916" }
+    },
+    "etat": {
+      "$description": "Couleurs sémantiques, toujours doublées d'une icône ou d'un libellé.",
+      "succes":        { "$value": "#2E7D5B" },
+      "succes-fond":   { "$value": "#DFF0E7" },
+      "avertissement": { "$value": "#9A6215" },
+      "avertissement-fond": { "$value": "#F8EBD3" },
+      "erreur":        { "$value": "#B3261E" },
+      "erreur-fond":   { "$value": "#F8DEDC" },
+      "succes-clair":        { "$value": "#6FC49B" },
+      "avertissement-clair": { "$value": "#E0A84A" },
+      "erreur-clair":        { "$value": "#F08A82" },
+      "info":          { "$value": "{color.ardoise.600}" },
+      "info-fond":     { "$value": "{color.ardoise.50}" }
+    },
+    "dataviz": {
+      "$description": "Palettes de graphiques : bleu / orange, lisibles par les daltoniens.",
+      "categorie-1": { "$value": "#245A8F" },
+      "categorie-2": { "$value": "#D27838" },
+      "categorie-3": { "$value": "#8FB0D4" },
+      "categorie-4": { "$value": "#6B3313" },
+      "categorie-5": { "$value": "#9A958B" },
+      "categorie-6": { "$value": "#EDBB97" }
+    }
+  },
+
+  "font": {
+    "family": {
+      "$type": "fontFamily",
+      "display": { "$value": ["Plus Jakarta Sans", "system-ui", "sans-serif"] },
+      "body":    { "$value": ["Inter", "system-ui", "sans-serif"] },
+      "mono":    { "$value": ["IBM Plex Mono", "ui-monospace", "monospace"] }
+    },
+    "weight": {
+      "$type": "fontWeight",
+      "regular":  { "$value": 400 },
+      "medium":   { "$value": 500 },
+      "semibold": { "$value": 600 },
+      "bold":     { "$value": 700 },
+      "extrabold": { "$value": 800 }
+    },
+    "size": {
+      "$type": "dimension",
+      "$description": "Échelle modulaire 1,25 sur base 16 px.",
+      "overline": { "$value": { "value": 12, "unit": "px" } },
+      "small":    { "$value": { "value": 14, "unit": "px" } },
+      "body":     { "$value": { "value": 16, "unit": "px" } },
+      "body-lg":  { "$value": { "value": 20, "unit": "px" } },
+      "h4":       { "$value": { "value": 25, "unit": "px" } },
+      "h3":       { "$value": { "value": 31, "unit": "px" } },
+      "h2":       { "$value": { "value": 39, "unit": "px" } },
+      "h1":       { "$value": { "value": 49, "unit": "px" } },
+      "display":  { "$value": { "value": 61, "unit": "px" } }
+    }
+  },
+
+  "space": {
+    "$type": "dimension",
+    "$description": "Grille de 4 px.",
+    "1":  { "$value": { "value": 4,  "unit": "px" } },
+    "2":  { "$value": { "value": 8,  "unit": "px" } },
+    "3":  { "$value": { "value": 12, "unit": "px" } },
+    "4":  { "$value": { "value": 16, "unit": "px" } },
+    "5":  { "$value": { "value": 20, "unit": "px" } },
+    "6":  { "$value": { "value": 24, "unit": "px" } },
+    "8":  { "$value": { "value": 32, "unit": "px" } },
+    "12": { "$value": { "value": 48, "unit": "px" } },
+    "16": { "$value": { "value": 64, "unit": "px" } },
+    "24": { "$value": { "value": 96, "unit": "px" } }
+  },
+
+  "radius": {
+    "$type": "dimension",
+    "xs":   { "$value": { "value": 4,   "unit": "px" } },
+    "sm":   { "$value": { "value": 8,   "unit": "px" } },
+    "md":   { "$value": { "value": 10,  "unit": "px" } },
+    "lg":   { "$value": { "value": 16,  "unit": "px" } },
+    "full": { "$value": { "value": 999, "unit": "px" } }
+  },
+
+  "shadow": {
+    "$type": "shadow",
+    "1": { "$value": { "color": "#0B1F3314", "offsetX": { "value": 0, "unit": "px" }, "offsetY": { "value": 1,  "unit": "px" }, "blur": { "value": 2,  "unit": "px" }, "spread": { "value": 0, "unit": "px" } } },
+    "2": { "$value": { "color": "#0B1F331A", "offsetX": { "value": 0, "unit": "px" }, "offsetY": { "value": 4,  "unit": "px" }, "blur": { "value": 12, "unit": "px" }, "spread": { "value": 0, "unit": "px" } } },
+    "3": { "$value": { "color": "#0B1F3329", "offsetX": { "value": 0, "unit": "px" }, "offsetY": { "value": 12, "unit": "px" }, "blur": { "value": 32, "unit": "px" }, "spread": { "value": 0, "unit": "px" } } }
+  },
+
+  "duration": {
+    "$type": "duration",
+    "fast": { "$value": { "value": 120, "unit": "ms" } },
+    "base": { "$value": { "value": 200, "unit": "ms" } },
+    "slow": { "$value": { "value": 320, "unit": "ms" } }
+  },
+
+  "easing": {
+    "$type": "cubicBezier",
+    "standard": { "$value": [0.2, 0, 0, 1] }
+  },
+
+  "theme": {
+    "$description": "Tokens sémantiques : ce que les interfaces consomment. Chaque thème définit les mêmes clés.",
+    "clair": {
+      "$type": "color",
+      "fond":            { "$value": "{color.pierre.50}" },
+      "surface":         { "$value": "{color.pierre.0}" },
+      "surface-code":    { "$value": "{color.pierre.100}" },
+      "texte":           { "$value": "{color.pierre.900}" },
+      "texte-secondaire": { "$value": "{color.pierre.600}" },
+      "bordure":         { "$value": "{color.pierre.200}" },
+      "marque":          { "$value": "{color.ardoise.800}" },
+      "marque-sombre":   { "$value": "{color.ardoise.900}" },
+      "sur-marque":      { "$value": "{color.pierre.50}" },
+      "action":          { "$value": "{color.cuivre.500}" },
+      "action-survol":   { "$value": "{color.cuivre.600}" },
+      "sur-action":      { "$value": "{color.pierre.0}" },
+      "lien":            { "$value": "{color.ardoise.600}" },
+      "lien-survol":     { "$value": "{color.cuivre.500}" },
+      "focus":           { "$value": "{color.ardoise.500}" },
+      "accent-doux":     { "$value": "{color.cuivre.50}" },
+      "etat-info":          { "$value": "{color.etat.info}" },
+      "etat-succes":        { "$value": "{color.etat.succes}" },
+      "etat-avertissement": { "$value": "{color.etat.avertissement}" },
+      "etat-erreur":        { "$value": "{color.etat.erreur}" }
+    },
+    "sombre": {
+      "$type": "color",
+      "fond":            { "$value": "{color.ardoise.900}" },
+      "surface":         { "$value": "{color.ardoise.800}" },
+      "surface-code":    { "$value": "{color.ardoise.800}" },
+      "texte":           { "$value": "{color.pierre.50}" },
+      "texte-secondaire": { "$value": "{color.ardoise.200}" },
+      "bordure":         { "$value": "{color.ardoise.700}" },
+      "marque":          { "$value": "{color.ardoise.800}" },
+      "marque-sombre":   { "$value": "{color.ardoise.900}" },
+      "sur-marque":      { "$value": "{color.pierre.50}" },
+      "action":          { "$value": "{color.cuivre.300}" },
+      "action-survol":   { "$value": "{color.cuivre.200}" },
+      "sur-action":      { "$value": "{color.ardoise.900}" },
+      "lien":            { "$value": "{color.ardoise.300}" },
+      "lien-survol":     { "$value": "{color.cuivre.300}" },
+      "focus":           { "$value": "{color.ardoise.300}" },
+      "accent-doux":     { "$value": "{color.ardoise.700}" },
+      "etat-info":          { "$value": "{color.ardoise.300}" },
+      "etat-succes":        { "$value": "{color.etat.succes-clair}" },
+      "etat-avertissement": { "$value": "{color.etat.avertissement-clair}" },
+      "etat-erreur":        { "$value": "{color.etat.erreur-clair}" }
+    }
+  }
+}
