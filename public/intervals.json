@@ -1,0 +1,19 @@
+{
+  "method": "CQR_log_price",
+  "targetCoverage": 0.8,
+  "calibrationCorrection": 0.02317173237061887,
+  "trainN": 4069,
+  "calibrationN": 317,
+  "evaluationN": 239,
+  "calibrationPeriod": "mai 2026",
+  "evaluationPeriod": "juin 2026",
+  "coverage": 0.8493723849372385,
+  "medianWidthRelativeToPrediction": 0.6610488158431493,
+  "oldWidthRelativeToPrediction": 0.5746227263030819,
+  "quantiles": [
+    0.1,
+    0.9
+  ],
+  "referenceDate": "2026-06-30",
+  "historicalEvaluation": true
+}

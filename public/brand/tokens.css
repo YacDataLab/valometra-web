@@ -1,0 +1,140 @@
+/* Charte graphique Valometra v1.0.0 — design tokens.
+ * FICHIER GÉNÉRÉ par design/build_tokens.py depuis
+ * design/tokens/valometra.tokens.json : ne pas modifier à la main. */
+
+:root {
+  --vm-color-ardoise-50: #F1F5FA;
+  --vm-color-ardoise-100: #E3ECF5;
+  --vm-color-ardoise-200: #C3D5E9;
+  --vm-color-ardoise-300: #8FB0D4;
+  --vm-color-ardoise-400: #5487BD;
+  --vm-color-ardoise-500: #2F6AA3;
+  --vm-color-ardoise-600: #245A8F;
+  --vm-color-ardoise-700: #1A426B;
+  --vm-color-ardoise-800: #12304F;
+  --vm-color-ardoise-900: #0B1F33;
+  --vm-color-cuivre-50: #FBF1EA;
+  --vm-color-cuivre-100: #F6DCC9;
+  --vm-color-cuivre-200: #EDBB97;
+  --vm-color-cuivre-300: #E3955F;
+  --vm-color-cuivre-400: #D27838;
+  --vm-color-cuivre-500: #A9531E;
+  --vm-color-cuivre-600: #8A4218;
+  --vm-color-cuivre-700: #6B3313;
+  --vm-color-pierre-0: #FFFFFF;
+  --vm-color-pierre-50: #F7F6F3;
+  --vm-color-pierre-100: #EEECE7;
+  --vm-color-pierre-200: #DDD9D1;
+  --vm-color-pierre-300: #BDB8AE;
+  --vm-color-pierre-400: #9A958B;
+  --vm-color-pierre-500: #75706A;
+  --vm-color-pierre-600: #5E5A52;
+  --vm-color-pierre-700: #403D38;
+  --vm-color-pierre-800: #2B2925;
+  --vm-color-pierre-900: #1A1916;
+  --vm-color-etat-succes: #2E7D5B;
+  --vm-color-etat-succes-fond: #DFF0E7;
+  --vm-color-etat-avertissement: #9A6215;
+  --vm-color-etat-avertissement-fond: #F8EBD3;
+  --vm-color-etat-erreur: #B3261E;
+  --vm-color-etat-erreur-fond: #F8DEDC;
+  --vm-color-etat-succes-clair: #6FC49B;
+  --vm-color-etat-avertissement-clair: #E0A84A;
+  --vm-color-etat-erreur-clair: #F08A82;
+  --vm-color-etat-info: var(--vm-color-ardoise-600);
+  --vm-color-etat-info-fond: var(--vm-color-ardoise-50);
+  --vm-color-dataviz-categorie-1: #245A8F;
+  --vm-color-dataviz-categorie-2: #D27838;
+  --vm-color-dataviz-categorie-3: #8FB0D4;
+  --vm-color-dataviz-categorie-4: #6B3313;
+  --vm-color-dataviz-categorie-5: #9A958B;
+  --vm-color-dataviz-categorie-6: #EDBB97;
+  --vm-font-family-display: "Plus Jakarta Sans", system-ui, sans-serif;
+  --vm-font-family-body: Inter, system-ui, sans-serif;
+  --vm-font-family-mono: "IBM Plex Mono", ui-monospace, monospace;
+  --vm-font-weight-regular: 400;
+  --vm-font-weight-medium: 500;
+  --vm-font-weight-semibold: 600;
+  --vm-font-weight-bold: 700;
+  --vm-font-weight-extrabold: 800;
+  --vm-font-size-overline: 12px;
+  --vm-font-size-small: 14px;
+  --vm-font-size-body: 16px;
+  --vm-font-size-body-lg: 20px;
+  --vm-font-size-h4: 25px;
+  --vm-font-size-h3: 31px;
+  --vm-font-size-h2: 39px;
+  --vm-font-size-h1: 49px;
+  --vm-font-size-display: 61px;
+  --vm-space-1: 4px;
+  --vm-space-2: 8px;
+  --vm-space-3: 12px;
+  --vm-space-4: 16px;
+  --vm-space-5: 20px;
+  --vm-space-6: 24px;
+  --vm-space-8: 32px;
+  --vm-space-12: 48px;
+  --vm-space-16: 64px;
+  --vm-space-24: 96px;
+  --vm-radius-xs: 4px;
+  --vm-radius-sm: 8px;
+  --vm-radius-md: 10px;
+  --vm-radius-lg: 16px;
+  --vm-radius-full: 999px;
+  --vm-shadow-1: 0px 1px 2px 0px #0B1F3314;
+  --vm-shadow-2: 0px 4px 12px 0px #0B1F331A;
+  --vm-shadow-3: 0px 12px 32px 0px #0B1F3329;
+  --vm-duration-fast: 120ms;
+  --vm-duration-base: 200ms;
+  --vm-duration-slow: 320ms;
+  --vm-easing-standard: cubic-bezier(0.2, 0, 0, 1);
+}
+
+:root,
+[data-md-color-scheme="default"],
+[data-vm-theme="clair"] {
+  --vm-fond: var(--vm-color-pierre-50);
+  --vm-surface: var(--vm-color-pierre-0);
+  --vm-surface-code: var(--vm-color-pierre-100);
+  --vm-texte: var(--vm-color-pierre-900);
+  --vm-texte-secondaire: var(--vm-color-pierre-600);
+  --vm-bordure: var(--vm-color-pierre-200);
+  --vm-marque: var(--vm-color-ardoise-800);
+  --vm-marque-sombre: var(--vm-color-ardoise-900);
+  --vm-sur-marque: var(--vm-color-pierre-50);
+  --vm-action: var(--vm-color-cuivre-500);
+  --vm-action-survol: var(--vm-color-cuivre-600);
+  --vm-sur-action: var(--vm-color-pierre-0);
+  --vm-lien: var(--vm-color-ardoise-600);
+  --vm-lien-survol: var(--vm-color-cuivre-500);
+  --vm-focus: var(--vm-color-ardoise-500);
+  --vm-accent-doux: var(--vm-color-cuivre-50);
+  --vm-etat-info: var(--vm-color-etat-info);
+  --vm-etat-succes: var(--vm-color-etat-succes);
+  --vm-etat-avertissement: var(--vm-color-etat-avertissement);
+  --vm-etat-erreur: var(--vm-color-etat-erreur);
+}
+
+[data-md-color-scheme="slate"],
+[data-vm-theme="sombre"] {
+  --vm-fond: var(--vm-color-ardoise-900);
+  --vm-surface: var(--vm-color-ardoise-800);
+  --vm-surface-code: var(--vm-color-ardoise-800);
+  --vm-texte: var(--vm-color-pierre-50);
+  --vm-texte-secondaire: var(--vm-color-ardoise-200);
+  --vm-bordure: var(--vm-color-ardoise-700);
+  --vm-marque: var(--vm-color-ardoise-800);
+  --vm-marque-sombre: var(--vm-color-ardoise-900);
+  --vm-sur-marque: var(--vm-color-pierre-50);
+  --vm-action: var(--vm-color-cuivre-300);
+  --vm-action-survol: var(--vm-color-cuivre-200);
+  --vm-sur-action: var(--vm-color-ardoise-900);
+  --vm-lien: var(--vm-color-ardoise-300);
+  --vm-lien-survol: var(--vm-color-cuivre-300);
+  --vm-focus: var(--vm-color-ardoise-300);
+  --vm-accent-doux: var(--vm-color-ardoise-700);
+  --vm-etat-info: var(--vm-color-ardoise-300);
+  --vm-etat-succes: var(--vm-color-etat-succes-clair);
+  --vm-etat-avertissement: var(--vm-color-etat-avertissement-clair);
+  --vm-etat-erreur: var(--vm-color-etat-erreur-clair);
+}
