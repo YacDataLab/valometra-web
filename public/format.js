@@ -187,7 +187,12 @@
       .sort((a, b) => b.reliable - a.reliable || b.median - a.median);
   };
 
+  // Écart (en %) du prix au m² de l'estimation à la médiane locale.
+  const gapToMedian = (pricePerM2, medianPerM2) =>
+    pricePerM2 > 0 && medianPerM2 > 0 ? ((pricePerM2 - medianPerM2) / medianPerM2) * 100 : null;
+
   globalThis.ValometraFormat = {
+    gapToMedian,
     communeRanking,
     marketQuery,
     parseMarket,

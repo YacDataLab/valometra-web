@@ -89,7 +89,9 @@
         ? data.features.filter(f => f.properties?.label)
         : [];
       hide();
-      const exact = expected && rows.find(f => eligible(f) && f.properties.label === expected);
+      const exact =
+        expected &&
+        rows.find(f => eligible(f) && (expected === true || f.properties.label === expected));
       if (exact) {
         pick(exact);
         return;
@@ -172,10 +174,11 @@
       status.textContent = '39 communes autour de Grenoble. Entrez une adresse complète.';
     },
     // Lien partagé : recherche l'adresse et la sélectionne si le libellé est identique.
-    restore(label) {
+    restore(label, firstSuggestion = false) {
+      invalidate();
       input.value = label;
       input.setCustomValidity('Sélectionnez une adresse complète dans les suggestions.');
-      search(label, ++sequence, label);
+      search(label, ++sequence, firstSuggestion || label);
     },
     getSelected() {
       return selection && input.value === selection.label ? { ...selection } : null;

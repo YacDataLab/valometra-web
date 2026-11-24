@@ -4,6 +4,7 @@ import '../public/format.js';
 
 const {
   scenarioFeatures,
+  gapToMedian,
   communeRanking,
   marketQuery,
   parseMarket,
@@ -205,4 +206,11 @@ test('commune ranking sorts by median price per m² and sets small samples last'
     ],
   );
   assert.deepEqual(communeRanking([]), []);
+});
+
+test('gap to the local median', () => {
+  assert.equal(Math.round(gapToMedian(2381, 2271) * 10) / 10, 4.8);
+  assert.equal(gapToMedian(2000, 2500), -20);
+  assert.equal(gapToMedian(2000, null), null);
+  assert.equal(gapToMedian(0, 2500), null);
 });

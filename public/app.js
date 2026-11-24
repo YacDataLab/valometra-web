@@ -281,7 +281,7 @@ function showResult(value, input, intervals) {
         ? `<div class="gauge" role="img" aria-label="Estimation ${round(value)}, fourchette centrale de ${round(intervals['50'][0])} à ${round(intervals['50'][1])}, fourchette étendue de ${round(intervals['80'][0])} à ${round(intervals['80'][1])}"><span class="gauge-central" style="left:${g.low}%;width:${g.high - g.low}%"></span><span class="gauge-point" style="left:${g.point}%"></span></div><ul class="gauge-legend" aria-hidden="true"><li><i class="point"></i>Estimation</li><li><i class="central"></i>Centrale 50 %</li><li><i class="extended"></i>Étendue 80 %</li></ul>`
         : '<div class="range-bar"></div>'
     }<div class="range-values"><span>${round(bounds[0])}</span><span>${round(bounds[1])}</span></div><p class="hint">Bornes personnalisées à partir des caractéristiques du bien. ${band === '50' ? 'Cette fourchette plus étroite couvre environ une vente sur deux dans l’évaluation historique.' : 'La couverture mesurée sur les ventes de juin 2026 est de 84,9 %.'}</p></div>` +
-    `<dl class="key-figures"><div><dt>Prix au m²</dt><dd>${money(Math.round(value / surface))}<small>${m ? `médiane locale ${money(m)}\u202f/\u202fm²` : 'sans repère local'}</small></dd></div><div><dt>Comparables</dt><dd>${comps.length}<small>ventes de la commune, surfaces à ±25 %</small></dd></div><div><dt>Précision</dt><dd>${bars}<small>largeur de la fourchette</small></dd></div></dl>` +
+    `<dl class="key-figures"><div><dt>Prix au m²</dt><dd>${money(Math.round(value / surface))}<small>${m ? `médiane locale ${money(m)}\u202f/\u202fm²<br>${gapText(value / surface, m)}` : 'sans repère local'}</small></dd></div><div><dt>Comparables</dt><dd>${comps.length}<small>ventes de la commune, surfaces à ±25 %</small></dd></div><div><dt>Précision</dt><dd>${bars}<small>largeur de la fourchette</small></dd></div></dl>` +
     `<dl class="context"><dt>Localisation</dt><dd>${features.latitude ? `Adresse localisée · bâtiment ${input.enrichment?.building ? 'retrouvé' : 'renseigné manuellement ou absent'} · DPE ${input.enrichment?.dpe ? 'confirmé depuis l’ADEME' : 'saisi manuellement ou absent'}.` : 'Coordonnées non renseignées'}</dd></dl><p class="hint">Une expertise sur place reste utile pour l’état, l’étage, la vue et les travaux. Aucun ajustement de marché après juin 2026.</p>${simulatorHtml(input)}${comparablesTable(nearest)}<div class="result-actions"><a class="secondary" href="#method">Comprendre ces repères</a><button type="button" class="secondary" id="share-link">Copier le lien de cette estimation</button><button type="button" class="secondary" id="print-result">Imprimer</button></div><p class="print-only">Document généré le ${window.ValometraFormat.frDate(new Date().toISOString())} par Valometra (open source, licence AGPL-3.0). Estimation indicative, référence au 30 juin 2026 : elle ne remplace pas une expertise.</p>`;
   $('print-result').addEventListener('click', () => window.print());
   $('share-link').addEventListener('click', copyShareLink);
@@ -302,6 +302,19 @@ function showResult(value, input, intervals) {
   );
   $('model-status').textContent = 'Estimation actualisée.';
 }
+const EXAMPLE = {
+  adresse: '10 rue Lesdiguières 38000 Grenoble',
+  surface: 65,
+  pieces: 3,
+  definition: 'habitable',
+};
+$('fill-example').addEventListener('click', () => {
+  if (!metadata) return;
+  fillForm(EXAMPLE, true);
+  $('model-status').textContent =
+    'Exemple chargé : un appartement de 65 m² à Grenoble. Modifiez-le ou lancez l’estimation.';
+});
+
 function simulatorHtml(input) {
   const f = input.features,
     dpe = ['A', 'B', 'C', 'D', 'E', 'F', 'G'];
@@ -348,6 +361,14 @@ function showScenario(data) {
     `<dl class="simulation-result"><div><dt>Estimation de base</dt><dd>${round(base)}</dd></div>` +
     `<div><dt>Variante</dt><dd>${round(data.value)}${bounds?.every(Number.isFinite) ? `<small>de ${round(bounds[0])} à ${round(bounds[1])} (80 %)</small>` : ''}</dd></div>` +
     `<div><dt>Écart</dt><dd>${sign}${round(Math.abs(gap.euros))}<small>${sign}${percent}\u202f%</small></dd></div></dl>`;
+}
+
+function gapText(pricePerM2, median) {
+  const gap = window.ValometraFormat.gapToMedian(pricePerM2, median);
+  if (gap === null) return '';
+  const rounded = Math.round(gap);
+  if (rounded === 0) return 'au niveau de la médiane';
+  return `${Math.abs(rounded)}\u202f% ${rounded > 0 ? 'au-dessus' : 'en dessous'}`;
 }
 
 function comparablesTable(rows) {
@@ -397,14 +418,17 @@ async function copyShareLink() {
 // Préremplit le formulaire depuis un lien partagé ; l'estimation reste à lancer.
 function applySharedLink() {
   const shared = window.ValometraFormat.parseShare(location.search);
-  if (!shared) return;
+  if (shared) fillForm(shared);
+}
+
+function fillForm(shared, firstSuggestion = false) {
   $('surface').value = shared.surface;
   $('rooms').value = shared.pieces;
   if (shared.definition) $('surface-definition').value = shared.definition;
   if (shared.carrez) $('carrez').value = shared.carrez;
   if (shared.dependances !== undefined) $('dependencies').value = shared.dependances;
   if (shared.annee) $('year').value = shared.annee;
-  window.ValometraAddress.restore(shared.adresse);
+  window.ValometraAddress.restore(shared.adresse, firstSuggestion);
 }
 
 function initMap() {

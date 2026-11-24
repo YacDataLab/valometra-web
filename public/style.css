@@ -1419,3 +1419,31 @@ button.link {
   text-decoration: underline;
   cursor: pointer;
 }
+
+.field-error {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin: 6px 0 0;
+  color: var(--vm-etat-erreur);
+  font-size: var(--vm-font-size-small);
+}
+.field-error::before {
+  content: '!';
+  flex: none;
+  width: 18px;
+  height: 18px;
+  border-radius: var(--vm-radius-full);
+  background: var(--vm-etat-erreur);
+  color: var(--vm-surface);
+  font-size: var(--vm-font-size-overline);
+  font-weight: 700;
+  line-height: 18px;
+  text-align: center;
+}
+[aria-invalid='true'] {
+  border-color: var(--vm-etat-erreur) !important;
+}
+.example-line {
+  margin: -6px 0 14px;
+}

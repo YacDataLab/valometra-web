@@ -44,6 +44,51 @@
     if ($('surface-definition').value === 'carrez' && !$('carrez').value)
       $('carrez').value = $('surface').value;
   });
+  // Messages d'erreur de la charte : pictogramme, phrase corrective, focus sur le champ.
+  const errorText = field => {
+    const v = field.validity,
+      holder = document.querySelector(`label[for="${field.id}"]`) ?? field.closest('label'),
+      label = (holder?.querySelector('.req') ?? holder)?.textContent?.replace(/\s*\*$/, '').trim();
+    if (v.customError) return field.validationMessage;
+    if (v.valueMissing)
+      return field.tagName === 'SELECT'
+        ? `Choisissez une option pour « ${label} ».`
+        : `Renseignez « ${label} ».`;
+    if (v.rangeUnderflow || v.rangeOverflow)
+      return `Saisissez une valeur entre ${field.min} et ${field.max}.`;
+    return field.validationMessage;
+  };
+  const clearError = field => {
+    field.removeAttribute('aria-invalid');
+    document.getElementById(field.id + '-error')?.remove();
+  };
+  let focusPending = false;
+  $('estimate-form').addEventListener(
+    'invalid',
+    event => {
+      const field = event.target;
+      if (!field.id) return;
+      event.preventDefault();
+      clearError(field);
+      const message = document.createElement('p');
+      message.id = field.id + '-error';
+      message.className = 'field-error';
+      message.setAttribute('role', 'alert');
+      message.textContent = errorText(field);
+      (field.closest('label') ?? field).after(message);
+      field.setAttribute('aria-invalid', 'true');
+      if (!focusPending) {
+        focusPending = true;
+        setTimeout(() => {
+          focusPending = false;
+          field.focus();
+        }, 0);
+      }
+    },
+    true,
+  );
+  $('estimate-form').addEventListener('input', event => clearError(event.target));
+  $('estimate-form').addEventListener('change', event => clearError(event.target));
   $('estimate-form').addEventListener(
     'invalid',
     e => {
