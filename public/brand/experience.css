@@ -1,13 +1,4 @@
-/* Valometra estimation experience */
-:root {
-  --ink: var(--vm-texte);
-  --muted: var(--vm-texte-secondaire);
-  --accent: var(--vm-action);
-  --accent-text: var(--vm-lien);
-  --line: var(--vm-color-pierre-200);
-  --soft: var(--vm-fond);
-}
-
+/* Valometra : composants de l'expérience, construits sur les jetons de la charte (tokens.css). */
 html.valometra-document {
   overflow-x: clip;
   overflow-y: auto;
@@ -72,6 +63,10 @@ body.lens-valometra :is(h1, h2, h3, .price) {
   font-family: var(--vm-font-family-display);
   color: var(--vm-color-ardoise-800);
 }
+body.lens-valometra :is(h2, h3) {
+  font-weight: var(--vm-font-weight-semibold);
+  letter-spacing: 0;
+}
 .hero {
   padding: clamp(28px, 5vw, 76px) 0;
   border: 0;
@@ -80,7 +75,7 @@ body.lens-valometra :is(h1, h2, h3, .price) {
   font-size: clamp(2.3rem, 5.1vw, 4.5rem);
   font-weight: 800;
   line-height: 1.06;
-  letter-spacing: -0.065em;
+  letter-spacing: -0.03em;
   margin: 14px 0 20px;
 }
 .hero h1 em {

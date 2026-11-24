@@ -1,12 +1,18 @@
 'use strict';
 const $ = id => document.getElementById(id),
   money = n =>
+    // Charte : espace fine insécable (U+202F) avant € et entre les milliers.
     new Intl.NumberFormat('fr-FR', {
       style: 'currency',
       currency: 'EUR',
       maximumFractionDigits: 0,
-    }).format(n),
-  num = n => new Intl.NumberFormat('fr-FR', { maximumFractionDigits: 0 }).format(n),
+    })
+      .format(n)
+      .replace(/\u00a0/g, '\u202f'),
+  num = n =>
+    new Intl.NumberFormat('fr-FR', { maximumFractionDigits: 0 })
+      .format(n)
+      .replace(/\u00a0/g, '\u202f'),
   esc = s =>
     String(s).replace(
       /[&<>"']/g,
@@ -250,7 +256,7 @@ function showResult(value, input, intervals) {
   );
   const m = median(comps.map(r => r.price / r.surface));
   $('result').innerHTML =
-    `<div class="result-top"><div class="section-head"><span class="eyebrow">VOTRE ESTIMATION INDICATIVE</span></div><h2>${esc(town.name)} · ${num(surface)} m²</h2><p class="hint">${esc(input.address)}</p><div class="price">${money(Math.round(value / 1000) * 1000)}</div><span class="price-unit">soit environ ${money(Math.round(value / surface))} / m² · référence juin 2026</span></div><div class="range-box"><h3>Fourchette ${band === '50' ? 'centrale' : 'étendue'} · objectif ${band} %</h3><div class="range-bar"></div><div class="range-values"><span>${money(Math.round(bounds[0] / 1000) * 1000)}</span><span>${money(Math.round(bounds[1] / 1000) * 1000)}</span></div><p class="hint">Bornes personnalisées à partir des caractéristiques du bien. ${band === '50' ? 'Cette fourchette plus étroite couvre environ une vente sur deux dans l’évaluation historique.' : 'La couverture mesurée sur les ventes de juin 2026 est de 84,9 %.'} Retrouvez la méthode dans « Comprendre ces repères ».</p></div><dl><dt>Repère local, sans ajustement de qualité</dt><dd>${comps.length} ventes de la commune, surfaces à ±25 %${m ? ` · médiane ${money(m)} / m²` : ''}</dd><dt>Localisation</dt><dd>${features.latitude ? `Adresse localisée · bâtiment ${input.enrichment?.building ? 'retrouvé' : 'renseigné manuellement ou absent'} · DPE ${input.enrichment?.dpe ? 'confirmé depuis l’ADEME' : 'saisi manuellement ou absent'}.` : 'Coordonnées non renseignées'}</dd></dl><p class="hint">Une expertise sur place reste utile pour l’état, l’étage, la vue et les travaux. Aucun ajustement de marché après juin 2026.</p><a class="secondary" href="#method">Comprendre ces repères</a>`;
+    `<div class="result-top"><div class="section-head"><span class="eyebrow">VOTRE ESTIMATION INDICATIVE</span></div><h2>${esc(town.name)} · ${num(surface)} m²</h2><p class="hint">${esc(input.address)}</p><div class="price">${money(Math.round(value / 1000) * 1000)}</div><span class="price-unit">soit environ ${money(Math.round(value / surface))} / m² · référence juin 2026</span></div><div class="range-box"><h3>Fourchette ${band === '50' ? 'centrale' : 'étendue'} · objectif ${band} %</h3><div class="range-bar"></div><div class="range-values"><span>${money(Math.round(bounds[0] / 1000) * 1000)}</span><span>${money(Math.round(bounds[1] / 1000) * 1000)}</span></div><p class="hint">Bornes personnalisées à partir des caractéristiques du bien. ${band === '50' ? 'Cette fourchette plus étroite couvre environ une vente sur deux dans l’évaluation historique.' : 'La couverture mesurée sur les ventes de juin 2026 est de 84,9 %.'} Retrouvez la méthode dans « Comprendre ces repères ».</p></div><dl><dt>Repère local, sans ajustement de qualité</dt><dd>${comps.length} ventes de la commune, surfaces à ±25 %${m ? ` · médiane ${money(m)} / m²` : ''}</dd><dt>Localisation</dt><dd>${features.latitude ? `Adresse localisée · bâtiment ${input.enrichment?.building ? 'retrouvé' : 'renseigné manuellement ou absent'} · DPE ${input.enrichment?.dpe ? 'confirmé depuis l’ADEME' : 'saisi manuellement ou absent'}.` : 'Coordonnées non renseignées'}</dd></dl><p class="hint">Une expertise sur place reste utile pour l’état, l’étage, la vue et les travaux. Aucun ajustement de marché après juin 2026.</p><a class="secondary" href="#method">Comprendre ces repères</a>`;
   window.dispatchEvent(
     new CustomEvent('valometra:estimated', {
       detail: {
@@ -311,14 +317,18 @@ function renderMarket() {
   const prices = filtered.map(r => r.price),
     m2 = filtered.map(r => r.price / r.surface);
   $('market-stats').innerHTML =
-    `<div class="stat"><b>${num(filtered.length)}</b><span>ventes sélectionnées</span></div><div class="stat"><b>${filtered.length ? money(median(m2)) : '—'}</b><span>prix médian / m²</span></div><div class="stat"><b>${filtered.length ? money(median(prices)) : '—'}</b><span>prix médian</span></div>`;
+    `<div class="stat"><b>${num(filtered.length)}</b><span>ventes sélectionnées</span></div><div class="stat"><b>${filtered.length ? money(median(m2)) : '—'}</b><span>prix médian / m²</span></div><div class="stat"><b>${filtered.length ? money(median(prices)) : '—'}</b><span>prix médian</span></div>`;
   if (layer) {
     layer.clearLayers();
     const key = $('map-color').value,
       vals = base.map(r => measure(r, key)).sort((a, b) => a - b),
       q1 = vals[Math.floor(vals.length / 3)] || 0,
       q2 = vals[Math.floor((vals.length * 2) / 3)] || 0,
-      palette = ['#447cba', '#23917e', '#bf773c'];
+      palette = ['300', '500', '800'].map(step =>
+        getComputedStyle(document.documentElement)
+          .getPropertyValue('--vm-color-ardoise-' + step)
+          .trim(),
+      );
     const buckets = new Map();
     for (const r of base) {
       const k = r.lat.toFixed(5) + ',' + r.lon.toFixed(5);
@@ -340,7 +350,7 @@ function renderMarket() {
           rows
             .map(
               r =>
-                `<div class="popup-sale">${esc(r.date)} · ${num(r.surface)} m² · ${num(r.rooms)} pièces<br><b>${money(r.price)}</b> · ${money(r.price / r.surface)}/m² · DPE ${esc(r.dpe || 'absent')}</div>`,
+                `<div class="popup-sale">${esc(r.date)} · ${num(r.surface)} m² · ${num(r.rooms)} pièces<br><b>${money(r.price)}</b> · ${money(r.price / r.surface)}/m² · DPE ${esc(r.dpe || 'absent')}</div>`,
             )
             .join(''),
         { maxWidth: 320 },
@@ -386,7 +396,7 @@ function renderTable() {
       .slice(page * 15, page * 15 + 15)
       .map(
         r =>
-          `<tr><td>${esc(r.date)}</td><td>${esc(r.town)}</td><td>${num(r.surface)} m²</td><td>${money(r.price)}</td><td>${money(r.price / r.surface)}</td><td>${esc(r.dpe || '—')}</td></tr>`,
+          `<tr><td>${esc(r.date)}</td><td>${esc(r.town)}</td><td>${num(r.surface)} m²</td><td>${money(r.price)}</td><td>${money(r.price / r.surface)}</td><td>${esc(r.dpe || '—')}</td></tr>`,
       )
       .join('') || '<tr><td colspan="6">Aucune vente ne correspond aux filtres.</td></tr>';
   $('page-sales').textContent = `Page ${page + 1} / ${pages}`;
