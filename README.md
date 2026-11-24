@@ -1,4 +1,45 @@
-# Valometra Estimation
+# Valometra-web
+
+Valometra-web est l'application web open source de l'estimateur immobilier Valometra. Elle permet aux développeurs de contribuer à l'évolution de ses fonctionnalités et à l'amélioration de l'expérience utilisateur, tout en renforçant ses capacités d'aide à la décision.
+
+L'application s'appuie sur un modèle d'estimation entraîné sur le jeu de données Valometra. Son périmètre géographique couvre actuellement **Grenoble et sa métropole**, avec pour ambition de proposer des estimations tenant compte des spécificités immobilières, économiques et territoriales propres à chaque commune.
+
+L'objectif est de développer un outil d'estimation toujours plus précis, transparent et adapté aux réalités locales.
+
+## Fonctionnalités
+
+- Estimation locale avec le modèle CatBoost sauvegardé (inférence dans le navigateur, sans serveur de prédiction).
+- Bornes de prix conditionnelles (objectifs 80 % et 50 %).
+- Rapprochement d'adresse avec les bases BDNB et ADEME (DPE).
+- Explorateur SIG du marché.
+- Espace de suivi des demandes d'accompagnement.
+
+## Démarrage rapide
+
+Prérequis : Node.js 24 et Python 3.12.
+
+```bash
+npm test
+```
+
+Cette commande reconstruit le Worker (`python3 scripts/build.py`) puis exécute les tests. Les sources statiques sont dans `public/`, le Worker dans `worker/`. Un lancement local en conteneur est décrit plus bas, dans la section [Docker](#docker-optionnel).
+
+## Contribuer
+
+1. Créez une branche à partir de `main`.
+2. Modifiez `public/` (interface, modèles, données) ou `worker/` (service).
+3. Formatez le code avec `npm run format` (Prettier, configuré dans `.prettierrc.json`), puis vérifiez que `npm test` passe : le workflow GitHub exécute la même commande.
+4. Ouvrez une pull request en décrivant le changement et son effet sur les estimations.
+
+Les pistes les plus utiles : couverture d'autres communes, amélioration du formulaire et de l'expérience utilisateur, transparence des estimations et des bornes, tests.
+
+## Licence
+
+Code sous licence GNU AGPL v3, voir [LICENSE](LICENSE). Le thème Lens (HTML5 UP / AJ, CC BY 3.0) est crédité dans la page `credits.html`.
+
+---
+
+# Documentation technique
 
 Site statique : estimation locale avec le modèle CatBoost sauvegardé, bornes de prix conditionnelles, rapprochement adresse/BDNB/ADEME, explorateur SIG.
 
