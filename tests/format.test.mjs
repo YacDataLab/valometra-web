@@ -5,6 +5,8 @@ import '../public/format.js';
 
 const {
   scenarioFeatures,
+  monthlyMedian,
+  frMonth,
   gapToMedian,
   communeRanking,
   marketQuery,
@@ -214,4 +216,31 @@ test('gap to the local median', () => {
   assert.equal(gapToMedian(2000, 2500), -20);
   assert.equal(gapToMedian(2000, null), null);
   assert.equal(gapToMedian(0, 2500), null);
+});
+
+test('monthly median is sorted and flags months with few sales', () => {
+  const sale = (date, price) => ({ date, surface: 50, price });
+  const rows = [
+    sale('2025-08-10', 100000),
+    sale('2025-08-11', 120000),
+    sale('2025-07-02', 90000),
+    sale('2025-07-03', 110000),
+    sale('2025-07-04', 130000),
+    { date: 'n/a', surface: 50, price: 1 },
+  ];
+  const series = monthlyMedian(rows, 3);
+  assert.deepEqual(
+    series.map(m => [m.month, m.count, m.median, m.reliable]),
+    [
+      ['2025-07', 3, 2200, true],
+      ['2025-08', 2, 2200, false],
+    ],
+  );
+  assert.deepEqual(monthlyMedian([]), []);
+});
+
+test('month label is in French', () => {
+  assert.equal(frMonth('2025-07'), 'juil. 2025');
+  assert.equal(frMonth('2026-06'), 'juin 2026');
+  assert.equal(frMonth('x'), 'x');
 });

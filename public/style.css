@@ -1484,3 +1484,29 @@ html[data-vm-theme='sombre'] .hero .hero-jump {
 .theme-toggle:hover {
   color: var(--vm-texte);
 }
+
+.trend svg {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+.trend .grid {
+  stroke: var(--line);
+  stroke-width: 1;
+}
+.trend .axis {
+  fill: var(--muted);
+  font-size: 12px;
+  font-family: var(--vm-font-family-mono);
+}
+.trend .trend-line {
+  fill: none;
+  stroke: var(--vm-color-dataviz-categorie-1);
+  stroke-width: 2.5;
+  stroke-linejoin: round;
+}
+.trend .trend-dot {
+  fill: var(--vm-surface);
+  stroke: var(--vm-color-dataviz-categorie-1);
+  stroke-width: 2;
+}

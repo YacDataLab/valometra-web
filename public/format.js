@@ -194,7 +194,49 @@
   const gapToMedian = (pricePerM2, medianPerM2) =>
     pricePerM2 > 0 && medianPerM2 > 0 ? ((pricePerM2 - medianPerM2) / medianPerM2) * 100 : null;
 
+  // Prix médian au m² par mois (« 2025-07 »). Un mois de moins de `minSales` ventes
+  // reste dans la série mais n'est pas fiable : il n'est pas relié sur la courbe.
+  const monthlyMedian = (rows, minSales = 10) => {
+    const byMonth = new Map();
+    for (const r of rows) {
+      const month = /^(\d{4}-\d{2})/.exec(r.date ?? '')?.[1];
+      if (!month || !(r.surface > 0) || !Number.isFinite(r.price)) continue;
+      if (!byMonth.has(month)) byMonth.set(month, []);
+      byMonth.get(month).push(r.price / r.surface);
+    }
+    return [...byMonth.entries()]
+      .sort(([a], [b]) => (a < b ? -1 : 1))
+      .map(([month, values]) => ({
+        month,
+        count: values.length,
+        median: middle(values),
+        reliable: values.length >= minSales,
+      }));
+  };
+
+  // « 2025-07 » -> « juil. 2025 ».
+  const frMonth = month => {
+    const match = /^(\d{4})-(\d{2})$/.exec(month);
+    const names = [
+      'janv.',
+      'févr.',
+      'mars',
+      'avr.',
+      'mai',
+      'juin',
+      'juil.',
+      'août',
+      'sept.',
+      'oct.',
+      'nov.',
+      'déc.',
+    ];
+    return match ? `${names[Number(match[2]) - 1]} ${match[1]}` : String(month);
+  };
+
   globalThis.ValometraFormat = {
+    monthlyMedian,
+    frMonth,
     gapToMedian,
     communeRanking,
     marketQuery,

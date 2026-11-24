@@ -557,10 +557,57 @@ function renderMarket() {
       `<span>${base.length} ventes sur la carte</span><span><i style="background:${palette[0]}"></i>≤ ${num(q1)} ${unit}</span><span><i style="background:${palette[1]}"></i>${num(q1)}–${num(q2)} ${unit}</span><span><i style="background:${palette[2]}"></i>> ${num(q2)} ${unit}</span>`;
   }
   drawHistogram();
+  drawTrend();
   renderRanking();
   page = 0;
   renderTable();
 }
+function drawTrend() {
+  const { monthlyMedian, frMonth } = window.ValometraFormat,
+    series = monthlyMedian(filtered),
+    points = series.filter(m => m.reliable),
+    box = $('market-trend');
+  $('trend-note').textContent =
+    'Chaque point est la médiane d’un mois, affichée à partir de 10 ventes. Sur un an seulement, ce n’est pas une tendance : les variations restent à lire avec prudence.';
+  if (points.length < 2) {
+    box.textContent = 'Pas assez de ventes par mois pour tracer une courbe avec ces filtres.';
+    return;
+  }
+  const W = 600,
+    H = 220,
+    pad = { l: 64, r: 16, t: 16, b: 34 },
+    months = series.map(m => m.month),
+    values = points.map(m => m.median),
+    lo = Math.min(...values) * 0.95,
+    hi = Math.max(...values) * 1.05,
+    x = m => pad.l + (months.indexOf(m) / Math.max(1, months.length - 1)) * (W - pad.l - pad.r),
+    y = v => pad.t + (1 - (v - lo) / (hi - lo)) * (H - pad.t - pad.b),
+    line = points.map(m => `${x(m.month).toFixed(1)},${y(m.median).toFixed(1)}`).join(' '),
+    ticks = [lo, (lo + hi) / 2, hi];
+  box.innerHTML =
+    `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Prix médian au m² par mois : de ${money(points[0].median)} en ${frMonth(points[0].month)} à ${money(points.at(-1).median)} en ${frMonth(points.at(-1).month)}.">` +
+    ticks
+      .map(
+        v =>
+          `<line class="grid" x1="${pad.l}" x2="${W - pad.r}" y1="${y(v).toFixed(1)}" y2="${y(v).toFixed(1)}"/><text class="axis" x="${pad.l - 8}" y="${(y(v) + 4).toFixed(1)}" text-anchor="end">${num(v)}</text>`,
+      )
+      .join('') +
+    `<polyline class="trend-line" points="${line}"/>` +
+    points
+      .map(
+        m =>
+          `<circle class="trend-dot" cx="${x(m.month).toFixed(1)}" cy="${y(m.median).toFixed(1)}" r="4"><title>${frMonth(m.month)} : ${money(m.median)}/m², ${m.count} ventes</title></circle>`,
+      )
+      .join('') +
+    [months[0], months.at(-1)]
+      .map(
+        (m, i) =>
+          `<text class="axis" x="${x(m).toFixed(1)}" y="${H - 10}" text-anchor="${i ? 'end' : 'start'}">${frMonth(m)}</text>`,
+      )
+      .join('') +
+    `</svg>`;
+}
+
 function renderRanking() {
   const selected = $('market-town').value;
   $('town-ranking').innerHTML = window.ValometraFormat.communeRanking(getBase(true))
