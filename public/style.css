@@ -8,6 +8,26 @@
   --line: var(--vm-bordure);
   --soft: var(--vm-fond);
   --side: clamp(440px, 46vw, 700px);
+  /* Teintes de la charte qui s'inversent en thème sombre. */
+  --tone-50: var(--vm-color-ardoise-50);
+  --tone-100: var(--vm-color-ardoise-100);
+  --tone-300: var(--vm-color-ardoise-300);
+  --tone-400: var(--vm-color-ardoise-400);
+  --heading: var(--vm-color-ardoise-800);
+  --heading-soft: var(--vm-color-ardoise-700);
+  --placeholder: var(--vm-color-pierre-500);
+  --track: var(--vm-color-pierre-200);
+}
+:root[data-vm-theme='sombre'] {
+  color-scheme: dark;
+  --tone-50: var(--vm-color-ardoise-900);
+  --tone-100: var(--vm-color-ardoise-700);
+  --tone-300: var(--vm-color-ardoise-500);
+  --tone-400: var(--vm-color-ardoise-400);
+  --heading: var(--vm-color-pierre-50);
+  --heading-soft: var(--vm-color-ardoise-200);
+  --placeholder: var(--vm-color-ardoise-300);
+  --track: var(--vm-color-ardoise-700);
 }
 html {
   font-size: var(--vm-font-size-body);
@@ -198,7 +218,7 @@ nav a.active {
   font-size: var(--vm-font-size-overline);
   line-height: 1.4;
   color: var(--accent-text);
-  background: var(--vm-color-ardoise-50);
+  background: var(--tone-50);
   padding: 6px 9px;
   border-radius: var(--vm-radius-md);
   white-space: nowrap;
@@ -246,7 +266,7 @@ input[readonly] {
 }
 input::placeholder,
 textarea::placeholder {
-  color: var(--vm-color-pierre-500) !important;
+  color: var(--placeholder) !important;
   opacity: 1;
 }
 select {
@@ -326,8 +346,8 @@ textarea {
   text-align: center;
 }
 .secondary:hover {
-  background: var(--vm-color-ardoise-50);
-  border-color: var(--vm-color-ardoise-300);
+  background: var(--tone-50);
+  border-color: var(--tone-300);
   color: var(--accent-text);
 }
 details {
@@ -369,7 +389,7 @@ summary {
 }
 .enrichment-block {
   padding: 17px 15px;
-  background: var(--vm-color-ardoise-50);
+  background: var(--tone-50);
   border-radius: var(--vm-radius-md);
   margin: 16px 0 20px;
 }
@@ -420,7 +440,7 @@ summary {
 }
 .address-suggestions button:hover:not(:disabled),
 .address-suggestions button:focus-visible {
-  background: var(--vm-color-ardoise-100);
+  background: var(--tone-100);
 }
 .address-suggestions button:disabled {
   opacity: 1;
@@ -453,12 +473,7 @@ summary {
 .mini-range {
   height: 6px;
   max-width: 300px;
-  background: linear-gradient(
-    90deg,
-    var(--vm-color-ardoise-100),
-    var(--vm-color-ardoise-400),
-    var(--vm-color-ardoise-100)
-  );
+  background: linear-gradient(90deg, var(--tone-100), var(--tone-400), var(--tone-100));
   margin: 24px 0 15px;
   position: relative;
 }
@@ -475,7 +490,7 @@ summary {
   line-height: 1.2;
   letter-spacing: -0.02em;
   margin: 14px 0;
-  color: var(--vm-marque);
+  color: var(--heading);
   font-weight: 700;
 }
 .price-unit {
@@ -498,26 +513,21 @@ summary {
 }
 .range-bar {
   height: 7px;
-  background: linear-gradient(
-    90deg,
-    var(--vm-color-ardoise-100),
-    var(--vm-color-ardoise-400),
-    var(--vm-color-ardoise-100)
-  );
+  background: linear-gradient(90deg, var(--tone-100), var(--tone-400), var(--tone-100));
   margin: 17px 0;
 }
 .gauge {
   position: relative;
   height: 12px;
   margin: 22px 0 10px;
-  background: var(--vm-color-ardoise-100);
+  background: var(--tone-100);
   border-radius: var(--vm-radius-full);
 }
 .gauge-central {
   position: absolute;
   top: 0;
   bottom: 0;
-  background: var(--vm-color-ardoise-300);
+  background: var(--tone-300);
   border-radius: var(--vm-radius-full);
 }
 .gauge-point {
@@ -556,10 +566,10 @@ summary {
   background: var(--vm-action);
 }
 .gauge-legend .central {
-  background: var(--vm-color-ardoise-300);
+  background: var(--tone-300);
 }
 .gauge-legend .extended {
-  background: var(--vm-color-ardoise-100);
+  background: var(--tone-100);
 }
 .simulator {
   margin: 0 0 20px;
@@ -635,7 +645,7 @@ summary {
   font-family: var(--vm-font-family-display);
   font-size: var(--vm-font-size-body-lg);
   font-weight: 700;
-  color: var(--vm-marque);
+  color: var(--heading);
 }
 .key-figures small {
   flex-basis: 100%;
@@ -661,7 +671,7 @@ summary {
   width: 6px;
   height: 10px;
   border-radius: var(--vm-radius-xs);
-  background: var(--vm-color-pierre-200);
+  background: var(--track);
 }
 .bars i:nth-child(2) {
   height: 14px;
@@ -1287,7 +1297,7 @@ table th {
   border: 1px solid var(--vm-bordure);
   border-radius: var(--vm-radius-full);
   background: var(--vm-surface);
-  color: var(--vm-color-ardoise-700);
+  color: var(--heading-soft);
   font-family: var(--vm-font-family-mono);
   font-size: var(--vm-font-size-overline);
   letter-spacing: 0.02em;
@@ -1408,7 +1418,7 @@ table th {
   font-size: var(--vm-font-size-overline);
 }
 .ranking-wrap tr.selected td {
-  background: var(--vm-color-ardoise-100);
+  background: var(--tone-100);
 }
 button.link {
   padding: 0;
@@ -1446,4 +1456,26 @@ button.link {
 }
 .example-line {
   margin: -6px 0 14px;
+}
+
+html[data-vm-theme='sombre'] .brand img {
+  content: url('brand/valometra-logo-inverse.svg');
+}
+html[data-vm-theme='sombre'] .hero .hero-jump {
+  background: var(--vm-action);
+  border-color: var(--vm-action);
+  color: var(--vm-sur-action);
+}
+.theme-toggle {
+  min-height: 44px;
+  padding: 0 14px;
+  border: 0;
+  background: none;
+  color: var(--vm-texte-secondaire);
+  font: inherit;
+  font-size: var(--vm-font-size-small);
+  cursor: pointer;
+}
+.theme-toggle:hover {
+  color: var(--vm-texte);
 }

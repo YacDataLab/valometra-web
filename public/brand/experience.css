@@ -50,7 +50,7 @@ body.lens-valometra #header.site-header {
   border-bottom: 2px solid transparent;
 }
 .site-header nav a[aria-current='page'] {
-  color: var(--vm-color-ardoise-800);
+  color: var(--heading);
   border-bottom-color: var(--vm-action);
   font-weight: 700;
 }
@@ -61,7 +61,7 @@ body.lens-valometra .site-content {
 }
 body.lens-valometra :is(h1, h2, h3, .price) {
   font-family: var(--vm-font-family-display);
-  color: var(--vm-color-ardoise-800);
+  color: var(--heading);
 }
 body.lens-valometra :is(h2, h3) {
   font-weight: var(--vm-font-weight-semibold);
@@ -90,7 +90,7 @@ body.lens-valometra :is(h2, h3) {
   font-family: var(--vm-font-family-mono);
   font-size: var(--vm-font-size-overline);
   letter-spacing: 0.08em;
-  color: var(--vm-color-ardoise-700);
+  color: var(--heading-soft);
 }
 .hero .hero-jump {
   min-height: 48px;
@@ -123,7 +123,7 @@ body.lens-valometra #result {
 }
 #result .range-bar,
 #result .mini-range {
-  background: var(--vm-color-ardoise-100);
+  background: var(--tone-100);
 }
 #result .mini-range i {
   background: var(--vm-action);
