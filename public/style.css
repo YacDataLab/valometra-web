@@ -769,6 +769,11 @@ summary {
 #footer .brand img {
   width: 120px;
 }
+#footer .version-line {
+  width: 100%;
+  margin: 0;
+  font-family: var(--vm-font-family-mono);
+}
 #footer .theme-credit {
   width: 100%;
   font-size: var(--vm-font-size-overline);

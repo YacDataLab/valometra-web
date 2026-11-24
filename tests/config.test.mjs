@@ -29,3 +29,8 @@ test('the model days feature matches the reference date', () => {
   const days = (Date.parse(config.referenceDate) - Date.parse('2025-01-01')) / 86400000;
   assert.equal(config.daysSince2025, days);
 });
+
+test('the footer states the reference date', () => {
+  const footer = html.slice(html.indexOf('<footer'));
+  assert.ok(footer.includes(`Prix au ${config.referenceLabel}`));
+});
