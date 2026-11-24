@@ -255,8 +255,16 @@ function showResult(value, input, intervals) {
     r => r.code === town.code && r.surface >= surface * 0.75 && r.surface <= surface * 1.25,
   );
   const m = median(comps.map(r => r.price / r.surface));
+  const round = n => money(Math.round(n / 1000) * 1000),
+    fiability = window.ValometraFormat.precision(value, intervals['80']),
+    bars = fiability
+      ? `<span class="level"><span class="bars" data-level="${fiability.bars}" role="img" aria-label="Précision de la fourchette : ${fiability.label}, ${fiability.bars} sur 3">${[1, 2, 3].map(i => `<i${i <= fiability.bars ? ' class="on"' : ''}></i>`).join('')}</span>${fiability.label}</span>`
+      : '—';
   $('result').innerHTML =
-    `<div class="result-top"><div class="section-head"><span class="eyebrow">VOTRE ESTIMATION INDICATIVE</span></div><h2>${esc(town.name)} · ${num(surface)} m²</h2><p class="hint">${esc(input.address)}</p><div class="price">${money(Math.round(value / 1000) * 1000)}</div><span class="price-unit">soit environ ${money(Math.round(value / surface))} / m² · référence juin 2026</span></div><div class="range-box"><h3>Fourchette ${band === '50' ? 'centrale' : 'étendue'} · objectif ${band} %</h3><div class="range-bar"></div><div class="range-values"><span>${money(Math.round(bounds[0] / 1000) * 1000)}</span><span>${money(Math.round(bounds[1] / 1000) * 1000)}</span></div><p class="hint">Bornes personnalisées à partir des caractéristiques du bien. ${band === '50' ? 'Cette fourchette plus étroite couvre environ une vente sur deux dans l’évaluation historique.' : 'La couverture mesurée sur les ventes de juin 2026 est de 84,9 %.'} Retrouvez la méthode dans « Comprendre ces repères ».</p></div><dl><dt>Repère local, sans ajustement de qualité</dt><dd>${comps.length} ventes de la commune, surfaces à ±25 %${m ? ` · médiane ${money(m)} / m²` : ''}</dd><dt>Localisation</dt><dd>${features.latitude ? `Adresse localisée · bâtiment ${input.enrichment?.building ? 'retrouvé' : 'renseigné manuellement ou absent'} · DPE ${input.enrichment?.dpe ? 'confirmé depuis l’ADEME' : 'saisi manuellement ou absent'}.` : 'Coordonnées non renseignées'}</dd></dl><p class="hint">Une expertise sur place reste utile pour l’état, l’étage, la vue et les travaux. Aucun ajustement de marché après juin 2026.</p><a class="secondary" href="#method">Comprendre ces repères</a>`;
+    `<div class="result-top"><div class="section-head"><div><span class="eyebrow">VOTRE ESTIMATION</span><h2>${esc(town.name)} · ${num(surface)} m²</h2></div></div><p class="hint">${esc(input.address)}</p><div class="price">${round(value)}</div><span class="price-unit">Estimation indicative · référence au 30 juin 2026</span></div>` +
+    `<div class="range-box"><h3>Fourchette ${band === '50' ? 'centrale' : 'étendue'} · objectif ${band} %</h3><div class="range-bar"></div><div class="range-values"><span>${round(bounds[0])}</span><span>${round(bounds[1])}</span></div><p class="hint">Bornes personnalisées à partir des caractéristiques du bien. ${band === '50' ? 'Cette fourchette plus étroite couvre environ une vente sur deux dans l’évaluation historique.' : 'La couverture mesurée sur les ventes de juin 2026 est de 84,9 %.'}</p></div>` +
+    `<dl class="key-figures"><div><dt>Prix au m²</dt><dd>${money(Math.round(value / surface))}<small>${m ? `médiane locale ${money(m)}\u202f/\u202fm²` : 'sans repère local'}</small></dd></div><div><dt>Comparables</dt><dd>${comps.length}<small>ventes de la commune, surfaces à ±25 %</small></dd></div><div><dt>Précision</dt><dd>${bars}<small>largeur de la fourchette</small></dd></div></dl>` +
+    `<dl class="context"><dt>Localisation</dt><dd>${features.latitude ? `Adresse localisée · bâtiment ${input.enrichment?.building ? 'retrouvé' : 'renseigné manuellement ou absent'} · DPE ${input.enrichment?.dpe ? 'confirmé depuis l’ADEME' : 'saisi manuellement ou absent'}.` : 'Coordonnées non renseignées'}</dd></dl><p class="hint">Une expertise sur place reste utile pour l’état, l’étage, la vue et les travaux. Aucun ajustement de marché après juin 2026.</p><a class="secondary" href="#method">Comprendre ces repères</a>`;
   window.dispatchEvent(
     new CustomEvent('valometra:estimated', {
       detail: {
@@ -350,7 +358,7 @@ function renderMarket() {
           rows
             .map(
               r =>
-                `<div class="popup-sale">${esc(r.date)} · ${num(r.surface)} m² · ${num(r.rooms)} pièces<br><b>${money(r.price)}</b> · ${money(r.price / r.surface)}/m² · DPE ${esc(r.dpe || 'absent')}</div>`,
+                `<div class="popup-sale">${esc(window.ValometraFormat.frDate(r.date))} · ${num(r.surface)} m² · ${num(r.rooms)} pièces<br><b>${money(r.price)}</b> · ${money(r.price / r.surface)}/m² · DPE ${esc(r.dpe || 'absent')}</div>`,
             )
             .join(''),
         { maxWidth: 320 },
@@ -396,7 +404,7 @@ function renderTable() {
       .slice(page * 15, page * 15 + 15)
       .map(
         r =>
-          `<tr><td>${esc(r.date)}</td><td>${esc(r.town)}</td><td>${num(r.surface)} m²</td><td>${money(r.price)}</td><td>${money(r.price / r.surface)}</td><td>${esc(r.dpe || '—')}</td></tr>`,
+          `<tr><td>${esc(window.ValometraFormat.frDate(r.date))}</td><td>${esc(r.town)}</td><td>${num(r.surface)} m²</td><td>${money(r.price)}</td><td>${money(r.price / r.surface)}</td><td>${esc(r.dpe || '—')}</td></tr>`,
       )
       .join('') || '<tr><td colspan="6">Aucune vente ne correspond aux filtres.</td></tr>';
   $('page-sales').textContent = `Page ${page + 1} / ${pages}`;
