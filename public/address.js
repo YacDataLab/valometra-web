@@ -66,7 +66,7 @@
       Math.abs(c[1]) <= 90
     );
   }
-  async function search(query, token) {
+  async function search(query, token, expected) {
     controller = new AbortController();
     status.textContent = 'Recherche d’adresses…';
     try {
@@ -89,6 +89,11 @@
         ? data.features.filter(f => f.properties?.label)
         : [];
       hide();
+      const exact = expected && rows.find(f => eligible(f) && f.properties.label === expected);
+      if (exact) {
+        pick(exact);
+        return;
+      }
       if (!rows.length) {
         status.textContent = 'Aucune adresse trouvée. Précisez le numéro, la rue et la commune.';
         return;
@@ -165,6 +170,12 @@
       towns = items;
       input.disabled = false;
       status.textContent = '39 communes autour de Grenoble. Entrez une adresse complète.';
+    },
+    // Lien partagé : recherche l'adresse et la sélectionne si le libellé est identique.
+    restore(label) {
+      input.value = label;
+      input.setCustomValidity('Sélectionnez une adresse complète dans les suggestions.');
+      search(label, ++sequence, label);
     },
     getSelected() {
       return selection && input.value === selection.label ? { ...selection } : null;

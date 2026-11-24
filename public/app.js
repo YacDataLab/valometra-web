@@ -254,7 +254,14 @@ function showResult(value, input, intervals) {
   const comps = market.filter(
     r => r.code === town.code && r.surface >= surface * 0.75 && r.surface <= surface * 1.25,
   );
-  const m = median(comps.map(r => r.price / r.surface));
+  const m = median(comps.map(r => r.price / r.surface)),
+    nearest = window.ValometraFormat.nearestComparables(market, {
+      code: town.code,
+      surface,
+      lat: Number(features.latitude),
+      lon: Number(features.longitude),
+    }),
+    g = window.ValometraFormat.gauge(value, intervals['50'], intervals['80']);
   const round = n => money(Math.round(n / 1000) * 1000),
     fiability = window.ValometraFormat.precision(value, intervals['80']),
     bars = fiability
@@ -262,9 +269,14 @@ function showResult(value, input, intervals) {
       : '—';
   $('result').innerHTML =
     `<div class="result-top"><div class="section-head"><div><span class="eyebrow">VOTRE ESTIMATION</span><h2>${esc(town.name)} · ${num(surface)} m²</h2></div></div><p class="hint">${esc(input.address)}</p><div class="price">${round(value)}</div><span class="price-unit">Estimation indicative · référence au 30 juin 2026</span></div>` +
-    `<div class="range-box"><h3>Fourchette ${band === '50' ? 'centrale' : 'étendue'} · objectif ${band} %</h3><div class="range-bar"></div><div class="range-values"><span>${round(bounds[0])}</span><span>${round(bounds[1])}</span></div><p class="hint">Bornes personnalisées à partir des caractéristiques du bien. ${band === '50' ? 'Cette fourchette plus étroite couvre environ une vente sur deux dans l’évaluation historique.' : 'La couverture mesurée sur les ventes de juin 2026 est de 84,9 %.'}</p></div>` +
+    `<div class="range-box"><h3>Fourchette ${band === '50' ? 'centrale' : 'étendue'} · objectif ${band} %</h3>${
+      g
+        ? `<div class="gauge" role="img" aria-label="Estimation ${round(value)}, fourchette centrale de ${round(intervals['50'][0])} à ${round(intervals['50'][1])}, fourchette étendue de ${round(intervals['80'][0])} à ${round(intervals['80'][1])}"><span class="gauge-central" style="left:${g.low}%;width:${g.high - g.low}%"></span><span class="gauge-point" style="left:${g.point}%"></span></div><ul class="gauge-legend" aria-hidden="true"><li><i class="point"></i>Estimation</li><li><i class="central"></i>Centrale 50 %</li><li><i class="extended"></i>Étendue 80 %</li></ul>`
+        : '<div class="range-bar"></div>'
+    }<div class="range-values"><span>${round(bounds[0])}</span><span>${round(bounds[1])}</span></div><p class="hint">Bornes personnalisées à partir des caractéristiques du bien. ${band === '50' ? 'Cette fourchette plus étroite couvre environ une vente sur deux dans l’évaluation historique.' : 'La couverture mesurée sur les ventes de juin 2026 est de 84,9 %.'}</p></div>` +
     `<dl class="key-figures"><div><dt>Prix au m²</dt><dd>${money(Math.round(value / surface))}<small>${m ? `médiane locale ${money(m)}\u202f/\u202fm²` : 'sans repère local'}</small></dd></div><div><dt>Comparables</dt><dd>${comps.length}<small>ventes de la commune, surfaces à ±25 %</small></dd></div><div><dt>Précision</dt><dd>${bars}<small>largeur de la fourchette</small></dd></div></dl>` +
-    `<dl class="context"><dt>Localisation</dt><dd>${features.latitude ? `Adresse localisée · bâtiment ${input.enrichment?.building ? 'retrouvé' : 'renseigné manuellement ou absent'} · DPE ${input.enrichment?.dpe ? 'confirmé depuis l’ADEME' : 'saisi manuellement ou absent'}.` : 'Coordonnées non renseignées'}</dd></dl><p class="hint">Une expertise sur place reste utile pour l’état, l’étage, la vue et les travaux. Aucun ajustement de marché après juin 2026.</p><a class="secondary" href="#method">Comprendre ces repères</a>`;
+    `<dl class="context"><dt>Localisation</dt><dd>${features.latitude ? `Adresse localisée · bâtiment ${input.enrichment?.building ? 'retrouvé' : 'renseigné manuellement ou absent'} · DPE ${input.enrichment?.dpe ? 'confirmé depuis l’ADEME' : 'saisi manuellement ou absent'}.` : 'Coordonnées non renseignées'}</dd></dl><p class="hint">Une expertise sur place reste utile pour l’état, l’étage, la vue et les travaux. Aucun ajustement de marché après juin 2026.</p>${comparablesTable(nearest)}<div class="result-actions"><a class="secondary" href="#method">Comprendre ces repères</a><button type="button" class="secondary" id="share-link">Copier le lien de cette estimation</button></div>`;
+  $('share-link').addEventListener('click', copyShareLink);
   window.dispatchEvent(
     new CustomEvent('valometra:estimated', {
       detail: {
@@ -281,6 +293,63 @@ function showResult(value, input, intervals) {
   );
   $('model-status').textContent = 'Estimation actualisée.';
 }
+function comparablesTable(rows) {
+  if (!rows.length) return '';
+  const { frDate, frDistance } = window.ValometraFormat;
+  return (
+    `<div class="comparables"><h3>Ventes comparables les plus proches</h3><div class="table-wrap"><table><thead><tr><th>Distance</th><th>Date</th><th>Surface</th><th>Prix</th></tr></thead><tbody>` +
+    rows
+      .map(
+        r =>
+          `<tr><td>${frDistance(r.meters)}</td><td>${frDate(r.date)}</td><td>${num(r.surface)}\u202fm²</td><td>${money(r.price)}<small>${money(Math.round(r.price / r.surface))}\u202f/\u202fm²</small></td></tr>`,
+      )
+      .join('') +
+    `</tbody></table></div><p class="hint">Ventes réelles de la commune, surfaces à ±25 %, classées par distance. La position est celle de la parcelle, pas du logement.</p></div>`
+  );
+}
+
+function shareUrl() {
+  const url = new URL(location.href);
+  url.search = window.ValometraFormat.shareQuery({
+    adresse: lastInputs.address,
+    surface: $('surface').value,
+    pieces: $('rooms').value,
+    definition: lastInputs.surfaceDefinition,
+    carrez: $('carrez').value,
+    dependances: $('dependencies').value,
+    annee: $('year').value,
+  });
+  url.hash = '#estimate';
+  return url.href;
+}
+
+async function copyShareLink() {
+  const button = $('share-link');
+  try {
+    await navigator.clipboard.writeText(shareUrl());
+    button.textContent = 'Lien copié';
+  } catch {
+    button.textContent = 'Copie impossible : copiez l’adresse du navigateur';
+    history.replaceState(null, '', shareUrl());
+  }
+  setTimeout(() => {
+    button.textContent = 'Copier le lien de cette estimation';
+  }, 2500);
+}
+
+// Préremplit le formulaire depuis un lien partagé ; l'estimation reste à lancer.
+function applySharedLink() {
+  const shared = window.ValometraFormat.parseShare(location.search);
+  if (!shared) return;
+  $('surface').value = shared.surface;
+  $('rooms').value = shared.pieces;
+  if (shared.definition) $('surface-definition').value = shared.definition;
+  if (shared.carrez) $('carrez').value = shared.carrez;
+  if (shared.dependances !== undefined) $('dependencies').value = shared.dependances;
+  if (shared.annee) $('year').value = shared.annee;
+  window.ValometraAddress.restore(shared.adresse);
+}
+
 function initMap() {
   if (map) return;
   if (!window.L) {
@@ -475,6 +544,7 @@ readJson('metadata.json')
       })
       .catch(() => {});
     window.ValometraAddress.init(data.towns);
+    applySharedLink();
     const options = data.towns
       .map(town => `<option value="${town.code}">${esc(town.name)}</option>`)
       .join('');
