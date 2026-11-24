@@ -199,3 +199,32 @@ test('only the manager reads the feedback summary', async () => {
   assert.equal(summary.rows.length, 1);
   assert.equal('id' in summary.rows[0], false);
 });
+
+test('static pages carry a strict content security policy', async () => {
+  const { request } = fixture();
+  for (const path of ['/', '/index.html', '/app.js', '/sw.js']) {
+    const response = await request(path);
+    assert.equal(response.status, 200, path);
+    const csp = response.headers.get('Content-Security-Policy');
+    assert.match(csp, /default-src 'self'/);
+    assert.match(csp, /frame-ancestors 'none'/);
+    assert.match(csp, /object-src 'none'/);
+    // Aucun script en ligne ni eval JavaScript : seul le WebAssembly de Pyodide est autorisé.
+    const scripts = csp.split('; ').find(d => d.startsWith('script-src'));
+    assert.ok(!scripts.includes('unsafe-inline') && !scripts.includes("'unsafe-eval'"), scripts);
+    assert.equal(response.headers.get('X-Frame-Options'), 'DENY');
+    assert.equal(response.headers.get('X-Content-Type-Options'), 'nosniff');
+    assert.match(response.headers.get('Permissions-Policy'), /geolocation=\(\)/);
+  }
+});
+
+test('the manager search treats % and _ as plain characters', async () => {
+  const { request } = fixture();
+  const admin = { id: 'a', email: 'admin@example.test' };
+  const total = async q =>
+    (await (await request('/api/admin/leads?q=' + encodeURIComponent(q), admin)).json()).total;
+  assert.equal(await total('Ali'), 1);
+  assert.equal(await total('%'), 0);
+  assert.equal(await total('_'), 0);
+  assert.equal(await total('A_ice'), 0);
+});

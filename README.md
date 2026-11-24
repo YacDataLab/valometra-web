@@ -11,7 +11,11 @@ L'objectif est de développer un outil d'estimation toujours plus précis, trans
 - Estimation locale avec le modèle CatBoost sauvegardé : l'inférence s'exécute dans le navigateur, sans serveur de prédiction.
 - Fourchettes de prix personnalisées (objectifs 80 % et 50 %).
 - Rapprochement d'adresse avec les bases BDNB et ADEME (DPE).
-- Explorateur du marché : carte, filtres, statistiques et export CSV.
+- Résultat détaillé : jauge de la fourchette, prix au m² situé par rapport à la médiane locale, indicateur de précision, ventes comparables les plus proches, simulateur « et si ? » (surface, pièces, dépendances, DPE), impression, lien partageable.
+- Explorateur du marché : carte, filtres partageables par l'URL, statistiques, courbe mensuelle du prix médian, classement des communes et export CSV.
+- Historique local des estimations (facultatif, dans le navigateur) avec comparaison de deux biens.
+- Retour anonyme sur la justesse d'une estimation.
+- Mode clair et sombre, installation en application et usage hors connexion.
 - Espaces privés pour les demandes d'accompagnement déjà enregistrées.
 
 ## Principes clés
@@ -24,7 +28,7 @@ Ce qui guide chaque choix du projet (le détail est dans la [documentation techn
 - **Le DPE est toujours confirmé par l'utilisateur.** Une adresse n'identifie pas un appartement : pas de DPE estimé, et la surface DPE ne remplace jamais la surface DVF/Carrez.
 - **Des fourchettes honnêtes.** Régressions quantiles calibrées (CQR) : 84,9 % de couverture mesurée pour l'objectif 80 %, 48,5 % pour l'objectif 50 %, sans garantie pour un bien précis.
 - **Un prix de référence daté.** Valeur au 30 juin 2026, sans ajustement de marché ultérieur ; les API renvoient leur millésime courant, sans historique garanti.
-- **Vie privée.** Pas de clé API, pas de stockage des adresses, pas de suivi publicitaire ; les pages privées ne sont jamais mises en cache.
+- **Vie privée.** Pas de clé API, pas de stockage des adresses côté serveur, pas de suivi publicitaire ; les pages privées et les API ne sont jamais mises en cache. L'historique des estimations reste dans le navigateur, sur consentement ; le retour sur une estimation est anonyme (voir Espace de suivi).
 - **Transparence.** Les limites du modèle sont affichées dans l'application (page « Méthode ») et les chiffres affichés sont ceux de l'évaluation historique.
 
 ## Démarrage rapide
@@ -97,12 +101,23 @@ Cinq exports Python autonomes (point, bornes 80 % et 50 %) sont exécutés via P
 - Écritures protégées par vérification de l'origine, paramètres SQL liés et validation. Les pages privées et leurs données ne sont jamais mises en cache.
 - Le Worker publié utilise l'identité injectée par la passerelle Sites. Avant un déploiement autonome, il faut raccorder une authentification serveur vérifiée et empêcher les clients d'envoyer ces en-têtes.
 
+### Retour anonyme
+
+`POST /api/feedback` (sans connexion) enregistre dans la table D1 `feedback` (migration `drizzle/0001_feedback.sql`) : l'avis (trop basse, juste, trop haute), le code commune, la surface et le nombre de pièces, le prix estimé arrondi au millier et, si l'utilisateur le connaît, le prix réel. Aucune adresse, coordonnée ni identifiant n'est reçue ni stockée. Le Worker vérifie l'origine, valide strictement les champs et plafonne le total à 300 retours par heure (aucune donnée personnelle ne permet de limiter par visiteur). `/gestion` affiche un résumé réservé au gestionnaire (`GET /api/admin/feedback`).
+
+### Sécurité et hors connexion
+
+- Le Worker ajoute à chaque page une politique de sécurité du contenu (`script-src` sans script en ligne, sources limitées à jsDelivr pour Pyodide, IGN, BDNB, ADEME, OpenStreetMap et Google Fonts), `X-Frame-Options: DENY` et une `Permissions-Policy` restrictive. Toute nouvelle source externe doit être ajoutée à `contentSecurityPolicy` dans `worker/service.mjs`, avec son test.
+- Limite connue : Pyodide est chargé depuis jsDelivr sans contrôle d'intégrité (le chargeur ne le permet pas). L'auto-hébergement du moteur supprimerait cette dépendance, mais alourdirait le Worker de plusieurs mégaoctets.
+- `public/sw.js` garde une copie locale des pages publiques (réseau d'abord, copie en secours). Il n'intercepte jamais `/api/`, `/gestion` ni `/mes-demandes`. Modifier `CACHE` pour forcer le renouvellement.
+- Les valeurs de référence (date, couvertures, nombre de communes, jours depuis 2025) sont dans `public/config.js` ; `tests/config.test.mjs` vérifie leur cohérence avec les pages et les métadonnées.
+
 ### Interface et thème
 
-Thème Lens (HTML5 UP / AJ, CC BY 3.0), base CSS conservée dans `public/theme/lens/css/main.css` et adaptation applicative dans `public/style.css`. Les jetons de la charte graphique sont dans `public/brand/tokens.css`, généré depuis `design/` (voir [docs/08_design](docs/08_design/index.md)). Les originaux du thème sont conservés dans `design-reference/lens/`.
+Le thème clair ou sombre suit le choix mémorisé dans le navigateur, sinon le réglage du système (`public/theme.js`). Thème Lens (HTML5 UP / AJ, CC BY 3.0), base CSS conservée dans `public/theme/lens/css/main.css` et adaptation applicative dans `public/style.css`. Les jetons de la charte graphique sont dans `public/brand/tokens.css`, généré depuis `design/` (voir [docs/08_design](docs/08_design/index.md)). Les originaux du thème sont conservés dans `design-reference/lens/`.
 
 ### Vérifications
 
-`npm test` reconstruit le Worker, puis vérifie les droits sur les demandes, la page du formulaire et des estimations de référence (le code Python embarqué du Worker est exécuté tel quel).
+`npm test` reconstruit le Worker, puis vérifie les droits sur les demandes, le retour anonyme, les en-têtes de sécurité, les fonctions d'affichage (`public/format.js`), la cohérence des constantes, les contrastes WCAG des deux thèmes, l'accessibilité statique des pages, le manifeste et des estimations de référence (le code Python embarqué du Worker est exécuté tel quel). Les contrôles d'accessibilité sont statiques : ils ne remplacent pas un essai au lecteur d'écran.
 
 Contrôle de performance manuel, sur un profil mobile avec cache désactivé : relever les entrées Performance `valometra-formulaire` au chargement et `valometra-estimation` à la première estimation valide. Dans l'onglet Réseau, vérifier que Pyodide et les modèles attendent une estimation, que Leaflet attend l'onglet marché, et que `market.json` n'est chargé qu'au premier usage du marché ou de l'estimation.

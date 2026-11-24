@@ -1,3 +1,27 @@
+// Politique de sécurité du contenu : sources autorisées = celles que l'application
+// utilise réellement (moteur Pyodide sur jsDelivr, géocodage IGN, BDNB, ADEME, fonds de
+// carte OpenStreetMap, polices Google). Aucun script en ligne n'est autorisé.
+const contentSecurityPolicy = [
+  "default-src 'self'",
+  "script-src 'self' 'wasm-unsafe-eval' https://cdn.jsdelivr.net",
+  "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
+  'font-src https://fonts.gstatic.com',
+  "img-src 'self' data: https://tile.openstreetmap.org",
+  "connect-src 'self' https://cdn.jsdelivr.net https://data.geopf.fr https://api.bdnb.io https://data.ademe.fr",
+  "worker-src 'self' blob:",
+  "manifest-src 'self'",
+  "object-src 'none'",
+  "base-uri 'self'",
+  "form-action 'self'",
+  "frame-ancestors 'none'",
+].join('; ');
+const securityHeaders = {
+  'Content-Security-Policy': contentSecurityPolicy,
+  'X-Frame-Options': 'DENY',
+  'X-Content-Type-Options': 'nosniff',
+  'Referrer-Policy': 'strict-origin-when-cross-origin',
+  'Permissions-Policy': 'camera=(), microphone=(), geolocation=(), payment=(), usb=()',
+};
 const verdicts = ['trop_bas', 'juste', 'trop_haut'];
 const statusValues = ['nouveau', 'a_contacter', 'contacte', 'rendez_vous', 'termine'];
 const j = (data, status = 200) =>
@@ -187,8 +211,12 @@ export async function api(request, env) {
       args.push(status);
     }
     if (search) {
-      where.push('(name LIKE ? OR email LIKE ? OR phone LIKE ? OR property_json LIKE ?)');
-      for (let i = 0; i < 4; i++) args.push('%' + search + '%');
+      // Les jokers % et _ saisis par le gestionnaire sont cherchés tels quels.
+      where.push(
+        "(name LIKE ? ESCAPE '\\' OR email LIKE ? ESCAPE '\\' OR phone LIKE ? ESCAPE '\\' OR property_json LIKE ? ESCAPE '\\')",
+      );
+      const pattern = '%' + search.replace(/[\\%_]/g, '\\$&') + '%';
+      for (let i = 0; i < 4; i++) args.push(pattern);
     }
     const clause = where.length ? ' WHERE ' + where.join(' AND ') : '';
     if (path.endsWith('/export')) {
@@ -330,8 +358,7 @@ export async function handle(request, env, assets) {
       'Content-Type': asset.type,
       'Cache-Control': privatePage ? 'no-store' : 'public, max-age=0, must-revalidate',
       ETag: asset.etag,
-      'X-Content-Type-Options': 'nosniff',
-      'Referrer-Policy': 'strict-origin-when-cross-origin',
+      ...securityHeaders,
     },
   });
 }
