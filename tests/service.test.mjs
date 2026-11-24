@@ -45,11 +45,29 @@ test('private requests are scoped to their owner', async () => {
   const { request, database } = fixture();
   assert.equal((await request('/api/my-requests')).status, 401);
   const mine = await (await request('/api/my-requests', { id: 'alice' })).json();
-  assert.deepEqual(mine.rows.map(row => row.id), [first]);
-  assert.equal((await request('/api/my-requests/' + second, { id: 'alice', method: 'DELETE' })).status, 200);
+  assert.deepEqual(
+    mine.rows.map(row => row.id),
+    [first],
+  );
+  assert.equal(
+    (await request('/api/my-requests/' + second, { id: 'alice', method: 'DELETE' })).status,
+    200,
+  );
   assert.equal(database.prepare('SELECT id FROM leads WHERE id = ?').get(second).id, second);
-  assert.equal((await request('/api/my-requests/' + first, { id: 'alice', method: 'DELETE', source: 'https://elsewhere.example' })).status, 403);
-  assert.equal((await request('/api/my-requests/' + first, { id: 'alice', method: 'DELETE' })).status, 200);
+  assert.equal(
+    (
+      await request('/api/my-requests/' + first, {
+        id: 'alice',
+        method: 'DELETE',
+        source: 'https://elsewhere.example',
+      })
+    ).status,
+    403,
+  );
+  assert.equal(
+    (await request('/api/my-requests/' + first, { id: 'alice', method: 'DELETE' })).status,
+    200,
+  );
   assert.equal(database.prepare('SELECT id FROM leads WHERE id = ?').get(first), undefined);
   database.close();
 });
@@ -59,8 +77,15 @@ test('admin authorization, payload validation and closed submissions', async () 
   assert.equal((await request('/api/admin/leads', { id: 'alice' })).status, 403);
   const admin = { id: 'manager', email: 'admin@example.test' };
   assert.equal((await request('/api/admin/leads', admin)).status, 200);
-  assert.equal((await request('/api/admin/leads/' + first, { ...admin, method: 'PATCH', body: 'null' })).status, 400);
-  assert.equal((await request('/api/leads', { id: 'alice', method: 'POST', body: '{}' })).status, 410);
+  assert.equal(
+    (await request('/api/admin/leads/' + first, { ...admin, method: 'PATCH', body: 'null' }))
+      .status,
+    400,
+  );
+  assert.equal(
+    (await request('/api/leads', { id: 'alice', method: 'POST', body: '{}' })).status,
+    410,
+  );
   assert.equal(database.prepare('SELECT COUNT(*) AS total FROM leads').get().total, 2);
   database.close();
 });

@@ -20,7 +20,7 @@ def load_estimator():
         models[name] = namespace["apply_catboost_model"]
 
     source = (PUBLIC / "inference-worker.js").read_text()
-    code = re.search(r"py\.runPython\(`(.*?)`\);return py", source, re.S)[1]
+    code = re.search(r"py\.runPython\(`(.*?)`\);\s*return py", source, re.S)[1]
     context = dict(
         models=models,
         config_json=json.dumps(load_json("preprocessing.json")),

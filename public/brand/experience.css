@@ -40,16 +40,25 @@ body.lens-valometra #header.site-header {
   background: transparent;
   border-bottom: 1px solid var(--line);
 }
-.site-header .brand img { display: block; width: 146px; height: auto; }
-.site-header nav { display: flex; flex-wrap: wrap; gap: 4px 20px; margin: 0; }
+.site-header .brand img {
+  display: block;
+  width: 146px;
+  height: auto;
+}
+.site-header nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 20px;
+  margin: 0;
+}
 .site-header nav a {
   display: inline-flex;
   min-height: 44px;
   align-items: center;
-  font-size: .875rem;
+  font-size: 0.875rem;
   border-bottom: 2px solid transparent;
 }
-.site-header nav a[aria-current="page"] {
+.site-header nav a[aria-current='page'] {
   color: var(--vm-color-ardoise-800);
   border-bottom-color: var(--vm-action);
   font-weight: 700;
@@ -59,7 +68,7 @@ body.lens-valometra .site-content {
   padding: 0 clamp(20px, 4vw, 52px) 40px;
   margin-inline: auto;
 }
-body.lens-valometra :is(h1,h2,h3,.price) {
+body.lens-valometra :is(h1, h2, h3, .price) {
   font-family: var(--vm-font-family-display);
   color: var(--vm-color-ardoise-800);
 }
@@ -71,15 +80,21 @@ body.lens-valometra :is(h1,h2,h3,.price) {
   font-size: clamp(2.3rem, 5.1vw, 4.5rem);
   font-weight: 800;
   line-height: 1.06;
-  letter-spacing: -.065em;
+  letter-spacing: -0.065em;
   margin: 14px 0 20px;
 }
-.hero h1 em { color: var(--vm-action); font-style: normal; }
-.hero .lede { max-width: 49ch; font-size: clamp(1rem, 1.6vw, 1.15rem); }
+.hero h1 em {
+  color: var(--vm-action);
+  font-style: normal;
+}
+.hero .lede {
+  max-width: 49ch;
+  font-size: clamp(1rem, 1.6vw, 1.15rem);
+}
 .eyebrow {
   font-family: var(--vm-font-family-mono);
-  font-size: .8125rem;
-  letter-spacing: .08em;
+  font-size: 0.8125rem;
+  letter-spacing: 0.08em;
   color: var(--vm-color-ardoise-700);
 }
 .hero .hero-jump {
@@ -91,7 +106,7 @@ body.lens-valometra :is(h1,h2,h3,.price) {
 }
 .workspace {
   display: grid;
-  grid-template-columns: minmax(0, 1.35fr) minmax(0, .85fr);
+  grid-template-columns: minmax(0, 1.35fr) minmax(0, 0.85fr);
   align-items: start;
   gap: clamp(18px, 3vw, 38px);
 }
@@ -101,17 +116,34 @@ body.lens-valometra .panel {
   border-radius: 16px;
   background: var(--vm-surface);
 }
-body.lens-valometra #result { margin: 0; border-top: 4px solid var(--vm-action); }
-#result .empty-result { padding: 0; }
-#result .result-symbol { color: var(--vm-action); }
-#result .range-bar, #result .mini-range { background: var(--vm-color-ardoise-100); }
-#result .mini-range i { background: var(--vm-action); }
-body.lens-valometra :is(input:not([type=checkbox]):not([type=radio]), select, textarea) {
+body.lens-valometra #result {
+  margin: 0;
+  border-top: 4px solid var(--vm-action);
+}
+#result .empty-result {
+  padding: 0;
+}
+#result .result-symbol {
+  color: var(--vm-action);
+}
+#result .range-bar,
+#result .mini-range {
+  background: var(--vm-color-ardoise-100);
+}
+#result .mini-range i {
+  background: var(--vm-action);
+}
+body.lens-valometra :is(input:not([type='checkbox']):not([type='radio']), select, textarea) {
   min-height: 44px;
   border-radius: 8px;
 }
-body.lens-valometra :is(.primary,.secondary,summary) { min-height: 44px; }
-body.lens-valometra :is(.primary,.secondary) { border-radius: 8px; white-space: normal; }
+body.lens-valometra :is(.primary, .secondary, summary) {
+  min-height: 44px;
+}
+body.lens-valometra :is(.primary, .secondary) {
+  border-radius: 8px;
+  white-space: normal;
+}
 body.lens-valometra .primary {
   background: var(--vm-action);
   border-color: var(--vm-action);
@@ -121,14 +153,22 @@ body.lens-valometra .primary:hover:not(:disabled) {
   background: var(--vm-action-survol);
   border-color: var(--vm-action-survol);
 }
-body.lens-valometra :is(a,button,input,select,textarea,summary):focus-visible {
+body.lens-valometra :is(a, button, input, select, textarea, summary):focus-visible {
   outline: 3px solid var(--vm-focus);
   outline-offset: 3px;
 }
-body.lens-valometra .site-footer { max-width: 1320px; margin-inline: auto; }
+body.lens-valometra .site-footer {
+  max-width: 1320px;
+  margin-inline: auto;
+}
 @media (min-width: 961px) {
-  #result:has(.empty-result) { position: sticky; top: 20px; }
+  #result:has(.empty-result) {
+    position: sticky;
+    top: 20px;
+  }
 }
 @media (max-width: 760px) {
-  .workspace { grid-template-columns: minmax(0, 1fr); }
+  .workspace {
+    grid-template-columns: minmax(0, 1fr);
+  }
 }
