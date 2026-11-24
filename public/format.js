@@ -270,7 +270,37 @@
     };
   };
 
+  // Carte schématique des communes (hero) : projection plate corrigée de la latitude,
+  // rayon proportionnel à la racine du nombre de ventes, étiquette pour les plus actives.
+  const constellation = (towns, { width = 300, height = 420, pad = 28, labels = 1 } = {}) => {
+    const valid = towns.filter(t => Number.isFinite(t.lat) && Number.isFinite(t.lon));
+    if (!valid.length) return [];
+    const lats = valid.map(t => t.lat),
+      lons = valid.map(t => t.lon),
+      minLat = Math.min(...lats),
+      maxLat = Math.max(...lats),
+      minLon = Math.min(...lons),
+      maxLon = Math.max(...lons),
+      cos = Math.cos((((minLat + maxLat) / 2) * Math.PI) / 180),
+      spanX = Math.max((maxLon - minLon) * cos, 1e-6),
+      spanY = Math.max(maxLat - minLat, 1e-6),
+      scale = Math.min((width - 2 * pad) / spanX, (height - 2 * pad) / spanY),
+      offsetX = (width - spanX * scale) / 2,
+      offsetY = (height - spanY * scale) / 2,
+      busiest = [...valid].sort((a, b) => b.n - a.n).slice(0, labels);
+    return valid.map(t => ({
+      code: t.code,
+      name: t.name,
+      x: offsetX + (t.lon - minLon) * cos * scale,
+      y: offsetY + (maxLat - t.lat) * scale,
+      r: 3 + Math.sqrt(Math.max(t.n, 0)) * 0.52,
+      hub: t === busiest[0],
+      label: busiest.includes(t),
+    }));
+  };
+
   globalThis.ValometraFormat = {
+    constellation,
     parseHistory,
     addHistory,
     compareEntries,

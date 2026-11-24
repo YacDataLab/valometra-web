@@ -114,7 +114,7 @@ Cinq exports Python autonomes (point, bornes 80 % et 50 %) sont exécutés via P
 
 ### Interface et thème
 
-Le thème clair ou sombre suit le choix mémorisé dans le navigateur, sinon le réglage du système (`public/theme.js`). Thème Lens (HTML5 UP / AJ, CC BY 3.0), base CSS conservée dans `public/theme/lens/css/main.css` et adaptation applicative dans `public/style.css`. Les jetons de la charte graphique sont dans `public/brand/tokens.css`, généré depuis `design/` (voir [docs/08_design](docs/08_design/index.md)). Les originaux du thème sont conservés dans `design-reference/lens/`.
+Deux polices, Plus Jakarta Sans (titres) et Inter (texte), sont hébergées dans `public/fonts/` (sous-ensemble latin, licence OFL) : aucun service de polices externe. L'application n'utilise pas IBM Plex Mono, que la charte réserve à la documentation. Les pictogrammes sont un sprite SVG (jeu Tabler, MIT) dans `public/index.html`, et la constellation des communes du hero est dessinée par `renderConstellation` à partir de `metadata.json`. Le thème clair ou sombre suit le choix mémorisé dans le navigateur, sinon le réglage du système (`public/theme.js`). Thème Lens (HTML5 UP / AJ, CC BY 3.0), base CSS conservée dans `public/theme/lens/css/main.css` et adaptation applicative dans `public/style.css`. Les jetons de la charte graphique sont dans `public/brand/tokens.css`, généré depuis `design/` (voir [docs/08_design](docs/08_design/index.md)). Les originaux du thème sont conservés dans `design-reference/lens/`.
 
 ### Vérifications
 

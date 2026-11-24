@@ -332,6 +332,30 @@ $('fill-example').addEventListener('click', () => {
     'Exemple chargé : un appartement de 65 m² à Grenoble. Modifiez-le ou lancez l’estimation.';
 });
 
+// Constellation des communes couvertes (hero) : dessinée à partir de metadata.json.
+function renderConstellation(towns) {
+  const points = window.ValometraFormat.constellation(towns);
+  if (!points.length) return;
+  $('hero-art').innerHTML =
+    `<svg viewBox="0 0 300 420" role="img" aria-labelledby="const-title"><title id="const-title">Les ${points.length} communes couvertes, placées selon leur position ; la taille suit le nombre de ventes.</title>` +
+    [...points]
+      .sort((a, b) => b.r - a.r)
+      .map(
+        p =>
+          `<circle class="${p.hub ? 'const-hub' : 'const-dot'}" cx="${p.x.toFixed(1)}" cy="${p.y.toFixed(1)}" r="${p.r.toFixed(1)}"/>`,
+      )
+      .join('') +
+    points
+      .filter(p => p.label)
+      .map(p =>
+        p.hub
+          ? `<text class="const-label const-label-hub" x="${p.x.toFixed(1)}" y="${(p.y + 4).toFixed(1)}" text-anchor="middle">${esc(p.name)}</text>`
+          : `<text class="const-label" x="${p.x.toFixed(1)}" y="${(p.y + p.r + 14).toFixed(1)}" text-anchor="middle">${esc(p.name)}</text>`,
+      )
+      .join('') +
+    `<text class="const-caption" x="150" y="412" text-anchor="middle">${points.length} communes · taille = nombre de ventes</text></svg>`;
+}
+
 function simulatorHtml(input) {
   const f = input.features,
     dpe = ['A', 'B', 'C', 'D', 'E', 'F', 'G'];
@@ -814,6 +838,7 @@ readJson('metadata.json')
       .join('');
     $('market-town').insertAdjacentHTML('beforeend', options);
     applyMarketLink();
+    renderConstellation(data.towns);
     if (!$('market').hidden && market.length) renderMarket();
     $('estimate-button').disabled = false;
     $('model-status').textContent = 'Le moteur se charge lors de la première estimation.';

@@ -5,6 +5,7 @@ import '../public/format.js';
 
 const {
   scenarioFeatures,
+  constellation,
   parseHistory,
   addHistory,
   compareEntries,
@@ -291,4 +292,32 @@ test('comparison gives the gaps between two estimates', () => {
   assert.equal(gap.surface, 10);
   assert.equal(gap.rooms, 1);
   assert.ok(Math.abs(gap.perM2.percent - 2.857) < 0.01);
+});
+
+test('constellation places every town inside the frame, the busiest one as hub', () => {
+  const towns = [
+    { code: '1', name: 'Grand', lat: 45.18, lon: 5.72, n: 2450 },
+    { code: '2', name: 'Nord', lat: 45.26, lon: 5.76, n: 5 },
+    { code: '3', name: 'Sud', lat: 44.99, lon: 5.6, n: 8 },
+    { code: '4', name: 'Est', lat: 45.2, lon: 5.84, n: 36 },
+    { code: '5', name: 'Cassée', lat: null, lon: 5.7, n: 3 },
+  ];
+  const points = constellation(towns, { width: 300, height: 420, pad: 28, labels: 2 });
+  assert.equal(points.length, 4);
+  for (const p of points) {
+    assert.ok(p.x >= 28 - 1e-9 && p.x <= 272 + 1e-9, `${p.name} x=${p.x}`);
+    assert.ok(p.y >= 28 - 1e-9 && p.y <= 392 + 1e-9, `${p.name} y=${p.y}`);
+  }
+  assert.deepEqual(
+    points.filter(p => p.hub).map(p => p.name),
+    ['Grand'],
+  );
+  assert.deepEqual(
+    points.filter(p => p.label).map(p => p.name),
+    ['Grand', 'Est'],
+  );
+  const byName = Object.fromEntries(points.map(p => [p.name, p]));
+  assert.ok(byName.Nord.y < byName.Sud.y);
+  assert.ok(byName.Est.x > byName.Sud.x);
+  assert.deepEqual(constellation([]), []);
 });
