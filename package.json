@@ -1,5 +1,11 @@
 {
   "name": "valometra-estimation",
+  "description": "Valometra-web : application web open source d'estimation immobilière (Grenoble et métropole)",
+  "license": "AGPL-3.0-only",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/YacDataLab/valometra-web.git"
+  },
   "private": true,
   "type": "module",
   "scripts": {
