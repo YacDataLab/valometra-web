@@ -35,3 +35,7 @@ Application web open source d'estimation immobilière (Grenoble et métropole). 
 - Les en-têtes `oai-authenticated-user-*` ne sont fiables que derrière la passerelle Sites : ne pas s'appuyer dessus pour un déploiement autonome.
 - Les textes affichés (couverture, date de référence, nombre de communes) sont des chiffres vérifiés : ne les changer qu'avec la source qui les justifie.
 - Interface et messages en français ; accessibilité et usage mobile à préserver.
+
+## Communication
+
+- Répondre de façon concise : aller droit au but.
