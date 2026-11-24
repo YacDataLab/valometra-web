@@ -1338,3 +1338,57 @@ table th {
 .filters h2 {
   font-size: var(--vm-font-size-h4);
 }
+
+.print-only {
+  display: none;
+}
+@page {
+  margin: 15mm;
+}
+@media print {
+  #header,
+  #footer,
+  .hero,
+  .bottom-links,
+  #estimate-form,
+  .simulator,
+  .result-actions,
+  .market-layout,
+  #market,
+  #method {
+    display: none !important;
+  }
+  html,
+  body,
+  body.lens-valometra,
+  #main {
+    background: #fff !important;
+  }
+  .site-content,
+  .workspace {
+    display: block !important;
+    width: auto !important;
+    max-width: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+  #result.result.panel {
+    width: auto !important;
+    max-width: none !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+    padding: 0 !important;
+  }
+  .print-only {
+    display: block;
+    margin-top: 16px;
+    font-size: var(--vm-font-size-small);
+    color: var(--muted);
+  }
+  .comparables,
+  .range-box,
+  .key-figures {
+    break-inside: avoid;
+  }
+}
