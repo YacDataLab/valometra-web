@@ -1,0 +1,17 @@
+.git
+.github
+.wrangler
+.sites-runtime
+.env*
+dist
+node_modules
+__pycache__
+*.pyc
+design
+design-reference
+docs
+tests
+README.md
+LICENSE
+Dockerfile
+.dockerignore

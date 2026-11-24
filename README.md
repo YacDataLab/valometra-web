@@ -54,3 +54,15 @@ Sites. Avant un déploiement autonome, raccorder une authentification serveur
 vérifiée et empêcher la transmission de ces en-têtes depuis les clients.
 Le stockage des demandes existantes reste privé. La création de nouvelles
 demandes est désactivée.
+
+## Docker (optionnel)
+
+Docker n'est pas nécessaire pour contribuer : `npm test` (Node.js 24 et Python 3.12) reste la vérification de référence, exécutée par le workflow GitHub.
+
+Pour lancer le site localement dans un conteneur :
+
+```bash
+docker compose up --build
+```
+
+Le site est servi sur http://localhost:8787. La base D1 locale (SQLite) est conservée dans le volume `web-data` ; `docker compose down -v` la supprime. Le conteneur exécute `wrangler dev --local`, destiné au développement : l'identité injectée par la passerelle Sites n'existe pas ici, donc `/gestion` et `/mes-demandes` ne sont pas utilisables. Après une modification de `public/` ou `worker/`, relancer avec `--build`.
