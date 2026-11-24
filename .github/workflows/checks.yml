@@ -3,6 +3,14 @@ on:
   push:
   pull_request:
   workflow_dispatch:
+    inputs:
+      target:
+        description: Deployment target
+        type: choice
+        options:
+          - test
+          - production
+        default: test
 permissions:
   contents: read
 jobs:
@@ -18,7 +26,11 @@ jobs:
           python-version: '3.12'
       - run: npm test
   deploy-test:
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main' && vars.VALOMETRA_PRIVATE_TEST_READY == 'true'
+    if: >-
+      github.ref == 'refs/heads/main' &&
+      vars.VALOMETRA_PRIVATE_TEST_READY == 'true' &&
+      (github.event_name == 'push' ||
+       (github.event_name == 'workflow_dispatch' && inputs.target == 'test'))
     needs: build-and-test
     runs-on: ubuntu-latest
     concurrency:
@@ -31,26 +43,27 @@ jobs:
       - uses: actions/setup-python@v5.6.0
         with:
           python-version: '3.12'
-      - run: python3 scripts/build_cloudflare.py
-      - name: Deploy to the Cloudflare Access-protected test Worker
+      - run: python3 scripts/build_cloudflare.py --test
+      - name: Deploy the protected test Worker
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
         run: |
           test_url=https://valometra-test.valometra-grenoble.workers.dev
-          for path in / /model.py; do
-            curl --silent --show-error --max-time 20 --dump-header - --output /dev/null "$test_url$path" |
-              grep -Ei '^location: https://[^/]+\.cloudflareaccess\.com/'
-          done
           git fetch --no-tags origin main
           if [[ "$(git rev-parse FETCH_HEAD)" != "$GITHUB_SHA" ]]; then
             exit 0
           fi
-          npx --yes wrangler@4.166.0 deploy --config dist/cloudflare/wrangler.json --name valometra-test
-          curl --silent --show-error --retry 4 --max-time 20 --dump-header - --output /dev/null "$test_url/" |
-            grep -Ei '^location: https://[^/]+\.cloudflareaccess\.com/'
+          npx --yes wrangler@4.166.0 deploy --config dist/cloudflare/wrangler.json
+          for path in / /model.py; do
+            status=$(curl --silent --show-error --retry 4 --max-time 20 --output /dev/null --write-out '%{http_code}' "$test_url$path")
+            if [[ "$status" != 401 ]]; then
+              echo "::error::Expected authentication on $path, received HTTP $status."
+              exit 1
+            fi
+          done
   deploy-production:
-    if: github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main'
+    if: github.event_name == 'workflow_dispatch' && inputs.target == 'production' && github.ref == 'refs/heads/main'
     needs: build-and-test
     runs-on: ubuntu-latest
     concurrency:

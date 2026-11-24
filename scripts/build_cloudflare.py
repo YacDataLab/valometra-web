@@ -1,6 +1,11 @@
+import argparse
 import json
 from pathlib import Path
-from shutil import copytree, ignore_patterns, rmtree
+from shutil import copyfile, copytree, ignore_patterns, rmtree
+
+parser = argparse.ArgumentParser()
+parser.add_argument("--test", action="store_true", help="Build the protected test Worker")
+args = parser.parse_args()
 
 root = Path(__file__).resolve().parent.parent
 target = root / "dist" / "cloudflare"
@@ -33,6 +38,15 @@ config = {
     "preview_urls": False,
     "assets": {"directory": "./assets"},
 }
+if args.test:
+    copyfile(root / "worker" / "test-access.mjs", target / "test-access.mjs")
+    config.update(
+        name="valometra-test",
+        main="test-access.mjs",
+        compatibility_flags=["nodejs_compat"],
+        assets={"directory": "./assets", "binding": "ASSETS", "run_worker_first": True},
+    )
+
 (target / "wrangler.json").write_text(
     json.dumps(config, indent=2) + "\n", encoding="utf-8",
 )
