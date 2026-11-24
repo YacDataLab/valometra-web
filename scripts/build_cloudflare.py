@@ -1,0 +1,37 @@
+import json
+from pathlib import Path
+from shutil import copytree, ignore_patterns, rmtree
+
+root = Path(__file__).resolve().parent.parent
+target = root / "dist" / "cloudflare"
+assets = target / "assets"
+
+if assets.exists():
+    rmtree(assets)
+
+copytree(
+    root / "public",
+    assets,
+    ignore=ignore_patterns(
+        "admin.html", "admin.js", "my-requests.html", "my-requests.js",
+        "__pycache__", "*.pyc",
+    ),
+)
+
+index = assets / "index.html"
+html = index.read_text(encoding="utf-8")
+for link in (
+    '<a href="/mes-demandes">Mes demandes</a>',
+    '<a id="admin-link" href="/gestion" hidden>Espace privé</a>',
+):
+    html = html.replace(link, "")
+index.write_text(html, encoding="utf-8")
+
+config = {
+    "name": "valometra-estimation",
+    "compatibility_date": "2025-09-15",
+    "assets": {"directory": "./assets"},
+}
+(target / "wrangler.json").write_text(
+    json.dumps(config, indent=2) + "\n", encoding="utf-8",
+)
