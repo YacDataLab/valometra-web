@@ -1328,11 +1328,6 @@ table th {
   font-size: var(--vm-font-size-overline);
   letter-spacing: 0.02em;
 }
-.nav-source::after {
-  content: '\2197';
-  margin-left: 4px;
-  font-family: var(--vm-font-family-body);
-}
 #footer .tagline {
   color: var(--muted);
 }
@@ -1619,4 +1614,45 @@ html[data-vm-theme='sombre'] .hero .hero-jump {
   .feedback-done {
     display: none !important;
   }
+}
+
+.sprite {
+  position: absolute;
+}
+.icon {
+  width: 1.15em;
+  height: 1.15em;
+  flex: none;
+  vertical-align: -0.2em;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.75;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.icon-sm {
+  width: 0.9em;
+  height: 0.9em;
+  margin-left: 4px;
+}
+.icon-lg {
+  width: 40px;
+  height: 40px;
+  stroke-width: 1.5;
+}
+.hero-actions :is(button, a),
+.result-actions :is(button, a),
+.theme-toggle,
+.actions button {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+.key-figures dt {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.key-figures dt .icon {
+  color: var(--vm-action);
 }

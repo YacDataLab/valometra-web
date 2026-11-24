@@ -51,3 +51,18 @@ test("index.html : chaque page de l'application a un titre de niveau 1", () => {
     assert.match(html.slice(start, end), /<h1[ >]/, id);
   }
 });
+
+test('every pictogram used by the page or the scripts exists in the SVG sprite', () => {
+  const html = read('index');
+  const symbols = new Set([...html.matchAll(/<symbol id="(i-[\w-]+)"/g)].map(m => m[1]));
+  assert.ok(symbols.size >= 10);
+  const scripts = ['app.js', 'theme.js'].map(f =>
+    readFileSync(new URL(`../public/${f}`, import.meta.url), 'utf8'),
+  );
+  const used = [
+    ...[html, ...scripts].flatMap(source => [...source.matchAll(/#(i-[\w-]+)/g)].map(m => m[1])),
+    ...scripts[0].matchAll(/icon\('([\w-]+)'/g).map(m => 'i-' + m[1]),
+  ];
+  const missing = [...new Set(used)].filter(id => !symbols.has(id));
+  assert.deepEqual(missing, []);
+});

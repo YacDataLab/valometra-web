@@ -1,5 +1,8 @@
 'use strict';
-const $ = id => document.getElementById(id),
+// Pictogramme du sprite SVG de index.html (jeu Tabler, licence MIT).
+const icon = name =>
+    `<svg class="icon" aria-hidden="true" focusable="false"><use href="#i-${name}"/></svg>`,
+  $ = id => document.getElementById(id),
   money = n =>
     // Charte : espace fine insécable (U+202F) avant € et entre les milliers.
     new Intl.NumberFormat('fr-FR', {
@@ -293,9 +296,9 @@ function showResult(value, input, intervals) {
       g
         ? `<div class="gauge" role="img" aria-label="Estimation ${round(value)}, fourchette centrale de ${round(intervals['50'][0])} à ${round(intervals['50'][1])}, fourchette étendue de ${round(intervals['80'][0])} à ${round(intervals['80'][1])}"><span class="gauge-central" style="left:${g.low}%;width:${g.high - g.low}%"></span><span class="gauge-point" style="left:${g.point}%"></span></div><ul class="gauge-legend" aria-hidden="true"><li><i class="point"></i>Estimation</li><li><i class="central"></i>Centrale 50 %</li><li><i class="extended"></i>Étendue 80 %</li></ul>`
         : '<div class="range-bar"></div>'
-    }<div class="range-values"><span>${round(bounds[0])}</span><span>${round(bounds[1])}</span></div><p class="hint">Bornes personnalisées à partir des caractéristiques du bien. ${band === '50' ? 'Cette fourchette plus étroite couvre environ une vente sur deux dans l’évaluation historique.' : 'La couverture mesurée sur les ventes de juin 2026 est de ${ValometraConfig.coverage[80]} %.'}</p></div>` +
-    `<dl class="key-figures"><div><dt>Prix au m²</dt><dd>${money(Math.round(value / surface))}<small>${m ? `médiane locale ${money(m)}\u202f/\u202fm²<br>${gapText(value / surface, m)}` : 'sans repère local'}</small></dd></div><div><dt>Comparables</dt><dd>${comps.length}<small>ventes de la commune, surfaces à ±25 %</small></dd></div><div><dt>Précision</dt><dd>${bars}<small>largeur de la fourchette</small></dd></div></dl>` +
-    `<dl class="context"><dt>Localisation</dt><dd>${features.latitude ? `Adresse localisée · bâtiment ${input.enrichment?.building ? 'retrouvé' : 'renseigné manuellement ou absent'} · DPE ${input.enrichment?.dpe ? 'confirmé depuis l’ADEME' : 'saisi manuellement ou absent'}.` : 'Coordonnées non renseignées'}</dd></dl><p class="hint">Une expertise sur place reste utile pour l’état, l’étage, la vue et les travaux. Aucun ajustement de marché après ${ValometraConfig.referenceLabel.slice(3)}.</p>${simulatorHtml(input)}${comparablesTable(nearest)}<div class="result-actions"><a class="secondary" href="#method">Comprendre ces repères</a><button type="button" class="secondary" id="share-link">Copier le lien de cette estimation</button><button type="button" class="secondary" id="print-result">Imprimer</button></div>${feedbackHtml()}<p class="print-only">Document généré le ${window.ValometraFormat.frDate(new Date().toISOString())} par Valometra (open source, licence AGPL-3.0). Estimation indicative, référence au ${ValometraConfig.referenceLabel} : elle ne remplace pas une expertise.</p>`;
+    }<div class="range-values"><span>${round(bounds[0])}</span><span>${round(bounds[1])}</span></div><p class="hint">Bornes personnalisées à partir des caractéristiques du bien. ${band === '50' ? 'Cette fourchette plus étroite couvre environ une vente sur deux dans l’évaluation historique.' : `La couverture mesurée sur les ventes de juin 2026 est de ${ValometraConfig.coverage[80]} %.`}</p></div>` +
+    `<dl class="key-figures"><div><dt>${icon('ruler-2')}Prix au m²</dt><dd>${money(Math.round(value / surface))}<small>${m ? `médiane locale ${money(m)}\u202f/\u202fm²<br>${gapText(value / surface, m)}` : 'sans repère local'}</small></dd></div><div><dt>${icon('building-community')}Comparables</dt><dd>${comps.length}<small>ventes de la commune, surfaces à ±25 %</small></dd></div><div><dt>${icon('chart-arrows-vertical')}Précision</dt><dd>${bars}<small>largeur de la fourchette</small></dd></div></dl>` +
+    `<dl class="context"><dt>Localisation</dt><dd>${features.latitude ? `Adresse localisée · bâtiment ${input.enrichment?.building ? 'retrouvé' : 'renseigné manuellement ou absent'} · DPE ${input.enrichment?.dpe ? 'confirmé depuis l’ADEME' : 'saisi manuellement ou absent'}.` : 'Coordonnées non renseignées'}</dd></dl><p class="hint">Une expertise sur place reste utile pour l’état, l’étage, la vue et les travaux. Aucun ajustement de marché après ${ValometraConfig.referenceLabel.slice(3)}.</p>${simulatorHtml(input)}${comparablesTable(nearest)}<div class="result-actions"><a class="secondary" href="#method">Comprendre ces repères</a><button type="button" class="secondary" id="share-link">${icon('link')}<span>Copier le lien de cette estimation</span></button><button type="button" class="secondary" id="print-result">${icon('printer')}Imprimer</button></div>${feedbackHtml()}<p class="print-only">Document généré le ${window.ValometraFormat.frDate(new Date().toISOString())} par Valometra (open source, licence AGPL-3.0). Estimation indicative, référence au ${ValometraConfig.referenceLabel} : elle ne remplace pas une expertise.</p>`;
   $('print-result').addEventListener('click', () => window.print());
   $('feedback')?.addEventListener('click', sendFeedback);
   $('share-link').addEventListener('click', copyShareLink);
@@ -485,13 +488,13 @@ async function copyShareLink() {
   const button = $('share-link');
   try {
     await navigator.clipboard.writeText(shareUrl());
-    button.textContent = 'Lien copié';
+    button.querySelector('span').textContent = 'Lien copié';
   } catch {
-    button.textContent = 'Copie impossible : copiez l’adresse du navigateur';
+    button.querySelector('span').textContent = 'Copie impossible : copiez l’adresse du navigateur';
     history.replaceState(null, '', shareUrl());
   }
   setTimeout(() => {
-    button.textContent = 'Copier le lien de cette estimation';
+    button.querySelector('span').textContent = 'Copier le lien de cette estimation';
   }, 2500);
 }
 

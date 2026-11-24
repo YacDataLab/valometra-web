@@ -17,7 +17,10 @@
   const apply = theme => {
     root.dataset.vmTheme = theme;
     const button = document.getElementById('theme-toggle');
-    if (button) button.textContent = theme === 'sombre' ? 'Mode clair' : 'Mode sombre';
+    if (button) {
+      button.querySelector('span').textContent = theme === 'sombre' ? 'Mode clair' : 'Mode sombre';
+      button.querySelector('use').setAttribute('href', theme === 'sombre' ? '#i-sun' : '#i-moon');
+    }
   };
   apply(stored() ?? system());
 
