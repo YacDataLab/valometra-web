@@ -73,9 +73,9 @@ body.lens-valometra :is(h2, h3) {
 }
 .hero h1 {
   font-size: clamp(2.25rem, 5vw, var(--vm-font-size-display));
-  font-weight: 800;
+  font-weight: 700;
   line-height: 1.06;
-  letter-spacing: -0.03em;
+  letter-spacing: -0.02em;
   margin: 14px 0 20px;
 }
 .hero h1 em {
@@ -87,8 +87,9 @@ body.lens-valometra :is(h2, h3) {
   font-size: var(--vm-font-size-body-lg);
 }
 .eyebrow {
-  font-family: var(--vm-font-family-mono);
+  font-family: var(--vm-font-family-body);
   font-size: var(--vm-font-size-overline);
+  font-weight: 600;
   letter-spacing: 0.08em;
   color: var(--heading-soft);
 }

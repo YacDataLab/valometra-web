@@ -1,4 +1,25 @@
 /* Valometra adaptation of Lens by HTML5 UP (CC BY 3.0). Original theme remains in theme/lens/css/main.css. */
+/* Polices hébergées (licence SIL OFL 1.1, voir fonts/LICENSE.txt) : deux familles, sous-ensemble latin. */
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 400 700;
+  font-display: swap;
+  src: url('fonts/inter-latin.woff2') format('woff2');
+  unicode-range:
+    U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329,
+    U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+@font-face {
+  font-family: 'Plus Jakarta Sans';
+  font-style: normal;
+  font-weight: 600 800;
+  font-display: swap;
+  src: url('fonts/plus-jakarta-sans-latin.woff2') format('woff2');
+  unicode-range:
+    U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329,
+    U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
 :root {
   /* Alias historiques du thème, pointés vers les jetons de la charte (brand/tokens.css). */
   --ink: var(--vm-texte);
@@ -772,7 +793,7 @@ summary {
 #footer .version-line {
   width: 100%;
   margin: 0;
-  font-family: var(--vm-font-family-mono);
+  font-family: var(--vm-font-family-body);
 }
 #footer .theme-credit {
   width: 100%;
@@ -1303,14 +1324,14 @@ table th {
   border-radius: var(--vm-radius-full);
   background: var(--vm-surface);
   color: var(--heading-soft);
-  font-family: var(--vm-font-family-mono);
+  font-family: var(--vm-font-family-body);
   font-size: var(--vm-font-size-overline);
   letter-spacing: 0.02em;
 }
 .nav-source::after {
   content: '\2197';
   margin-left: 4px;
-  font-family: var(--vm-font-family-mono);
+  font-family: var(--vm-font-family-body);
 }
 #footer .tagline {
   color: var(--muted);
@@ -1321,7 +1342,7 @@ table th {
   gap: 4px 18px;
   margin: 0;
   width: 100%;
-  font-family: var(--vm-font-family-mono);
+  font-family: var(--vm-font-family-body);
 }
 #footer .footer-links a {
   border: 0;
@@ -1335,7 +1356,7 @@ table th {
   display: flex;
   flex-wrap: wrap;
   gap: 6px 18px;
-  font-family: var(--vm-font-family-mono);
+  font-family: var(--vm-font-family-body);
   font-size: var(--vm-font-size-small);
 }
 .method-grid > .open-source {
@@ -1497,7 +1518,7 @@ html[data-vm-theme='sombre'] .hero .hero-jump {
 .trend .axis {
   fill: var(--muted);
   font-size: 12px;
-  font-family: var(--vm-font-family-mono);
+  font-family: var(--vm-font-family-body);
 }
 .trend .trend-line {
   fill: none;
