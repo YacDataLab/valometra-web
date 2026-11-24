@@ -2,6 +2,7 @@ name: Valometra checks
 on:
   push:
   pull_request:
+  workflow_dispatch:
 permissions:
   contents: read
 jobs:
@@ -16,8 +17,40 @@ jobs:
         with:
           python-version: '3.12'
       - run: npm test
-  deploy:
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+  deploy-test:
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main' && vars.VALOMETRA_PRIVATE_TEST_READY == 'true'
+    needs: build-and-test
+    runs-on: ubuntu-latest
+    concurrency:
+      group: cloudflare-test
+    steps:
+      - uses: actions/checkout@v4.2.2
+      - uses: actions/setup-node@v4.4.0
+        with:
+          node-version: '24'
+      - uses: actions/setup-python@v5.6.0
+        with:
+          python-version: '3.12'
+      - run: python3 scripts/build_cloudflare.py
+      - name: Deploy to the Cloudflare Access-protected test Worker
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          test_url=https://valometra-test.valometra-grenoble.workers.dev
+          for path in / /model.py; do
+            curl --silent --show-error --max-time 20 --dump-header - --output /dev/null "$test_url$path" |
+              grep -Ei '^location: https://[^/]+\.cloudflareaccess\.com/'
+          done
+          git fetch --no-tags origin main
+          if [[ "$(git rev-parse FETCH_HEAD)" != "$GITHUB_SHA" ]]; then
+            exit 0
+          fi
+          npx --yes wrangler@4.166.0 deploy --config dist/cloudflare/wrangler.json --name valometra-test
+          curl --silent --show-error --retry 4 --max-time 20 --dump-header - --output /dev/null "$test_url/" |
+            grep -Ei '^location: https://[^/]+\.cloudflareaccess\.com/'
+  deploy-production:
+    if: github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main'
     needs: build-and-test
     runs-on: ubuntu-latest
     concurrency:

@@ -30,6 +30,7 @@ index.write_text(html, encoding="utf-8")
 config = {
     "name": "valometra-estimation",
     "compatibility_date": "2025-09-15",
+    "previews_enabled": False,
     "assets": {"directory": "./assets"},
 }
 (target / "wrangler.json").write_text(
