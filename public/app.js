@@ -132,7 +132,7 @@ function startEngine() {
       }
       if (data.type === 'error') {
         if (data.id === undefined) reject(new Error(data.message));
-        else engineFailure(data.message);
+        else if (data.id === requestId) engineFailure(data.message);
       }
     };
     worker.onerror = () => {
@@ -165,7 +165,11 @@ $('estimate-form').addEventListener('submit', async e => {
     return;
   }
   const town = metadata.towns.find(t => t.code === address.code);
-  if (!town) return;
+  if (!town) {
+    $('model-status').textContent =
+      'Cette commune n’est pas couverte. Choisissez une adresse dans l’une des communes proposées.';
+    return;
+  }
   if ($('dpe').value && (!$('dpe-date').value || $('dpe-date').value > '2026-06-30')) {
     $('model-status').textContent =
       'Indiquez la date du DPE, au plus tard le 30 juin 2026, ou laissez le DPE non renseigné.';
@@ -446,6 +450,12 @@ $('export-market').onclick = () => {
 readJson('metadata.json')
   .then(data => {
     metadata = data;
+    fetch('/api/session')
+      .then(response => response.json())
+      .then(session => {
+        if (session.admin) $('admin-link').hidden = false;
+      })
+      .catch(() => {});
     window.ValometraAddress.init(data.towns);
     const options = data.towns
       .map(town => `<option value="${town.code}">${esc(town.name)}</option>`)

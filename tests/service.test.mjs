@@ -102,3 +102,34 @@ test('the published HTML contains the required estimation fields and no contact 
   assert.doesNotMatch(text, /envisagez de vendre|lead-form|leads\.js/i);
   database.close();
 });
+
+test('a corrupted property column does not break the admin list or export', async () => {
+  const { request, database } = fixture();
+  const admin = { id: 'manager', email: 'admin@example.test' };
+  database.prepare("UPDATE leads SET property_json = '{not json' WHERE id = ?").run(first);
+  const list = await request('/api/admin/leads', admin);
+  assert.equal(list.status, 200);
+  const rows = (await list.json()).rows;
+  assert.equal(rows.length, 2);
+  assert.deepEqual(rows.find(row => row.id === first).property, {});
+  assert.equal((await request('/api/admin/leads/export', admin)).status, 200);
+  database.close();
+});
+
+test('the session endpoint tells the page whether to show the private space link', async () => {
+  const { request, database } = fixture();
+  const admin = { id: 'manager', email: 'admin@example.test' };
+  assert.deepEqual(await (await request('/api/session', admin)).json(), {
+    signedIn: true,
+    admin: true,
+  });
+  assert.deepEqual(await (await request('/api/session', { id: 'alice' })).json(), {
+    signedIn: true,
+    admin: false,
+  });
+  assert.deepEqual(await (await request('/api/session')).json(), {
+    signedIn: false,
+    admin: false,
+  });
+  database.close();
+});

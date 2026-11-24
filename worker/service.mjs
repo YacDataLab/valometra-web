@@ -16,6 +16,14 @@ const text = (v, max) => (typeof v === 'string' ? v.trim().slice(0, max) : '');
 const uuid = v =>
   typeof v === 'string' &&
   /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(v);
+function parseProperty(json) {
+  try {
+    const value = JSON.parse(json || '{}');
+    return value && typeof value === 'object' && !Array.isArray(value) ? value : {};
+  } catch {
+    return {};
+  }
+}
 function decode(row, admin) {
   const r = {
     id: row.id,
@@ -28,7 +36,7 @@ function decode(row, admin) {
     timeline: row.timeline,
     message: row.message,
     status: row.status,
-    property: JSON.parse(row.property_json || '{}'),
+    property: parseProperty(row.property_json),
   };
   if (admin) {
     r.notes = row.notes;
@@ -134,7 +142,7 @@ export async function api(request, env) {
           'Consentement',
         ],
         ...data.results.map(r => {
-          const p = JSON.parse(r.property_json || '{}');
+          const p = parseProperty(r.property_json);
           return [
             r.created_at,
             r.name,
