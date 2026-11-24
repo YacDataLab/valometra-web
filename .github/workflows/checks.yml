@@ -2,6 +2,15 @@ name: Valometra checks
 on:
   push:
   pull_request:
+  workflow_dispatch:
+    inputs:
+      target:
+        description: Deployment target
+        type: choice
+        options:
+          - test
+          - production
+        default: test
 permissions:
   contents: read
 jobs:
@@ -16,3 +25,75 @@ jobs:
         with:
           python-version: '3.12'
       - run: npm test
+  deploy-test:
+    if: >-
+      github.ref == 'refs/heads/main' &&
+      vars.VALOMETRA_PRIVATE_TEST_READY == 'true' &&
+      (github.event_name == 'push' ||
+       (github.event_name == 'workflow_dispatch' && inputs.target == 'test'))
+    needs: build-and-test
+    runs-on: ubuntu-latest
+    concurrency:
+      group: cloudflare-test
+    steps:
+      - uses: actions/checkout@v4.2.2
+      - uses: actions/setup-node@v4.4.0
+        with:
+          node-version: '24'
+      - uses: actions/setup-python@v5.6.0
+        with:
+          python-version: '3.12'
+      - run: python3 scripts/build_cloudflare.py --test
+      - name: Deploy the protected test Worker
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          test_url=https://valometra-test.valometra-grenoble.workers.dev
+          git fetch --no-tags origin main
+          if [[ "$(git rev-parse FETCH_HEAD)" != "$GITHUB_SHA" ]]; then
+            exit 0
+          fi
+          npx --yes wrangler@4.166.0 deploy --config dist/cloudflare/wrangler.json
+          for path in / /model.py; do
+            status=$(curl --silent --show-error --retry 4 --max-time 20 --output /dev/null --write-out '%{http_code}' "$test_url$path")
+            if [[ "$status" != 401 ]]; then
+              echo "::error::Expected authentication on $path, received HTTP $status."
+              exit 1
+            fi
+          done
+  deploy-production:
+    if: github.event_name == 'workflow_dispatch' && inputs.target == 'production' && github.ref == 'refs/heads/main'
+    needs: build-and-test
+    runs-on: ubuntu-latest
+    concurrency:
+      group: cloudflare-production
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@v4.2.2
+      - uses: actions/setup-node@v4.4.0
+        with:
+          node-version: '24'
+      - uses: actions/setup-python@v5.6.0
+        with:
+          python-version: '3.12'
+      - run: python3 scripts/build_cloudflare.py
+      - name: Deploy current main to Cloudflare
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          if [[ -z "$CLOUDFLARE_API_TOKEN" || -z "$CLOUDFLARE_ACCOUNT_ID" ]]; then
+            echo "::error::Configure CLOUDFLARE_API_TOKEN and CLOUDFLARE_ACCOUNT_ID in GitHub Actions secrets."
+            exit 1
+          fi
+          git fetch --no-tags origin main
+          if [[ "$(git rev-parse FETCH_HEAD)" != "$GITHUB_SHA" ]]; then
+            echo "A newer commit is on main. Skipping this deployment."
+            exit 0
+          fi
+          npx --yes wrangler@4.166.0 deploy --config dist/cloudflare/wrangler.json
+          site=https://valometra-estimation.valometra-grenoble.workers.dev
+          for path in / /inference-worker.js /model.py; do
+            curl --fail --silent --show-error --retry 4 --max-time 20 "$site$path" --output /dev/null
+          done
