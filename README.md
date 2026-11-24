@@ -14,6 +14,19 @@ L'objectif est de développer un outil d'estimation toujours plus précis, trans
 - Explorateur du marché : carte, filtres, statistiques et export CSV.
 - Espaces privés pour les demandes d'accompagnement déjà enregistrées.
 
+## Principes clés
+
+Ce qui guide chaque choix du projet (le détail est dans la [documentation technique](#documentation-technique)) :
+
+- **Modèle inchangé, 77 variables.** Le formulaire en renseigne jusqu'à 40 ; les autres restent manquantes et suivent les règles de `preprocessing.json`.
+- **Aucun serveur de prédiction.** Cinq exports Python (estimation, bornes 80 % et 50 %) tournent via Pyodide dans le navigateur.
+- **Une adresse, des sources officielles.** Géocodage IGN, puis BDNB (bâtiment) et ADEME (DPE) par identifiant BAN exact, jamais par proximité.
+- **Le DPE est toujours confirmé par l'utilisateur.** Une adresse n'identifie pas un appartement : pas de DPE estimé, et la surface DPE ne remplace jamais la surface DVF/Carrez.
+- **Des fourchettes honnêtes.** Régressions quantiles calibrées (CQR) : 84,9 % de couverture mesurée pour l'objectif 80 %, 48,5 % pour l'objectif 50 %, sans garantie pour un bien précis.
+- **Un prix de référence daté.** Valeur au 30 juin 2026, sans ajustement de marché ultérieur ; les API renvoient leur millésime courant, sans historique garanti.
+- **Vie privée.** Pas de clé API, pas de stockage des adresses, pas de suivi publicitaire ; les pages privées ne sont jamais mises en cache.
+- **Transparence.** Les limites du modèle sont affichées dans l'application (page « Méthode ») et les chiffres affichés sont ceux de l'évaluation historique.
+
 ## Démarrage rapide
 
 Prérequis : Node.js 24 et Python 3.12.
@@ -51,15 +64,15 @@ Code sous licence GNU AGPL v3, voir [LICENSE](LICENSE). Le thème Lens (HTML5 UP
 
 ---
 
-# Documentation technique
+## Documentation technique
 
-## Inférence
+### Inférence
 
 Modèle ponctuel initial inchangé, 77 variables. Jusqu'à 40 variables sont alimentées par le formulaire et le rapprochement d'adresse ; les autres restent manquantes et suivent les règles de préparation de `preprocessing.json`.
 
 Cinq exports Python autonomes (point, bornes 80 % et 50 %) sont exécutés via Pyodide dans un Worker du navigateur, dans des espaces de noms séparés. Les chaînes catégorielles sont encodées en UTF-8/Latin-1 selon le dictionnaire de hash exporté.
 
-## Adresse et rapprochement
+### Adresse et rapprochement
 
 - Géocodage IGN, puis recherche BDNB par clé d'interopérabilité BAN exacte et ADEME par `identifiant_ban` exact. Aucun rattachement par proximité.
 - Fiche bâtiment unique préremplie ; choix explicite s'il y en a plusieurs. Seuls les champs bâtiment sont importés ; le DPE synthétique d'une fiche BDNB n'est jamais utilisé comme diagnostic de l'appartement.
@@ -68,7 +81,7 @@ Cinq exports Python autonomes (point, bornes 80 % et 50 %) sont exécutés via P
 - Délais bornés, erreurs partielles gérées indépendamment, saisie manuelle toujours possible.
 - BDNB : jusqu'à 10 fiches. ADEME : jusqu'à 100 diagnostics, troncature signalée. Requêtes directes depuis le navigateur (CORS vérifié avec l'origine du site), sans clé API ni persistance des adresses.
 
-## Bornes personnalisées
+### Bornes personnalisées
 
 - Deux paires de régressions quantiles sur log(prix), q10/q90 et q25/q75, chacune entraînée sur les 4 069 ventes antérieures à mai 2026.
 - Calibration CQR distincte sur 317 ventes de mai : score `max(borne_basse - log_réel, log_réel - borne_haute)`, rang `ceil((n+1) × couverture)`, correction positive ou nulle. Les croisements de bornes sont réordonnés.
@@ -76,7 +89,7 @@ Cinq exports Python autonomes (point, bornes 80 % et 50 %) sont exécutés via P
 - Les modèles ne garantissent pas une couverture conditionnelle à chaque bien. Ces couvertures ont été mesurées sur les données enrichies d'origine : elles ne valident ni les champs incomplets du formulaire ni les changements de millésime des API.
 - Prix de référence au 30 juin 2026, sans ajustement de marché au-delà. Vigilance : les API renvoient leur millésime courant pour le bâtiment, sans historique daté garanti.
 
-## Espace de suivi
+### Espace de suivi
 
 - Les demandes d'accompagnement sont distinctes de l'estimation. La création de nouvelles demandes est désactivée ; les demandes existantes restent stockées en D1 (migration `drizzle/0000_leads.sql`).
 - `/gestion` et `/api/admin/*` : identité authentifiée et e-mail du gestionnaire vérifiés côté serveur contre le secret `ADMIN_EMAIL`, jamais présent dans le code. Lecture, filtre, export CSV, notes privées, statut et suppression.
@@ -84,11 +97,11 @@ Cinq exports Python autonomes (point, bornes 80 % et 50 %) sont exécutés via P
 - Écritures protégées par vérification de l'origine, paramètres SQL liés et validation. Les pages privées et leurs données ne sont jamais mises en cache.
 - Le Worker publié utilise l'identité injectée par la passerelle Sites. Avant un déploiement autonome, il faut raccorder une authentification serveur vérifiée et empêcher les clients d'envoyer ces en-têtes.
 
-## Interface et thème
+### Interface et thème
 
 Thème Lens (HTML5 UP / AJ, CC BY 3.0), base CSS conservée dans `public/theme/lens/css/main.css` et adaptation applicative dans `public/style.css`. Les jetons de la charte graphique sont dans `public/brand/tokens.css`, généré depuis `design/` (voir [docs/08_design](docs/08_design/index.md)). Les originaux du thème sont conservés dans `design-reference/lens/`.
 
-## Vérifications
+### Vérifications
 
 `npm test` reconstruit le Worker, puis vérifie les droits sur les demandes, la page du formulaire et des estimations de référence (le code Python embarqué du Worker est exécuté tel quel).
 
