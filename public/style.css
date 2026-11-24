@@ -1572,3 +1572,30 @@ html[data-vm-theme='sombre'] .hero .hero-jump {
     display: none !important;
   }
 }
+
+.feedback {
+  margin: 0 0 20px;
+  padding: 16px;
+  border: 1px solid var(--line);
+  border-radius: var(--vm-radius-md);
+}
+.feedback h3 {
+  margin-bottom: 10px;
+}
+.feedback-choices {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin: 12px 0 8px;
+}
+.feedback-done {
+  margin: 0 0 20px;
+  color: var(--vm-etat-succes);
+  font-weight: 600;
+}
+@media print {
+  .feedback,
+  .feedback-done {
+    display: none !important;
+  }
+}

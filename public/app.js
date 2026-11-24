@@ -39,6 +39,7 @@ let metadata,
   requestId = 0,
   simId = null,
   simCount = 0,
+  feedbackSentFor = null,
   hasResult = false,
   lastPrediction = null;
 function readJson(path) {
@@ -294,8 +295,9 @@ function showResult(value, input, intervals) {
         : '<div class="range-bar"></div>'
     }<div class="range-values"><span>${round(bounds[0])}</span><span>${round(bounds[1])}</span></div><p class="hint">Bornes personnalisées à partir des caractéristiques du bien. ${band === '50' ? 'Cette fourchette plus étroite couvre environ une vente sur deux dans l’évaluation historique.' : 'La couverture mesurée sur les ventes de juin 2026 est de ${ValometraConfig.coverage[80]} %.'}</p></div>` +
     `<dl class="key-figures"><div><dt>Prix au m²</dt><dd>${money(Math.round(value / surface))}<small>${m ? `médiane locale ${money(m)}\u202f/\u202fm²<br>${gapText(value / surface, m)}` : 'sans repère local'}</small></dd></div><div><dt>Comparables</dt><dd>${comps.length}<small>ventes de la commune, surfaces à ±25 %</small></dd></div><div><dt>Précision</dt><dd>${bars}<small>largeur de la fourchette</small></dd></div></dl>` +
-    `<dl class="context"><dt>Localisation</dt><dd>${features.latitude ? `Adresse localisée · bâtiment ${input.enrichment?.building ? 'retrouvé' : 'renseigné manuellement ou absent'} · DPE ${input.enrichment?.dpe ? 'confirmé depuis l’ADEME' : 'saisi manuellement ou absent'}.` : 'Coordonnées non renseignées'}</dd></dl><p class="hint">Une expertise sur place reste utile pour l’état, l’étage, la vue et les travaux. Aucun ajustement de marché après ${ValometraConfig.referenceLabel.slice(3)}.</p>${simulatorHtml(input)}${comparablesTable(nearest)}<div class="result-actions"><a class="secondary" href="#method">Comprendre ces repères</a><button type="button" class="secondary" id="share-link">Copier le lien de cette estimation</button><button type="button" class="secondary" id="print-result">Imprimer</button></div><p class="print-only">Document généré le ${window.ValometraFormat.frDate(new Date().toISOString())} par Valometra (open source, licence AGPL-3.0). Estimation indicative, référence au ${ValometraConfig.referenceLabel} : elle ne remplace pas une expertise.</p>`;
+    `<dl class="context"><dt>Localisation</dt><dd>${features.latitude ? `Adresse localisée · bâtiment ${input.enrichment?.building ? 'retrouvé' : 'renseigné manuellement ou absent'} · DPE ${input.enrichment?.dpe ? 'confirmé depuis l’ADEME' : 'saisi manuellement ou absent'}.` : 'Coordonnées non renseignées'}</dd></dl><p class="hint">Une expertise sur place reste utile pour l’état, l’étage, la vue et les travaux. Aucun ajustement de marché après ${ValometraConfig.referenceLabel.slice(3)}.</p>${simulatorHtml(input)}${comparablesTable(nearest)}<div class="result-actions"><a class="secondary" href="#method">Comprendre ces repères</a><button type="button" class="secondary" id="share-link">Copier le lien de cette estimation</button><button type="button" class="secondary" id="print-result">Imprimer</button></div>${feedbackHtml()}<p class="print-only">Document généré le ${window.ValometraFormat.frDate(new Date().toISOString())} par Valometra (open source, licence AGPL-3.0). Estimation indicative, référence au ${ValometraConfig.referenceLabel} : elle ne remplace pas une expertise.</p>`;
   $('print-result').addEventListener('click', () => window.print());
+  $('feedback')?.addEventListener('click', sendFeedback);
   $('share-link').addEventListener('click', copyShareLink);
   $('simulate').addEventListener('click', runScenario);
   window.dispatchEvent(
@@ -396,6 +398,48 @@ function comparablesTable(rows) {
       .join('') +
     `</tbody></table></div><p class="hint">Ventes réelles de la commune, surfaces à ±25 %, classées par distance. La position est celle de la parcelle, pas du logement.</p></div>`
   );
+}
+
+function feedbackHtml() {
+  if (feedbackSentFor === lastPrediction)
+    return '<p class="feedback-done" role="status">Merci, votre retour est enregistré.</p>';
+  return (
+    '<section class="feedback" id="feedback"><h3>Cette estimation vous semble-t-elle juste ?</h3>' +
+    '<label>Prix réel, si vous le connaissez (€)<input id="feedback-actual" type="number" min="10000" max="5000000" step="1000" placeholder="Facultatif"></label>' +
+    '<div class="feedback-choices"><button type="button" class="secondary" data-verdict="trop_bas">Trop basse</button><button type="button" class="secondary" data-verdict="juste">Juste</button><button type="button" class="secondary" data-verdict="trop_haut">Trop haute</button></div>' +
+    '<p class="hint">Retour anonyme : ni adresse ni coordonnées, seulement la commune, la surface, les pièces et le prix estimé.</p><p id="feedback-status" role="status"></p></section>'
+  );
+}
+
+async function sendFeedback(event) {
+  const verdict = event.target.dataset?.verdict;
+  if (!verdict || !lastInputs || !lastPrediction) return;
+  const actual = $('feedback-actual').value;
+  const buttons = [...document.querySelectorAll('#feedback [data-verdict]')];
+  buttons.forEach(b => (b.disabled = true));
+  $('feedback-status').textContent = 'Envoi…';
+  try {
+    const response = await fetch('/api/feedback', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        verdict,
+        town_code: lastInputs.town.code,
+        surface: lastInputs.surface,
+        rooms: Number(lastInputs.features.nb_pieces),
+        estimate: lastPrediction.value,
+        actual: actual === '' ? null : Number(actual),
+      }),
+    });
+    if (!response.ok) throw new Error((await response.json()).error);
+    feedbackSentFor = lastPrediction;
+    $('feedback').outerHTML =
+      '<p class="feedback-done" role="status">Merci, votre retour est enregistré.</p>';
+  } catch (error) {
+    buttons.forEach(b => (b.disabled = false));
+    $('feedback-status').textContent =
+      error.message || 'Le retour est indisponible pour le moment.';
+  }
 }
 
 function shareValues() {

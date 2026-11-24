@@ -10,7 +10,8 @@ const origin = 'https://valometra.example';
 
 function fixture() {
   const database = new DatabaseSync(':memory:');
-  database.exec(readFileSync(new URL('../drizzle/0000_leads.sql', import.meta.url), 'utf8'));
+  for (const file of ['0000_leads', '0001_feedback'])
+    database.exec(readFileSync(new URL(`../drizzle/${file}.sql`, import.meta.url), 'utf8'));
   const insert = database.prepare(`INSERT INTO leads
     (id, requester_id, created_at, updated_at, name, consent_at, consent_version)
     VALUES (?, ?, '2026-01-01', '2026-01-01', ?, '2026-01-01', 'test')`);
@@ -132,4 +133,69 @@ test('the session endpoint tells the page whether to show the private space link
     admin: false,
   });
   database.close();
+});
+
+const goodFeedback = {
+  verdict: 'trop_haut',
+  town_code: '38185',
+  surface: 64.6,
+  rooms: 3,
+  estimate: 154751,
+  actual: 140400,
+};
+
+test('anyone can send an anonymous feedback, stored without address or identity', async () => {
+  const { request, database } = fixture();
+  const response = await request('/api/feedback', {
+    method: 'POST',
+    body: JSON.stringify({ ...goodFeedback, adresse: '12 rue Secrète', email: 'a@b.fr' }),
+  });
+  assert.equal(response.status, 201);
+  const row = database.prepare('SELECT * FROM feedback').get();
+  assert.deepEqual(Object.keys(row).sort(), [
+    'actual',
+    'created_at',
+    'estimate',
+    'id',
+    'rooms',
+    'surface',
+    'town_code',
+    'verdict',
+  ]);
+  assert.equal(row.surface, 65);
+  assert.equal(row.estimate, 155000);
+  assert.equal(row.actual, 140000);
+});
+
+test('feedback is validated, origin-checked and rate-limited', async () => {
+  const { request, database } = fixture();
+  const send = (data, extra = {}) =>
+    request('/api/feedback', { method: 'POST', body: JSON.stringify(data), ...extra });
+  assert.equal((await send({ ...goodFeedback, verdict: 'nul' })).status, 400);
+  assert.equal((await send({ ...goodFeedback, town_code: 'abc' })).status, 400);
+  assert.equal((await send({ ...goodFeedback, surface: 5000 })).status, 400);
+  assert.equal((await send({ ...goodFeedback, actual: 'beaucoup' })).status, 400);
+  assert.equal((await send(null)).status, 400);
+  assert.equal((await send(goodFeedback, { source: 'https://evil.example' })).status, 403);
+  assert.equal((await send({ ...goodFeedback, actual: null })).status, 201);
+  assert.equal(database.prepare('SELECT COUNT(*) AS n FROM feedback').get().n, 1);
+  const insert = database.prepare(
+    "INSERT INTO feedback (id, created_at, verdict, town_code, surface, rooms, estimate) VALUES (?, ?, 'juste', '38185', 60, 3, 150000)",
+  );
+  const now = new Date().toISOString();
+  for (let i = 0; i < 300; i++) insert.run('r' + i, now);
+  assert.equal((await send(goodFeedback)).status, 429);
+});
+
+test('only the manager reads the feedback summary', async () => {
+  const { request } = fixture();
+  await request('/api/feedback', { method: 'POST', body: JSON.stringify(goodFeedback) });
+  assert.equal((await request('/api/admin/feedback')).status, 401);
+  assert.equal((await request('/api/admin/feedback', { id: 'alice' })).status, 403);
+  const summary = await (
+    await request('/api/admin/feedback', { id: 'a', email: 'admin@example.test' })
+  ).json();
+  assert.deepEqual(summary.counts, { trop_haut: 1 });
+  assert.equal(summary.rows.length, 1);
+  assert.equal('id' in summary.rows[0], false);
 });

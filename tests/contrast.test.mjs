@@ -60,6 +60,7 @@ const PAIRS = [
   ['--vm-action', '--vm-fond'],
   ['--placeholder', '--vm-surface'],
   ['--vm-etat-erreur', '--vm-surface'],
+  ['--vm-etat-succes', '--vm-surface'],
   ['--vm-sur-action', '--vm-action'],
 ];
 

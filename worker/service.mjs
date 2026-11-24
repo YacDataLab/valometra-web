@@ -1,3 +1,4 @@
+const verdicts = ['trop_bas', 'juste', 'trop_haut'];
 const statusValues = ['nouveau', 'a_contacter', 'contacte', 'rendez_vous', 'termine'];
 const j = (data, status = 200) =>
   Response.json(data, {
@@ -58,6 +59,65 @@ function validMutation(request) {
     origin === u.origin && request.headers.get('Content-Type')?.split(';')[0] === 'application/json'
   );
 }
+// Retour anonyme sur une estimation : aucune adresse, aucune coordonnée, aucun identifiant.
+function feedbackFields(b) {
+  const num = (v, min, max) => {
+    const n = typeof v === 'number' ? v : Number.NaN;
+    return Number.isFinite(n) && n >= min && n <= max ? n : null;
+  };
+  if (!b || typeof b !== 'object' || !verdicts.includes(b.verdict)) return null;
+  if (typeof b.town_code !== 'string' || !/^\d{5}$/.test(b.town_code)) return null;
+  const surface = num(b.surface, 9, 500),
+    rooms = num(b.rooms, 1, 15),
+    estimate = num(b.estimate, 10000, 5000000);
+  if (surface === null || rooms === null || estimate === null) return null;
+  const hasActual = b.actual !== undefined && b.actual !== null;
+  const actual = hasActual ? num(b.actual, 10000, 5000000) : null;
+  if (hasActual && actual === null) return null;
+  return {
+    verdict: b.verdict,
+    town_code: b.town_code,
+    surface: Math.round(surface),
+    rooms: Math.round(rooms),
+    estimate: Math.round(estimate / 1000) * 1000,
+    actual: actual === null ? null : Math.round(actual / 1000) * 1000,
+  };
+}
+const FEEDBACK_HOURLY_LIMIT = 300;
+async function saveFeedback(request, env) {
+  if (!env.DB) return j({ error: 'Le retour est momentanément indisponible.' }, 503);
+  if (!validMutation(request)) return j({ error: 'Requête non autorisée.' }, 403);
+  let fields;
+  try {
+    fields = feedbackFields(await body(request));
+  } catch {
+    fields = null;
+  }
+  if (!fields) return j({ error: 'Retour invalide.' }, 400);
+  const since = new Date(Date.now() - 3600000).toISOString();
+  const recent = await env.DB.prepare('SELECT COUNT(*) AS total FROM feedback WHERE created_at > ?')
+    .bind(since)
+    .first();
+  // Plafond global (aucune donnée personnelle ne permet de limiter par visiteur).
+  if (recent.total >= FEEDBACK_HOURLY_LIMIT)
+    return j({ error: 'Trop de retours reçus. Réessayez plus tard.' }, 429);
+  await env.DB.prepare(
+    'INSERT INTO feedback (id, created_at, verdict, town_code, surface, rooms, estimate, actual) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
+  )
+    .bind(
+      crypto.randomUUID(),
+      new Date().toISOString(),
+      fields.verdict,
+      fields.town_code,
+      fields.surface,
+      fields.rooms,
+      fields.estimate,
+      fields.actual,
+    )
+    .run();
+  return j({ saved: true }, 201);
+}
+
 export async function api(request, env) {
   const url = new URL(request.url),
     path = url.pathname,
@@ -72,6 +132,7 @@ export async function api(request, env) {
       return j({ storageReady: false }, 503);
     }
   }
+  if (path === '/api/feedback' && request.method === 'POST') return saveFeedback(request, env);
   if (!user.id)
     return j({ error: 'Connectez-vous pour accéder à cet espace ou envoyer votre demande.' }, 401);
   if (!env.DB) return j({ error: 'L’enregistrement est momentanément indisponible.' }, 503);
@@ -79,6 +140,22 @@ export async function api(request, env) {
     return j({ error: 'Accès réservé au gestionnaire.' }, 403);
   if (!['GET', 'HEAD'].includes(request.method) && !validMutation(request))
     return j({ error: 'Requête non autorisée.' }, 403);
+  if (path === '/api/admin/feedback' && request.method === 'GET') {
+    const counts = await env.DB.prepare(
+        'SELECT verdict, COUNT(*) AS total FROM feedback GROUP BY verdict',
+      )
+        .bind()
+        .all(),
+      rows = await env.DB.prepare(
+        'SELECT created_at, verdict, town_code, surface, rooms, estimate, actual FROM feedback ORDER BY created_at DESC LIMIT 50',
+      )
+        .bind()
+        .all();
+    return j({
+      counts: Object.fromEntries(counts.results.map(r => [r.verdict, r.total])),
+      rows: rows.results,
+    });
+  }
   if (path === '/api/leads' && request.method === 'POST')
     return j({ error: 'Les nouvelles demandes sont fermées.' }, 410);
   if (path === '/api/my-requests' && request.method === 'GET') {

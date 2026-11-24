@@ -118,5 +118,35 @@
       button.disabled = false;
     }
   });
+  async function loadFeedback() {
+    const box = $('feedback-body');
+    try {
+      const r = await fetch('/api/admin/feedback');
+      const data = await r.json();
+      if (!r.ok) throw Error(data.error);
+      const total = Object.values(data.counts).reduce((a, b) => a + b, 0);
+      if (!total) {
+        box.textContent = 'Aucun retour pour le moment.';
+        return;
+      }
+      const label = { trop_bas: 'Trop basse', juste: 'Juste', trop_haut: 'Trop haute' };
+      box.innerHTML =
+        '<div class="stats">' +
+        Object.keys(label)
+          .map(k => `<div class="stat"><b>${data.counts[k] ?? 0}</b><span>${label[k]}</span></div>`)
+          .join('') +
+        '</div><div class="table-wrap"><table><thead><tr><th>Date</th><th>Avis</th><th>Commune</th><th>Surface</th><th>Pièces</th><th>Estimé</th><th>Prix réel</th></tr></thead><tbody>' +
+        data.rows
+          .map(
+            r =>
+              `<tr><td>${esc(r.created_at.slice(0, 10))}</td><td>${label[r.verdict]}</td><td>${esc(r.town_code)}</td><td>${r.surface} m²</td><td>${r.rooms}</td><td>${money(r.estimate)}</td><td>${r.actual ? money(r.actual) : '—'}</td></tr>`,
+          )
+          .join('') +
+        '</tbody></table></div>';
+    } catch (e) {
+      box.textContent = e.message || 'Retours indisponibles.';
+    }
+  }
+  loadFeedback();
   load();
 })();
