@@ -145,6 +145,7 @@ function startEngine() {
         );
         showResult(data.value, lastInputs, data.intervals);
         $('result').querySelector('h2')?.focus({ preventScroll: true });
+        recordHistory(data);
       }
       if (data.type === 'prediction' && data.id === simId) showScenario(data);
       if (data.type === 'error') {
@@ -397,9 +398,8 @@ function comparablesTable(rows) {
   );
 }
 
-function shareUrl() {
-  const url = new URL(location.href);
-  url.search = window.ValometraFormat.shareQuery({
+function shareValues() {
+  return {
     adresse: lastInputs.address,
     surface: $('surface').value,
     pieces: $('rooms').value,
@@ -407,7 +407,32 @@ function shareUrl() {
     carrez: $('carrez').value,
     dependances: $('dependencies').value,
     annee: $('year').value,
+  };
+}
+
+function recordHistory(data) {
+  const bounds = data.intervals?.['80'];
+  if (!bounds?.every(Number.isFinite)) return;
+  window.ValometraHistory?.record({
+    query: window.ValometraFormat.shareQuery(shareValues()),
+    town: lastInputs.town.name,
+    surface: lastInputs.surface,
+    rooms: Number(lastInputs.features.nb_pieces),
+    point: data.value,
+    low: bounds[0],
+    high: bounds[1],
   });
+}
+
+window.addEventListener('valometra:reopen', event => {
+  fillForm(event.detail);
+  $('model-status').textContent =
+    'Estimation rouverte depuis votre historique. Lancez l’estimation pour la recalculer.';
+});
+
+function shareUrl() {
+  const url = new URL(location.href);
+  url.search = window.ValometraFormat.shareQuery(shareValues());
   url.hash = '#estimate';
   return url.href;
 }

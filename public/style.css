@@ -1530,3 +1530,45 @@ html[data-vm-theme='sombre'] .hero .hero-jump {
 #result h2:focus {
   outline: none;
 }
+
+.history {
+  margin: 32px 0 0;
+}
+.history-list {
+  margin: 14px 0;
+  padding: 0;
+  list-style: none;
+}
+.history-list li {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  gap: 8px 20px;
+  align-items: center;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--line);
+}
+.history-list li > div {
+  display: flex;
+  flex-direction: column;
+}
+.history-actions {
+  align-items: flex-end;
+}
+.history-values {
+  text-align: right;
+}
+@media (max-width: 640px) {
+  .history-list li {
+    grid-template-columns: 1fr;
+  }
+  .history-values,
+  .history-actions {
+    text-align: left;
+    align-items: flex-start;
+  }
+}
+@media print {
+  .history {
+    display: none !important;
+  }
+}

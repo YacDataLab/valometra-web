@@ -234,7 +234,46 @@
     return match ? `${names[Number(match[2]) - 1]} ${match[1]}` : String(month);
   };
 
+  // Historique local des estimations : lecture tolérante (le contenu du navigateur
+  // peut être absent, ancien ou modifié) et ajout borné, le plus récent d'abord.
+  const HISTORY_MAX = 10;
+  const validEntry = e =>
+    e &&
+    typeof e === 'object' &&
+    typeof e.query === 'string' &&
+    parseShare(e.query) !== null &&
+    typeof e.town === 'string' &&
+    e.town.length <= 80 &&
+    typeof e.at === 'string' &&
+    !Number.isNaN(Date.parse(e.at)) &&
+    [e.surface, e.rooms, e.point, e.low, e.high].every(Number.isFinite);
+  const parseHistory = raw => {
+    try {
+      const list = JSON.parse(raw);
+      return Array.isArray(list) ? list.filter(validEntry).slice(0, HISTORY_MAX) : [];
+    } catch {
+      return [];
+    }
+  };
+  // Une estimation du même bien (même requête) remplace la précédente.
+  const addHistory = (list, entry) =>
+    [entry, ...list.filter(e => e.query !== entry.query)].slice(0, HISTORY_MAX);
+
+  // Lignes de comparaison de deux estimations conservées.
+  const compareEntries = (a, b) => {
+    const perM2 = e => e.point / e.surface;
+    return {
+      point: variation(a.point, b.point),
+      perM2: variation(perM2(a), perM2(b)),
+      surface: b.surface - a.surface,
+      rooms: b.rooms - a.rooms,
+    };
+  };
+
   globalThis.ValometraFormat = {
+    parseHistory,
+    addHistory,
+    compareEntries,
     monthlyMedian,
     frMonth,
     gapToMedian,

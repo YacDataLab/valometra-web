@@ -5,6 +5,9 @@ import '../public/format.js';
 
 const {
   scenarioFeatures,
+  parseHistory,
+  addHistory,
+  compareEntries,
   monthlyMedian,
   frMonth,
   gapToMedian,
@@ -243,4 +246,49 @@ test('month label is in French', () => {
   assert.equal(frMonth('2025-07'), 'juil. 2025');
   assert.equal(frMonth('2026-06'), 'juin 2026');
   assert.equal(frMonth('x'), 'x');
+});
+
+const entry = (n, overrides = {}) => ({
+  at: '2026-11-25T10:00:00.000Z',
+  query: shareQuery({ adresse: `${n} rue Test 38000 Grenoble`, surface: 60 + n, pieces: 3 }),
+  town: 'Grenoble',
+  surface: 60 + n,
+  rooms: 3,
+  point: 150000 + n * 1000,
+  low: 100000,
+  high: 200000,
+  ...overrides,
+});
+
+test('history reading ignores corrupted storage and invalid entries', () => {
+  assert.deepEqual(parseHistory(null), []);
+  assert.deepEqual(parseHistory('{pas du json'), []);
+  assert.deepEqual(parseHistory('{"a":1}'), []);
+  const raw = JSON.stringify([entry(1), { query: 'x' }, entry(2, { point: 'cher' }), entry(3)]);
+  assert.deepEqual(
+    parseHistory(raw).map(e => e.surface),
+    [61, 63],
+  );
+});
+
+test('history keeps the 10 most recent and replaces the same property', () => {
+  let list = [];
+  for (let n = 1; n <= 12; n++) list = addHistory(list, entry(n));
+  assert.equal(list.length, 10);
+  assert.equal(list[0].surface, 72);
+  const again = addHistory(list, entry(5, { point: 999999 }));
+  assert.equal(again.length, 10);
+  assert.equal(again[0].point, 999999);
+  assert.equal(again.filter(e => e.surface === 65).length, 1);
+});
+
+test('comparison gives the gaps between two estimates', () => {
+  const a = entry(0, { point: 150000 });
+  const b = entry(10, { point: 180000, surface: 70, rooms: 4 });
+  const gap = compareEntries(a, b);
+  assert.equal(gap.point.euros, 30000);
+  assert.equal(gap.point.percent, 20);
+  assert.equal(gap.surface, 10);
+  assert.equal(gap.rooms, 1);
+  assert.ok(Math.abs(gap.perM2.percent - 2.857) < 0.01);
 });
