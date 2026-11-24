@@ -161,7 +161,34 @@
     return out;
   };
 
+  const middle = values => {
+    const sorted = [...values].sort((a, b) => a - b),
+      i = Math.floor(sorted.length / 2);
+    return sorted.length % 2 ? sorted[i] : (sorted[i - 1] + sorted[i]) / 2;
+  };
+
+  // Prix médian au m² par commune. Sous `minSales` ventes, la médiane n'est pas
+  // fiable : la commune est signalée et classée après les autres.
+  const communeRanking = (rows, minSales = 10) => {
+    const byTown = new Map();
+    for (const r of rows) {
+      if (!(r.surface > 0) || !Number.isFinite(r.price)) continue;
+      if (!byTown.has(r.code)) byTown.set(r.code, { code: r.code, town: r.town, m2: [] });
+      byTown.get(r.code).m2.push(r.price / r.surface);
+    }
+    return [...byTown.values()]
+      .map(t => ({
+        code: t.code,
+        town: t.town,
+        count: t.m2.length,
+        median: middle(t.m2),
+        reliable: t.m2.length >= minSales,
+      }))
+      .sort((a, b) => b.reliable - a.reliable || b.median - a.median);
+  };
+
   globalThis.ValometraFormat = {
+    communeRanking,
     marketQuery,
     parseMarket,
     scenarioFeatures,

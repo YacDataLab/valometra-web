@@ -424,8 +424,8 @@ function initMap() {
     if ($('visible-only').checked) renderMarket();
   });
 }
-function getBase() {
-  const town = $('market-town').value,
+function getBase(ignoreTown = false) {
+  const town = ignoreTown ? '' : $('market-town').value,
     dpe = $('market-dpe').value;
   return market.filter(
     r =>
@@ -530,9 +530,26 @@ function renderMarket() {
       `<span>${base.length} ventes sur la carte</span><span><i style="background:${palette[0]}"></i>≤ ${num(q1)} ${unit}</span><span><i style="background:${palette[1]}"></i>${num(q1)}–${num(q2)} ${unit}</span><span><i style="background:${palette[2]}"></i>> ${num(q2)} ${unit}</span>`;
   }
   drawHistogram();
+  renderRanking();
   page = 0;
   renderTable();
 }
+function renderRanking() {
+  const selected = $('market-town').value;
+  $('town-ranking').innerHTML = window.ValometraFormat.communeRanking(getBase(true))
+    .map(
+      t =>
+        `<tr${t.code === selected ? ' class="selected"' : ''}><td><button type="button" class="link" data-code="${esc(t.code)}">${esc(t.town)}</button></td><td>${num(t.count)}${t.reliable ? '' : '<small>échantillon faible</small>'}</td><td>${money(t.median)}</td></tr>`,
+    )
+    .join('');
+}
+$('town-ranking').addEventListener('click', event => {
+  const button = event.target.closest('button[data-code]');
+  if (!button) return;
+  $('market-town').value = button.dataset.code;
+  renderMarket();
+  $('market-stats').scrollIntoView({ behavior: 'smooth', block: 'start' });
+});
 function drawHistogram() {
   const key = $('hist-measure').value,
     values = filtered.map(r => measure(r, key));

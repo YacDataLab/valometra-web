@@ -4,6 +4,7 @@ import '../public/format.js';
 
 const {
   scenarioFeatures,
+  communeRanking,
   marketQuery,
   parseMarket,
   variation,
@@ -180,4 +181,28 @@ test('market filters are read back and invalid values are ignored', () => {
     {},
   );
   assert.deepEqual(parseMarket(''), {});
+});
+
+test('commune ranking sorts by median price per m² and sets small samples last', () => {
+  const sale = (code, town, surface, price) => ({ code, town, surface, price });
+  const rows = [
+    sale('A', 'Alpha', 50, 100000),
+    sale('A', 'Alpha', 50, 110000),
+    sale('A', 'Alpha', 50, 120000),
+    sale('B', 'Beta', 50, 150000),
+    sale('B', 'Beta', 50, 160000),
+    sale('B', 'Beta', 50, 170000),
+    sale('C', 'Gamma', 50, 400000),
+    sale('Z', 'Zéro', 0, 1),
+  ];
+  const ranking = communeRanking(rows, 3);
+  assert.deepEqual(
+    ranking.map(r => [r.town, r.count, r.median, r.reliable]),
+    [
+      ['Beta', 3, 3200, true],
+      ['Alpha', 3, 2200, true],
+      ['Gamma', 1, 8000, false],
+    ],
+  );
+  assert.deepEqual(communeRanking([]), []);
 });

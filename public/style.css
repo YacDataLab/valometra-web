@@ -1392,3 +1392,30 @@ table th {
     break-inside: avoid;
   }
 }
+
+.ranking-wrap {
+  max-height: 360px;
+  overflow-y: auto;
+}
+.ranking-wrap thead th {
+  position: sticky;
+  top: 0;
+  background: var(--vm-surface);
+}
+.ranking-wrap td small {
+  display: block;
+  color: var(--muted);
+  font-size: var(--vm-font-size-overline);
+}
+.ranking-wrap tr.selected td {
+  background: var(--vm-color-ardoise-100);
+}
+button.link {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--vm-action);
+  font: inherit;
+  text-decoration: underline;
+  cursor: pointer;
+}
