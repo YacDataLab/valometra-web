@@ -4,6 +4,8 @@ import '../public/format.js';
 
 const {
   scenarioFeatures,
+  marketQuery,
+  parseMarket,
   variation,
   frDate,
   precision,
@@ -142,4 +144,40 @@ test('variation gives the gap in euros and percent', () => {
   assert.deepEqual(variation(100000, 110000), { euros: 10000, percent: 10 });
   assert.equal(variation(0, 5), null);
   assert.equal(variation(100, NaN), null);
+});
+
+test('market filters go to the URL without default values', () => {
+  const params = marketQuery({
+    commune: '38185',
+    smin: 40,
+    smax: '',
+    du: '2025-07-01',
+    au: '2026-03-31',
+    dpe: 'missing',
+    couleur: 'm2',
+  });
+  assert.equal(params.get('commune'), '38185');
+  assert.equal(params.get('du'), null);
+  assert.equal(params.get('smax'), null);
+  assert.equal(params.get('au'), '2026-03-31');
+  assert.equal(params.get('couleur'), 'm2');
+});
+
+test('market filters are read back and invalid values are ignored', () => {
+  assert.deepEqual(
+    parseMarket('commune=38185&smin=40&pmax=300000&dpe=G&couleur=price&du=2025-09-01'),
+    {
+      commune: '38185',
+      smin: 40,
+      pmax: 300000,
+      dpe: 'G',
+      couleur: 'price',
+      du: '2025-09-01',
+    },
+  );
+  assert.deepEqual(
+    parseMarket('commune=abc&smin=-5&pmax=x&dpe=Z&couleur=evil&du=2025-13-45&au=hier'),
+    {},
+  );
+  assert.deepEqual(parseMarket(''), {});
 });

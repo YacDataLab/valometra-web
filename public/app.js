@@ -441,8 +441,43 @@ function getBase() {
 }
 const measure = (r, k) =>
   k === 'price' ? r.price : k === 'surface' ? r.surface : r.price / r.surface;
+const MARKET_FIELDS = {
+  commune: 'market-town',
+  smin: 'min-area',
+  smax: 'max-area',
+  pmin: 'min-price',
+  pmax: 'max-price',
+  du: 'from-date',
+  au: 'to-date',
+  dpe: 'market-dpe',
+  couleur: 'map-color',
+};
+// Reflète les filtres dans l'URL pour pouvoir partager une vue du marché.
+function syncMarketUrl() {
+  const url = new URL(location.href),
+    values = {};
+  for (const [key, id] of Object.entries(MARKET_FIELDS)) {
+    values[key] = $(id).value;
+    url.searchParams.delete(key);
+  }
+  for (const [key, value] of window.ValometraFormat.marketQuery(values)) {
+    if (!(key === 'couleur' && value === 'm2')) url.searchParams.set(key, value);
+  }
+  history.replaceState(null, '', url);
+}
+function applyMarketLink() {
+  const shared = window.ValometraFormat.parseMarket(location.search);
+  for (const [key, value] of Object.entries(shared)) {
+    const field = $(MARKET_FIELDS[key]);
+    // Une commune absente de la liste ou une valeur inconnue laisse le filtre vide.
+    field.value = value;
+    if (field.value !== String(value)) field.value = '';
+  }
+}
+
 function renderMarket() {
   if (!metadata) return;
+  syncMarketUrl();
   const base = getBase();
   filtered =
     $('visible-only').checked && map
@@ -565,6 +600,7 @@ $('reset-market').onclick = () => {
     $(id).value = '';
   $('from-date').value = '2025-07-01';
   $('to-date').value = '2026-06-30';
+  $('map-color').value = 'm2';
   $('visible-only').checked = false;
   map?.setView([45.18, 5.73], 11);
   renderMarket();
@@ -606,6 +642,8 @@ readJson('metadata.json')
       .map(town => `<option value="${town.code}">${esc(town.name)}</option>`)
       .join('');
     $('market-town').insertAdjacentHTML('beforeend', options);
+    applyMarketLink();
+    if (!$('market').hidden && market.length) renderMarket();
     $('estimate-button').disabled = false;
     $('model-status').textContent = 'Le moteur se charge lors de la première estimation.';
     performance.mark('valometra-form-ready');

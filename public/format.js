@@ -127,7 +127,43 @@
       ? { euros: next - base, percent: ((next - base) / base) * 100 }
       : null;
 
+  // Filtres de l'explorateur du marché dans l'URL (valeurs par défaut omises).
+  const MARKET_DEFAULTS = { du: '2025-07-01', au: '2026-06-30' };
+  const MARKET_NUMBERS = ['smin', 'smax', 'pmin', 'pmax'];
+  const isDate = v => /^\d{4}-\d{2}-\d{2}$/.test(v) && !Number.isNaN(Date.parse(v));
+  const marketQuery = values => {
+    const params = new URLSearchParams();
+    for (const [key, value] of Object.entries(values)) {
+      if (value === undefined || value === null || String(value) === '') continue;
+      if (MARKET_DEFAULTS[key] === value) continue;
+      params.set(key, value);
+    }
+    return params;
+  };
+  const parseMarket = search => {
+    const params = new URLSearchParams(search),
+      out = {};
+    const commune = params.get('commune');
+    if (/^\d{5}$/.test(commune ?? '')) out.commune = commune;
+    for (const key of MARKET_NUMBERS) {
+      const raw = params.get(key);
+      if (raw !== null && raw.trim() !== '' && Number(raw) >= 0 && Number.isFinite(Number(raw)))
+        out[key] = Number(raw);
+    }
+    for (const key of ['du', 'au']) {
+      const raw = params.get(key);
+      if (raw !== null && isDate(raw)) out[key] = raw;
+    }
+    const dpe = params.get('dpe');
+    if (dpe && /^([A-G]|missing)$/.test(dpe)) out.dpe = dpe;
+    const couleur = params.get('couleur');
+    if (['m2', 'price', 'surface'].includes(couleur)) out.couleur = couleur;
+    return out;
+  };
+
   globalThis.ValometraFormat = {
+    marketQuery,
+    parseMarket,
     scenarioFeatures,
     variation,
     frDate,
