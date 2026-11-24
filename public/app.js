@@ -183,9 +183,12 @@ $('estimate-form').addEventListener('submit', async e => {
       'Cette commune n’est pas couverte. Choisissez une adresse dans l’une des communes proposées.';
     return;
   }
-  if ($('dpe').value && (!$('dpe-date').value || $('dpe-date').value > '2026-06-30')) {
+  if (
+    $('dpe').value &&
+    (!$('dpe-date').value || $('dpe-date').value > ValometraConfig.referenceDate)
+  ) {
     $('model-status').textContent =
-      'Indiquez la date du DPE, au plus tard le 30 juin 2026, ou laissez le DPE non renseigné.';
+      `Indiquez la date du DPE, au plus tard le ${ValometraConfig.referenceLabel}, ou laissez le DPE non renseigné.`;
     return;
   }
   const lat = address.lat,
@@ -204,7 +207,7 @@ $('estimate-form').addEventListener('submit', async e => {
     bdnb_annee_construction: $('year').value,
     longitude: lon,
     latitude: lat,
-    jours_depuis_2025: 545,
+    jours_depuis_2025: ValometraConfig.daysSince2025,
     dpe_disponible: $('dpe').value ? 1 : 0,
     carrez_disponible: $('carrez').value ? 1 : 0,
     coordonnees_disponibles: lat ? 1 : 0,
@@ -275,14 +278,14 @@ function showResult(value, input, intervals) {
       ? `<span class="level"><span class="bars" data-level="${fiability.bars}" role="img" aria-label="Précision de la fourchette : ${fiability.label}, ${fiability.bars} sur 3">${[1, 2, 3].map(i => `<i${i <= fiability.bars ? ' class="on"' : ''}></i>`).join('')}</span>${fiability.label}</span>`
       : '—';
   $('result').innerHTML =
-    `<div class="result-top"><div class="section-head"><div><span class="eyebrow">VOTRE ESTIMATION</span><h2>${esc(town.name)} · ${num(surface)} m²</h2></div></div><p class="hint">${esc(input.address)}</p><div class="price">${round(value)}</div><span class="price-unit">Estimation indicative · référence au 30 juin 2026</span></div>` +
+    `<div class="result-top"><div class="section-head"><div><span class="eyebrow">VOTRE ESTIMATION</span><h2>${esc(town.name)} · ${num(surface)} m²</h2></div></div><p class="hint">${esc(input.address)}</p><div class="price">${round(value)}</div><span class="price-unit">Estimation indicative · référence au ${ValometraConfig.referenceLabel}</span></div>` +
     `<div class="range-box"><h3>Fourchette ${band === '50' ? 'centrale' : 'étendue'} · objectif ${band} %</h3>${
       g
         ? `<div class="gauge" role="img" aria-label="Estimation ${round(value)}, fourchette centrale de ${round(intervals['50'][0])} à ${round(intervals['50'][1])}, fourchette étendue de ${round(intervals['80'][0])} à ${round(intervals['80'][1])}"><span class="gauge-central" style="left:${g.low}%;width:${g.high - g.low}%"></span><span class="gauge-point" style="left:${g.point}%"></span></div><ul class="gauge-legend" aria-hidden="true"><li><i class="point"></i>Estimation</li><li><i class="central"></i>Centrale 50 %</li><li><i class="extended"></i>Étendue 80 %</li></ul>`
         : '<div class="range-bar"></div>'
-    }<div class="range-values"><span>${round(bounds[0])}</span><span>${round(bounds[1])}</span></div><p class="hint">Bornes personnalisées à partir des caractéristiques du bien. ${band === '50' ? 'Cette fourchette plus étroite couvre environ une vente sur deux dans l’évaluation historique.' : 'La couverture mesurée sur les ventes de juin 2026 est de 84,9 %.'}</p></div>` +
+    }<div class="range-values"><span>${round(bounds[0])}</span><span>${round(bounds[1])}</span></div><p class="hint">Bornes personnalisées à partir des caractéristiques du bien. ${band === '50' ? 'Cette fourchette plus étroite couvre environ une vente sur deux dans l’évaluation historique.' : 'La couverture mesurée sur les ventes de juin 2026 est de ${ValometraConfig.coverage[80]} %.'}</p></div>` +
     `<dl class="key-figures"><div><dt>Prix au m²</dt><dd>${money(Math.round(value / surface))}<small>${m ? `médiane locale ${money(m)}\u202f/\u202fm²<br>${gapText(value / surface, m)}` : 'sans repère local'}</small></dd></div><div><dt>Comparables</dt><dd>${comps.length}<small>ventes de la commune, surfaces à ±25 %</small></dd></div><div><dt>Précision</dt><dd>${bars}<small>largeur de la fourchette</small></dd></div></dl>` +
-    `<dl class="context"><dt>Localisation</dt><dd>${features.latitude ? `Adresse localisée · bâtiment ${input.enrichment?.building ? 'retrouvé' : 'renseigné manuellement ou absent'} · DPE ${input.enrichment?.dpe ? 'confirmé depuis l’ADEME' : 'saisi manuellement ou absent'}.` : 'Coordonnées non renseignées'}</dd></dl><p class="hint">Une expertise sur place reste utile pour l’état, l’étage, la vue et les travaux. Aucun ajustement de marché après juin 2026.</p>${simulatorHtml(input)}${comparablesTable(nearest)}<div class="result-actions"><a class="secondary" href="#method">Comprendre ces repères</a><button type="button" class="secondary" id="share-link">Copier le lien de cette estimation</button><button type="button" class="secondary" id="print-result">Imprimer</button></div><p class="print-only">Document généré le ${window.ValometraFormat.frDate(new Date().toISOString())} par Valometra (open source, licence AGPL-3.0). Estimation indicative, référence au 30 juin 2026 : elle ne remplace pas une expertise.</p>`;
+    `<dl class="context"><dt>Localisation</dt><dd>${features.latitude ? `Adresse localisée · bâtiment ${input.enrichment?.building ? 'retrouvé' : 'renseigné manuellement ou absent'} · DPE ${input.enrichment?.dpe ? 'confirmé depuis l’ADEME' : 'saisi manuellement ou absent'}.` : 'Coordonnées non renseignées'}</dd></dl><p class="hint">Une expertise sur place reste utile pour l’état, l’étage, la vue et les travaux. Aucun ajustement de marché après ${ValometraConfig.referenceLabel.slice(3)}.</p>${simulatorHtml(input)}${comparablesTable(nearest)}<div class="result-actions"><a class="secondary" href="#method">Comprendre ces repères</a><button type="button" class="secondary" id="share-link">Copier le lien de cette estimation</button><button type="button" class="secondary" id="print-result">Imprimer</button></div><p class="print-only">Document généré le ${window.ValometraFormat.frDate(new Date().toISOString())} par Valometra (open source, licence AGPL-3.0). Estimation indicative, référence au ${ValometraConfig.referenceLabel} : elle ne remplace pas une expertise.</p>`;
   $('print-result').addEventListener('click', () => window.print());
   $('share-link').addEventListener('click', copyShareLink);
   $('simulate').addEventListener('click', runScenario);
@@ -639,8 +642,8 @@ $('next-sales').onclick = () => {
 $('reset-market').onclick = () => {
   for (const id of ['market-town', 'min-area', 'max-area', 'min-price', 'max-price', 'market-dpe'])
     $(id).value = '';
-  $('from-date').value = '2025-07-01';
-  $('to-date').value = '2026-06-30';
+  $('from-date').value = ValometraConfig.marketStart;
+  $('to-date').value = ValometraConfig.referenceDate;
   $('map-color').value = 'm2';
   $('visible-only').checked = false;
   map?.setView([45.18, 5.73], 11);

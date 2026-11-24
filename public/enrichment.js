@@ -243,8 +243,9 @@
           r =>
             r.numero_dpe &&
             /^[0-9]{4}-[0-9]{2}-[0-9]{2}$/.test(r.date_etablissement_dpe || '') &&
-            r.date_etablissement_dpe <= '2026-06-30' &&
-            (!r.date_fin_validite_dpe || r.date_fin_validite_dpe >= '2026-06-30') &&
+            r.date_etablissement_dpe <= ValometraConfig.referenceDate &&
+            (!r.date_fin_validite_dpe ||
+              r.date_fin_validite_dpe >= ValometraConfig.referenceDate) &&
             Number(r.surface_habitable_logement) > 0,
         )
         .sort((a, b) => b.date_etablissement_dpe.localeCompare(a.date_etablissement_dpe));

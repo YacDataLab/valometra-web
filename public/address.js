@@ -121,7 +121,9 @@
       input.setAttribute('aria-expanded', 'true');
       status.textContent = rows.some(eligible)
         ? 'Choisissez votre adresse dans les suggestions.'
-        : 'Aucune adresse précise couverte. Ajoutez un numéro et une commune parmi les 39 communes couvertes.';
+        : 'Aucune adresse précise couverte. Ajoutez un numéro et une commune parmi les ' +
+          ValometraConfig.townCount +
+          ' communes couvertes.';
     } catch (e) {
       if (e.name === 'AbortError' || token !== sequence) return;
       hide();
@@ -171,7 +173,8 @@
     init(items) {
       towns = items;
       input.disabled = false;
-      status.textContent = '39 communes autour de Grenoble. Entrez une adresse complète.';
+      status.textContent =
+        ValometraConfig.townCount + ' communes autour de Grenoble. Entrez une adresse complète.';
     },
     // Lien partagé : recherche l'adresse et la sélectionne si le libellé est identique.
     restore(label, firstSuggestion = false) {
