@@ -228,3 +228,15 @@ test('the manager search treats % and _ as plain characters', async () => {
   assert.equal(await total('_'), 0);
   assert.equal(await total('A_ice'), 0);
 });
+
+test('every external host named in the scripts is allowed by the content security policy', async () => {
+  const { request } = fixture();
+  const csp = (await request('/')).headers.get('Content-Security-Policy');
+  const allowed = [...csp.matchAll(/https:\/\/[a-z0-9.-]+/g)].map(m => m[0]);
+  for (const file of ['app.js', 'address.js', 'enrichment.js', 'inference-worker.js']) {
+    const source = readFileSync(new URL(`../public/${file}`, import.meta.url), 'utf8');
+    // Les liens d'attribution (href="…") ne sont pas des requêtes du navigateur.
+    const hosts = [...source.matchAll(/(?<!href=")'(https:\/\/[a-z0-9.-]+)/g)].map(m => m[1]);
+    for (const host of hosts) assert.ok(allowed.includes(host), `${file} : ${host}`);
+  }
+});

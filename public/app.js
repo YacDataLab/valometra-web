@@ -123,6 +123,10 @@ async function route() {
   }
 }
 
+// Les couleurs de la carte dépendent du thème : on redessine les ventes au changement.
+window.addEventListener('valometra:theme', () => {
+  if (layer && !$('market').hidden) renderMarket();
+});
 window.addEventListener('hashchange', route);
 route();
 
@@ -546,10 +550,16 @@ function initMap() {
     return;
   }
   map = L.map('market-map', { scrollWheelZoom: false }).setView([45.18, 5.73], 11);
-  L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    maxZoom: 19,
-    attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
-  }).addTo(map);
+  // Plan IGN de la Géoplateforme (Licence ouverte, sans clé). Les tuiles sont passées en
+  // niveaux de gris par le CSS (#market-map) pour laisser la couleur aux ventes.
+  L.tileLayer(
+    'https://data.geopf.fr/wmts?SERVICE=WMTS&REQUEST=GetTile&VERSION=1.0.0&LAYER=GEOGRAPHICALGRIDSYSTEMS.PLANIGNV2&STYLE=normal&FORMAT=image/png&TILEMATRIXSET=PM&TILEMATRIX={z}&TILEROW={y}&TILECOL={x}',
+    {
+      maxZoom: 19,
+      attribution:
+        '© <a href="https://www.ign.fr/" target="_blank" rel="noopener">IGN</a> · Plan IGN',
+    },
+  ).addTo(map);
   layer = L.layerGroup().addTo(map);
   map.on('moveend', () => {
     if ($('visible-only').checked) renderMarket();
@@ -624,7 +634,12 @@ function renderMarket() {
       vals = base.map(r => measure(r, key)).sort((a, b) => a - b),
       q1 = vals[Math.floor(vals.length / 3)] || 0,
       q2 = vals[Math.floor((vals.length * 2) / 3)] || 0,
-      palette = ['300', '500', '800'].map(step =>
+      // Du plus bas au plus haut : sombre sur fond clair, clair sur fond sombre.
+      steps =
+        document.documentElement.dataset.vmTheme === 'sombre'
+          ? ['500', '300', '100']
+          : ['300', '500', '800'],
+      palette = steps.map(step =>
         getComputedStyle(document.documentElement)
           .getPropertyValue('--vm-color-ardoise-' + step)
           .trim(),

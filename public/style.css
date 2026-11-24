@@ -1704,3 +1704,10 @@ html[data-vm-theme='sombre'] .hero .hero-jump {
     display: none;
   }
 }
+
+#market-map .leaflet-tile-pane {
+  filter: grayscale(1) contrast(0.85) brightness(1.12);
+}
+html[data-vm-theme='sombre'] #market-map .leaflet-tile-pane {
+  filter: grayscale(1) invert(1) contrast(0.8) brightness(0.75);
+}

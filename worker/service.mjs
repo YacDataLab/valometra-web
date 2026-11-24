@@ -1,12 +1,12 @@
 // Politique de sécurité du contenu : sources autorisées = celles que l'application
 // utilise réellement (moteur Pyodide sur jsDelivr, géocodage IGN, BDNB, ADEME, fonds de
-// carte OpenStreetMap). Aucun script en ligne n'est autorisé.
+// carte Plan IGN). Aucun script en ligne n'est autorisé.
 const contentSecurityPolicy = [
   "default-src 'self'",
   "script-src 'self' 'wasm-unsafe-eval' https://cdn.jsdelivr.net",
   "style-src 'self' 'unsafe-inline'",
   "font-src 'self'",
-  "img-src 'self' data: https://tile.openstreetmap.org",
+  "img-src 'self' data: https://data.geopf.fr",
   "connect-src 'self' https://cdn.jsdelivr.net https://data.geopf.fr https://api.bdnb.io https://data.ademe.fr",
   "worker-src 'self' blob:",
   "manifest-src 'self'",
