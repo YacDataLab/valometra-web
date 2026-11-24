@@ -561,6 +561,39 @@ summary {
 .gauge-legend .extended {
   background: var(--vm-color-ardoise-100);
 }
+.simulator {
+  margin: 0 0 20px;
+  padding: 14px 16px;
+  border: 1px solid var(--line);
+  border-radius: var(--vm-radius-md);
+}
+.simulator summary {
+  cursor: pointer;
+  font-weight: 600;
+  color: var(--vm-action);
+}
+.simulator[open] summary {
+  margin-bottom: 10px;
+}
+.simulator button {
+  margin-top: 14px;
+}
+.simulation-result {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  margin: 14px 0 0;
+}
+.simulation-result dd {
+  margin: 0;
+  font-weight: 600;
+}
+.simulation-result small {
+  display: block;
+  font-weight: 400;
+  color: var(--muted);
+  font-size: var(--vm-font-size-overline);
+}
 .comparables {
   margin: 0 0 20px;
 }

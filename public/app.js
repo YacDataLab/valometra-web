@@ -37,6 +37,8 @@ let metadata,
   marketView = 0,
   lastInputs = null,
   requestId = 0,
+  simId = null,
+  simCount = 0,
   hasResult = false,
   lastPrediction = null;
 function readJson(path) {
@@ -136,9 +138,14 @@ function startEngine() {
         );
         showResult(data.value, lastInputs, data.intervals);
       }
+      if (data.type === 'prediction' && data.id === simId) showScenario(data);
       if (data.type === 'error') {
         if (data.id === undefined) reject(new Error(data.message));
         else if (data.id === requestId) engineFailure(data.message);
+        else if (data.id === simId) {
+          $('simulate').disabled = false;
+          $('simulation').textContent = 'La simulation a échoué. Réessayez.';
+        }
       }
     };
     worker.onerror = () => {
@@ -275,8 +282,9 @@ function showResult(value, input, intervals) {
         : '<div class="range-bar"></div>'
     }<div class="range-values"><span>${round(bounds[0])}</span><span>${round(bounds[1])}</span></div><p class="hint">Bornes personnalisées à partir des caractéristiques du bien. ${band === '50' ? 'Cette fourchette plus étroite couvre environ une vente sur deux dans l’évaluation historique.' : 'La couverture mesurée sur les ventes de juin 2026 est de 84,9 %.'}</p></div>` +
     `<dl class="key-figures"><div><dt>Prix au m²</dt><dd>${money(Math.round(value / surface))}<small>${m ? `médiane locale ${money(m)}\u202f/\u202fm²` : 'sans repère local'}</small></dd></div><div><dt>Comparables</dt><dd>${comps.length}<small>ventes de la commune, surfaces à ±25 %</small></dd></div><div><dt>Précision</dt><dd>${bars}<small>largeur de la fourchette</small></dd></div></dl>` +
-    `<dl class="context"><dt>Localisation</dt><dd>${features.latitude ? `Adresse localisée · bâtiment ${input.enrichment?.building ? 'retrouvé' : 'renseigné manuellement ou absent'} · DPE ${input.enrichment?.dpe ? 'confirmé depuis l’ADEME' : 'saisi manuellement ou absent'}.` : 'Coordonnées non renseignées'}</dd></dl><p class="hint">Une expertise sur place reste utile pour l’état, l’étage, la vue et les travaux. Aucun ajustement de marché après juin 2026.</p>${comparablesTable(nearest)}<div class="result-actions"><a class="secondary" href="#method">Comprendre ces repères</a><button type="button" class="secondary" id="share-link">Copier le lien de cette estimation</button></div>`;
+    `<dl class="context"><dt>Localisation</dt><dd>${features.latitude ? `Adresse localisée · bâtiment ${input.enrichment?.building ? 'retrouvé' : 'renseigné manuellement ou absent'} · DPE ${input.enrichment?.dpe ? 'confirmé depuis l’ADEME' : 'saisi manuellement ou absent'}.` : 'Coordonnées non renseignées'}</dd></dl><p class="hint">Une expertise sur place reste utile pour l’état, l’étage, la vue et les travaux. Aucun ajustement de marché après juin 2026.</p>${simulatorHtml(input)}${comparablesTable(nearest)}<div class="result-actions"><a class="secondary" href="#method">Comprendre ces repères</a><button type="button" class="secondary" id="share-link">Copier le lien de cette estimation</button></div>`;
   $('share-link').addEventListener('click', copyShareLink);
+  $('simulate').addEventListener('click', runScenario);
   window.dispatchEvent(
     new CustomEvent('valometra:estimated', {
       detail: {
@@ -293,6 +301,54 @@ function showResult(value, input, intervals) {
   );
   $('model-status').textContent = 'Estimation actualisée.';
 }
+function simulatorHtml(input) {
+  const f = input.features,
+    dpe = ['A', 'B', 'C', 'D', 'E', 'F', 'G'];
+  return (
+    `<details class="simulator"><summary>Et si… ? Simuler une variante</summary>` +
+    `<p class="hint">Modifiez une caractéristique pour voir comment le modèle réagit. L’écart est statistique : ce n’est ni le coût ni la valeur réelle de travaux.</p>` +
+    `<div class="two"><label>Surface (m²)<input id="sim-surface" type="number" min="9" max="500" step="0.1" value="${esc(input.surface)}"></label>` +
+    `<label>Pièces<input id="sim-rooms" type="number" min="1" max="15" value="${esc(f.nb_pieces)}"></label>` +
+    `<label>Dépendances (cave, garage…)<input id="sim-dependencies" type="number" min="0" max="20" value="${esc(f.nb_dependances || 0)}"></label>` +
+    `<label>Étiquette DPE<select id="sim-dpe"><option value="">${f.dpe_etiquette_energie ? 'Inchangée' : 'Sans DPE'}</option>${dpe.map(l => `<option>${l}</option>`).join('')}</select></label></div>` +
+    `<button type="button" class="secondary" id="simulate">Comparer avec la variante</button><div id="simulation" role="status" aria-live="polite"></div></details>`
+  );
+}
+
+function runScenario() {
+  if (!lastInputs || !lastPrediction || !worker) return;
+  const features = window.ValometraFormat.scenarioFeatures(lastInputs.features, {
+    surface: $('sim-surface').value,
+    rooms: $('sim-rooms').value,
+    dependencies: $('sim-dependencies').value,
+    dpe: $('sim-dpe').value,
+  });
+  simId = 'sim-' + ++simCount;
+  $('simulate').disabled = true;
+  $('simulation').textContent = 'Calcul de la variante…';
+  worker.postMessage({ type: 'predict', features, id: simId });
+}
+
+function showScenario(data) {
+  $('simulate').disabled = false;
+  const base = lastPrediction.value,
+    gap = window.ValometraFormat.variation(base, data.value),
+    bounds = data.intervals?.['80'];
+  if (!gap) {
+    $('simulation').textContent = 'La simulation a échoué. Réessayez.';
+    return;
+  }
+  const sign = gap.euros > 0 ? '+' : gap.euros < 0 ? '−' : '',
+    round = n => money(Math.round(n / 1000) * 1000),
+    percent = new Intl.NumberFormat('fr-FR', { maximumFractionDigits: 1 }).format(
+      Math.abs(gap.percent),
+    );
+  $('simulation').innerHTML =
+    `<dl class="simulation-result"><div><dt>Estimation de base</dt><dd>${round(base)}</dd></div>` +
+    `<div><dt>Variante</dt><dd>${round(data.value)}${bounds?.every(Number.isFinite) ? `<small>de ${round(bounds[0])} à ${round(bounds[1])} (80 %)</small>` : ''}</dd></div>` +
+    `<div><dt>Écart</dt><dd>${sign}${round(Math.abs(gap.euros))}<small>${sign}${percent}\u202f%</small></dd></div></dl>`;
+}
+
 function comparablesTable(rows) {
   if (!rows.length) return '';
   const { frDate, frDistance } = window.ValometraFormat;

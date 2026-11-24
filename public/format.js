@@ -98,7 +98,38 @@
     return out.adresse && out.surface && out.pieces ? out : null;
   };
 
+  // Variables du modèle d'une variante du bien. Les détails du DPE saisis pour
+  // l'étiquette d'origine sont retirés : ils ne correspondraient plus à la nouvelle.
+  const scenarioFeatures = (base, changes) => {
+    const f = { ...base };
+    const surface = Number(changes.surface);
+    if (surface > 0) {
+      const ratio = surface / Number(base.surface_habitable);
+      f.surface_habitable = String(surface);
+      if (Number(base.surface_carrez) > 0 && Number.isFinite(ratio))
+        f.surface_carrez = String(Math.round(Number(base.surface_carrez) * ratio * 10) / 10);
+    }
+    if (Number(changes.rooms) > 0) f.nb_pieces = String(changes.rooms);
+    if (changes.dependencies !== undefined && changes.dependencies !== '')
+      f.nb_dependances = String(changes.dependencies);
+    if (changes.dpe) {
+      for (const key of Object.keys(f)) if (key.startsWith('dpe_')) delete f[key];
+      f.dpe_etiquette_energie = changes.dpe;
+      f.dpe_type = 'existant';
+      f.dpe_disponible = 1;
+    }
+    return f;
+  };
+
+  // Écart entre l'estimation de base et celle de la variante.
+  const variation = (base, next) =>
+    base > 0 && Number.isFinite(next)
+      ? { euros: next - base, percent: ((next - base) / base) * 100 }
+      : null;
+
   globalThis.ValometraFormat = {
+    scenarioFeatures,
+    variation,
     frDate,
     precision,
     gauge,

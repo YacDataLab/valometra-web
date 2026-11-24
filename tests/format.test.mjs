@@ -3,6 +3,8 @@ import { test } from 'node:test';
 import '../public/format.js';
 
 const {
+  scenarioFeatures,
+  variation,
   frDate,
   precision,
   gauge,
@@ -103,4 +105,41 @@ test('share link rejects incomplete or out-of-range values', () => {
     surface: 65,
     pieces: 3,
   });
+});
+
+test('scenario changes only what is asked and leaves the base untouched', () => {
+  const base = {
+    surface_habitable: '60',
+    surface_carrez: '58',
+    nb_pieces: '3',
+    nb_dependances: '0',
+    code_commune: '38185',
+  };
+  const next = scenarioFeatures(base, { surface: 66, rooms: 4, dependencies: 1 });
+  assert.equal(next.surface_habitable, '66');
+  assert.equal(next.surface_carrez, '63.8');
+  assert.equal(next.nb_pieces, '4');
+  assert.equal(next.nb_dependances, '1');
+  assert.equal(next.code_commune, '38185');
+  assert.equal(base.surface_habitable, '60');
+  assert.deepEqual(scenarioFeatures(base, {}), base);
+});
+
+test('scenario DPE replaces the label and drops stale DPE details', () => {
+  const base = { dpe_etiquette_energie: 'G', dpe_conso_ep_m2: '450', dpe_disponible: 1 };
+  const next = scenarioFeatures(base, { dpe: 'C' });
+  assert.deepEqual(next, {
+    dpe_etiquette_energie: 'C',
+    dpe_type: 'existant',
+    dpe_disponible: 1,
+  });
+  const noDpe = scenarioFeatures({ nb_pieces: '2' }, { dpe: 'B' });
+  assert.equal(noDpe.dpe_etiquette_energie, 'B');
+  assert.equal(noDpe.dpe_disponible, 1);
+});
+
+test('variation gives the gap in euros and percent', () => {
+  assert.deepEqual(variation(100000, 110000), { euros: 10000, percent: 10 });
+  assert.equal(variation(0, 5), null);
+  assert.equal(variation(100, NaN), null);
 });
