@@ -4,7 +4,7 @@
   "type": "module",
   "scripts": {
     "build": "python3 scripts/build.py",
-    "test": "npm run build && node --test tests/service.test.mjs && python3 tests/model_regression.py"
+    "test": "npm run build && node --test tests/*.test.mjs && python3 tests/model_regression.py"
   },
   "engines": {
     "node": "24.x"
