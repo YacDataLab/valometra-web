@@ -820,3 +820,6 @@ readJson('metadata.json')
   .catch(() => {
     $('model-status').textContent = 'Les communes n’ont pas pu être chargées. Rechargez la page.';
   });
+
+// Utilisation hors connexion : le service worker est facultatif, son échec n'est pas bloquant.
+if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(() => {});
