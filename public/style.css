@@ -1510,3 +1510,23 @@ html[data-vm-theme='sombre'] .hero .hero-jump {
   stroke: var(--vm-color-dataviz-categorie-1);
   stroke-width: 2;
 }
+
+.skip-link {
+  position: absolute;
+  left: 12px;
+  top: -100px;
+  z-index: 100;
+  padding: 10px 16px;
+  border-radius: var(--vm-radius-md);
+  background: var(--vm-surface);
+  color: var(--vm-lien);
+  border: 2px solid var(--vm-focus);
+}
+.skip-link:focus {
+  top: 12px;
+}
+#contenu:focus,
+.page h1:focus,
+#result h2:focus {
+  outline: none;
+}

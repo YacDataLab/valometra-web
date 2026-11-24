@@ -84,6 +84,12 @@ function loadLeaflet() {
   return leafletPromise;
 }
 
+const PAGE_TITLES = {
+  estimate: 'Valometra — L’immobilier, en perspective',
+  market: 'Le marché local — Valometra',
+  method: 'Méthode et limites — Valometra',
+};
+
 async function route() {
   const view = ++marketView;
   const hash = location.hash.slice(1);
@@ -91,6 +97,7 @@ async function route() {
   document.querySelectorAll('.page').forEach(element => {
     element.hidden = element.id !== id;
   });
+  document.title = PAGE_TITLES[id];
   document.querySelectorAll('nav a').forEach(link => {
     const active = link.hash === '#' + id;
     link.classList.toggle('active', active);
@@ -137,6 +144,7 @@ function startEngine() {
           'valometra-estimate-ready',
         );
         showResult(data.value, lastInputs, data.intervals);
+        $('result').querySelector('h2')?.focus({ preventScroll: true });
       }
       if (data.type === 'prediction' && data.id === simId) showScenario(data);
       if (data.type === 'error') {
@@ -278,7 +286,7 @@ function showResult(value, input, intervals) {
       ? `<span class="level"><span class="bars" data-level="${fiability.bars}" role="img" aria-label="Précision de la fourchette : ${fiability.label}, ${fiability.bars} sur 3">${[1, 2, 3].map(i => `<i${i <= fiability.bars ? ' class="on"' : ''}></i>`).join('')}</span>${fiability.label}</span>`
       : '—';
   $('result').innerHTML =
-    `<div class="result-top"><div class="section-head"><div><span class="eyebrow">VOTRE ESTIMATION</span><h2>${esc(town.name)} · ${num(surface)} m²</h2></div></div><p class="hint">${esc(input.address)}</p><div class="price">${round(value)}</div><span class="price-unit">Estimation indicative · référence au ${ValometraConfig.referenceLabel}</span></div>` +
+    `<div class="result-top"><div class="section-head"><div><span class="eyebrow">VOTRE ESTIMATION</span><h2 tabindex="-1">${esc(town.name)} · ${num(surface)} m²</h2></div></div><p class="hint">${esc(input.address)}</p><div class="price">${round(value)}</div><span class="price-unit">Estimation indicative · référence au ${ValometraConfig.referenceLabel}</span></div>` +
     `<div class="range-box"><h3>Fourchette ${band === '50' ? 'centrale' : 'étendue'} · objectif ${band} %</h3>${
       g
         ? `<div class="gauge" role="img" aria-label="Estimation ${round(value)}, fourchette centrale de ${round(intervals['50'][0])} à ${round(intervals['50'][1])}, fourchette étendue de ${round(intervals['80'][0])} à ${round(intervals['80'][1])}"><span class="gauge-central" style="left:${g.low}%;width:${g.high - g.low}%"></span><span class="gauge-point" style="left:${g.point}%"></span></div><ul class="gauge-legend" aria-hidden="true"><li><i class="point"></i>Estimation</li><li><i class="central"></i>Centrale 50 %</li><li><i class="extended"></i>Étendue 80 %</li></ul>`

@@ -4,7 +4,7 @@
   const navigation = [...document.querySelectorAll('.site-header nav a')];
   const address = document.getElementById('address');
 
-  function route() {
+  function route(event) {
     const hash = location.hash.slice(1);
     const view = ['market', 'method'].includes(hash) ? hash : 'estimate';
     document.body.dataset.lensView = view;
@@ -13,7 +13,17 @@
       else link.removeAttribute('aria-current');
     });
     window.scrollTo(0, 0);
+    // Navigation au clavier ou au lecteur d'écran : le focus suit le titre de la page.
+    if (event?.type === 'hashchange') {
+      const heading = document.querySelector('.page:not([hidden]) h1');
+      heading?.setAttribute('tabindex', '-1');
+      heading?.focus({ preventScroll: true });
+    }
   }
+  document.getElementById('skip-link').addEventListener('click', event => {
+    event.preventDefault();
+    document.getElementById('contenu').focus();
+  });
 
   document.getElementById('start-estimate').addEventListener('click', () => {
     if (address.disabled) {
