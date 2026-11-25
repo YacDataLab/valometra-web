@@ -58,7 +58,7 @@ test('every pictogram used by the pages or the scripts exists in the SVG sprite'
   const sprite = readFileSync(new URL('../public/icons.svg', import.meta.url), 'utf8');
   const symbols = new Set([...sprite.matchAll(/<symbol id="(i-[\w-]+)"/g)].map(m => m[1]));
   assert.ok(symbols.size >= 10);
-  const scripts = ['estimate.js', 'theme.js'].map(f =>
+  const scripts = ['result.js', 'theme.js'].map(f =>
     readFileSync(new URL(`../public/${f}`, import.meta.url), 'utf8'),
   );
   const sources = [...pages.map(read), ...scripts];
@@ -139,13 +139,14 @@ test('the market commune list is a filterable combobox that keeps the select as 
 
 test('the other lists use the same custom list, without filter, and keep their select', () => {
   const ui = readFileSync(new URL('../public/ui.js', import.meta.url), 'utf8');
-  const estimate = readFileSync(new URL('../public/estimate.js', import.meta.url), 'utf8');
+  const form = readFileSync(new URL('../public/form.js', import.meta.url), 'utf8');
+  const simulator = readFileSync(new URL('../public/simulator.js', import.meta.url), 'utf8');
   const market = readFileSync(new URL('../public/market.js', import.meta.url), 'utf8');
   const css = readFileSync(new URL('../public/style.css', import.meta.url), 'utf8');
   assert.match(ui, /filterable = true/);
   assert.match(ui, /aria-disabled/);
-  assert.match(estimate, /combobox\(select, \{ filterable: false \}\)/);
-  assert.match(estimate, /combobox\(\$\('sim-dpe'\), \{ filterable: false \}\)/);
+  assert.match(form, /combobox\(select, \{ filterable: false \}\)/);
+  assert.match(simulator, /combobox\(\$\('sim-dpe'\), \{ filterable: false \}\)/);
   assert.match(market, /combobox\(\$\('market-dpe'\), \{ filterable: false \}\)/);
   assert.match(css, /\.combobox-select input\s*{/);
 });
@@ -208,14 +209,14 @@ test('view changes are announced and back navigation keeps the scroll position',
   const app = readFileSync(new URL('../public/app.js', import.meta.url), 'utf8');
   const index = readFileSync(new URL('../public/index.html', import.meta.url), 'utf8');
   const market = readFileSync(new URL('../public/market.js', import.meta.url), 'utf8');
-  const estimate = readFileSync(new URL('../public/estimate.js', import.meta.url), 'utf8');
+  const share = readFileSync(new URL('../public/share.js', import.meta.url), 'utf8');
   assert.match(index, /<p id="route-status" class="sr-only" role="status" aria-live="polite">/);
   assert.match(app, /\$\('route-status'\)\.textContent =/);
   assert.match(app, /history\.scrollRestoration = 'manual'/);
   assert.match(app, /history\.replaceState\(\{ key: entryKey \}/);
   // Les mises à jour d'URL ne doivent pas effacer l'état de l'entrée d'historique.
   assert.doesNotMatch(market, /history\.replaceState\(null/);
-  assert.doesNotMatch(estimate, /history\.replaceState\(null/);
+  assert.doesNotMatch(share, /history\.replaceState\(null/);
 });
 
 test('the market map is large and zooms with the mouse wheel', () => {
