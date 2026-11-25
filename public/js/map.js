@@ -14,12 +14,19 @@ let map, layer, leafletPromise;
 export function loadLeaflet() {
   if (window.L) return Promise.resolve();
   leafletPromise ??= new Promise(resolve => {
+    // Leaflet mesure son conteneur à la création : la feuille de style doit être appliquée avant.
+    let pending = 2;
+    const loaded = () => {
+      if (--pending === 0) resolve();
+    };
     const stylesheet = document.createElement('link');
     stylesheet.rel = 'stylesheet';
     stylesheet.href = 'vendor/leaflet/leaflet.css';
+    stylesheet.addEventListener('load', loaded, { once: true });
+    stylesheet.addEventListener('error', loaded, { once: true });
     const script = document.createElement('script');
     script.src = 'vendor/leaflet/leaflet.js';
-    script.addEventListener('load', resolve, { once: true });
+    script.addEventListener('load', loaded, { once: true });
     script.addEventListener(
       'error',
       () => {
