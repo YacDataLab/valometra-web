@@ -19,6 +19,13 @@ Application web open source d'estimation immobilière (Grenoble et métropole). 
 
 ## Qualité
 
+- Pour les changements Python, vérifier avant commit, push ou fusion les seuils
+  suivants sur le code modifié et les dépendances concernées.
+  - Bandit exige zéro alerte de gravité moyenne ou élevée, quelle que soit la confiance.
+  - `pip-audit` exige zéro vulnérabilité connue.
+  - Pylint exige un score d’au moins 9,5/10.
+  - `pytest-cov` exige au moins 80 % de couverture combinée des instructions et branches.
+
 - Lire le code concerné avant de le modifier ; respecter les conventions existantes.
 - Corriger la cause, pas le symptôme. Pas de code mort, de commentaire obsolète ni de TODO sans suite.
 - Tout changement de comportement s'accompagne d'un test. Un bug corrigé reçoit un test de non-régression.

@@ -38,8 +38,15 @@ jobs:
       - uses: actions/setup-python@v5.6.0
         with:
           python-version: '3.12'
-      - run: python -m pip install pylint==3.3.9 pytest==8.3.5 pytest-cov==6.1.1
-      - name: Vérifier Pylint et la couverture
+      - run: python -m pip install -r .github/python-quality-requirements.txt
+      - name: Vérifier les dépendances Python
+        shell: bash
+        run: |
+          echo '## Audit des dépendances Python' >> "$GITHUB_STEP_SUMMARY"
+          python -m pip_audit -r .github/python-quality-requirements.txt 2>&1 \
+            | tee -a "$GITHUB_STEP_SUMMARY"
+      - name: Vérifier Bandit, Pylint et la couverture
+        if: success() || failure()
         shell: bash
         env:
           EVENT: ${{ github.event_name }}
@@ -63,6 +70,11 @@ jobs:
             test -f scripts/export_dataviz_sql.py
             test -f tests/dataviz_data.py
             printf '## Qualité Python · `%s`\n\n' "$commit" >> "$GITHUB_STEP_SUMMARY"
+            printf '### Bandit\n\n```text\n' >> "$GITHUB_STEP_SUMMARY"
+            python -m bandit --severity-level medium --ignore-nosec \
+              scripts/build_dataviz.py scripts/export_dataviz_sql.py tests/dataviz_data.py \
+              2>&1 | tee -a "$GITHUB_STEP_SUMMARY" || failed=1
+            printf '```\n\n' >> "$GITHUB_STEP_SUMMARY"
             printf '### Pylint\n\n```text\n' >> "$GITHUB_STEP_SUMMARY"
             python -m pylint --persistent=no --fail-under=9.5 \
               scripts/build_dataviz.py scripts/export_dataviz_sql.py tests/dataviz_data.py \
