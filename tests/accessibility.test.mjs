@@ -56,7 +56,7 @@ test('every pictogram used by the pages or the scripts exists in the SVG sprite'
   const sprite = readFileSync(new URL('../public/icons.svg', import.meta.url), 'utf8');
   const symbols = new Set([...sprite.matchAll(/<symbol id="(i-[\w-]+)"/g)].map(m => m[1]));
   assert.ok(symbols.size >= 10);
-  const scripts = ['app.js', 'theme.js'].map(f =>
+  const scripts = ['estimate.js', 'theme.js'].map(f =>
     readFileSync(new URL(`../public/${f}`, import.meta.url), 'utf8'),
   );
   const sources = [...pages.map(read), ...scripts];

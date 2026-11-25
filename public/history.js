@@ -6,15 +6,7 @@
     ENABLED_KEY = 'valometra-history-enabled';
   const $ = id => document.getElementById(id);
   const F = () => window.ValometraFormat;
-  const money = n =>
-    new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 })
-      .format(n)
-      .replace(/\u00a0/g, '\u202f');
-  const esc = s =>
-    String(s).replace(
-      /[&<>"']/g,
-      c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c],
-    );
+  const { money, roundMoney, esc } = window.ValometraFormat;
   const store = {
     get(key) {
       try {
@@ -69,8 +61,8 @@
       ) +
       row(
         'Prix estimé',
-        money(Math.round(a.point / 1000) * 1000),
-        money(Math.round(b.point / 1000) * 1000),
+        roundMoney(a.point),
+        roundMoney(b.point),
         `${euros(Math.round(gap.point.euros / 1000) * 1000)} · ${percent(gap.point.percent)}`,
       ) +
       row(
@@ -99,7 +91,7 @@
       ? list
           .map(e => {
             const shared = F().parseShare(e.query);
-            return `<li><div><b>${esc(shared.adresse)}</b><span class="hint">${esc(e.town)} · ${shared.surface}\u202fm² · ${shared.pieces} pièces · ${esc(F().frDate(e.at))}</span></div><div class="history-values"><b>${money(Math.round(e.point / 1000) * 1000)}</b><span class="hint">de ${money(Math.round(e.low / 1000) * 1000)} à ${money(Math.round(e.high / 1000) * 1000)}</span></div><div class="history-actions"><label class="check"><input type="checkbox" data-compare="${esc(e.at)}"${selected.includes(e.at) ? ' checked' : ''}>Comparer</label><button type="button" class="link" data-reopen="${esc(e.at)}">Rouvrir</button></div></li>`;
+            return `<li><div><b>${esc(shared.adresse)}</b><span class="hint">${esc(e.town)} · ${shared.surface}\u202fm² · ${shared.pieces} pièces · ${esc(F().frDate(e.at))}</span></div><div class="history-values"><b>${roundMoney(e.point)}</b><span class="hint">de ${roundMoney(e.low)} à ${roundMoney(e.high)}</span></div><div class="history-actions"><label class="check"><input type="checkbox" data-compare="${esc(e.at)}"${selected.includes(e.at) ? ' checked' : ''}>Comparer</label><button type="button" class="link" data-reopen="${esc(e.at)}">Rouvrir</button></div></li>`;
           })
           .join('')
       : on

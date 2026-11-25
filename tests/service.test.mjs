@@ -233,7 +233,15 @@ test('every external host named in the scripts is allowed by the content securit
   const { request } = fixture();
   const csp = (await request('/')).headers.get('Content-Security-Policy');
   const allowed = [...csp.matchAll(/https:\/\/[a-z0-9.-]+/g)].map(m => m[0]);
-  for (const file of ['app.js', 'address.js', 'enrichment.js', 'inference-worker.js']) {
+  for (const file of [
+    'app.js',
+    'estimate.js',
+    'market.js',
+    'map.js',
+    'address.js',
+    'enrichment.js',
+    'inference-worker.js',
+  ]) {
     const source = readFileSync(new URL(`../public/${file}`, import.meta.url), 'utf8');
     // Les liens d'attribution (href="…") ne sont pas des requêtes du navigateur.
     const hosts = [...source.matchAll(/(?<!href=")'(https:\/\/[a-z0-9.-]+)/g)].map(m => m[1]);

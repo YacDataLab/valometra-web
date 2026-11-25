@@ -1,19 +1,8 @@
 'use strict';
 (() => {
   const $ = id => document.getElementById(id),
-    esc = s =>
-      String(s ?? '').replace(
-        /[&<>"']/g,
-        c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c],
-      ),
-    money = n =>
-      Number.isFinite(n)
-        ? new Intl.NumberFormat('fr-FR', {
-            style: 'currency',
-            currency: 'EUR',
-            maximumFractionDigits: 0,
-          }).format(n)
-        : 'Non calculée';
+    { esc, money: euros } = window.ValometraFormat,
+    money = n => (Number.isFinite(n) ? euros(n) : 'Non calculée');
   const states = {
       nouveau: 'Nouveau',
       a_contacter: 'À contacter',

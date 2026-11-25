@@ -299,7 +299,79 @@
     }));
   };
 
+  // Échappement HTML pour tout texte inséré dans un gabarit.
+  const esc = value =>
+    String(value ?? '').replace(
+      /[&<>"']/g,
+      c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c],
+    );
+
+  // Charte : espace fine insécable (U+202F) avant € et entre les milliers.
+  const narrow = text => text.replace(/\u00a0/g, '\u202f');
+  const euros = new Intl.NumberFormat('fr-FR', {
+    style: 'currency',
+    currency: 'EUR',
+    maximumFractionDigits: 0,
+  });
+  const integers = new Intl.NumberFormat('fr-FR', { maximumFractionDigits: 0 });
+  const decimals = new Intl.NumberFormat('fr-FR', { maximumFractionDigits: 1 });
+  const money = value => narrow(euros.format(value));
+  const num = value => narrow(integers.format(value));
+  const dec = value => narrow(decimals.format(value));
+
+  // Prix arrondi au millier : l'estimation n'est pas plus précise que cela.
+  const roundMoney = value => money(Math.round(value / 1000) * 1000);
+
+  // Valeur affichée sur la carte et l'histogramme : prix au m², prix total ou surface.
+  const measure = (row, key) =>
+    key === 'price' ? row.price : key === 'surface' ? row.surface : row.price / row.surface;
+  const measureUnit = key => (key === 'surface' ? 'm²' : key === 'price' ? '€' : '€/m²');
+
+  // Borne de classe d'un histogramme : une décimale en milliers, pour que deux bornes voisines
+  // restent distinctes.
+  const binEdge = value => (value >= 1000 ? dec(value / 1000) + 'k' : num(value));
+
+  const median = values => {
+    if (!values.length) return null;
+    const sorted = [...values].sort((a, b) => a - b),
+      mid = Math.floor(sorted.length / 2);
+    return sorted.length % 2 ? sorted[mid] : (sorted[mid - 1] + sorted[mid]) / 2;
+  };
+
+  // Échelle de couleurs continue : le domaine va du 5e au 95e centile, pour qu'une vente
+  // atypique n'écrase pas toute la palette.
+  const scaleDomain = (values, from = 0.05, to = 0.95) => {
+    if (!values.length) return null;
+    const sorted = [...values].sort((a, b) => a - b),
+      at = q => sorted[Math.min(sorted.length - 1, Math.floor(q * sorted.length))];
+    return { lo: at(from), hi: at(to) };
+  };
+
+  const hexToRgb = hex => [1, 3, 5].map(i => parseInt(hex.slice(i, i + 2), 16));
+  // Couleur (#rrggbb) d'une valeur sur une rampe de teintes, interpolées linéairement.
+  const rampColor = (value, domain, stops) => {
+    const span = domain.hi - domain.lo,
+      t = span > 0 ? Math.min(1, Math.max(0, (value - domain.lo) / span)) : 0.5,
+      position = t * (stops.length - 1),
+      i = Math.min(stops.length - 2, Math.floor(position)),
+      a = hexToRgb(stops[i]),
+      b = hexToRgb(stops[i + 1]),
+      mix = a.map((channel, k) => Math.round(channel + (b[k] - channel) * (position - i)));
+    return '#' + mix.map(c => c.toString(16).padStart(2, '0')).join('');
+  };
+
   globalThis.ValometraFormat = {
+    esc,
+    money,
+    roundMoney,
+    measure,
+    measureUnit,
+    num,
+    dec,
+    binEdge,
+    median,
+    scaleDomain,
+    rampColor,
     constellation,
     parseHistory,
     addHistory,

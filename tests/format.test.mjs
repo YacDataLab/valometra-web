@@ -24,6 +24,14 @@ const {
   frDistance,
   shareQuery,
   parseShare,
+  esc,
+  money,
+  num,
+  dec,
+  binEdge,
+  median,
+  scaleDomain,
+  rampColor,
 } = globalThis.ValometraFormat;
 
 test('dates are shown day first', () => {
@@ -320,4 +328,46 @@ test('constellation places every town inside the frame, the busiest one as hub',
   assert.ok(byName.Nord.y < byName.Sud.y);
   assert.ok(byName.Est.x > byName.Sud.x);
   assert.deepEqual(constellation([]), []);
+});
+
+test('esc neutralises markup and tolerates missing values', () => {
+  assert.equal(esc('<a href="x">&\'</a>'), '&lt;a href=&quot;x&quot;&gt;&amp;&#39;&lt;/a&gt;');
+  assert.equal(esc(null), '');
+  assert.equal(esc(undefined), '');
+});
+
+test('money, num and dec use French formats with narrow no-break spaces', () => {
+  assert.equal(money(139201), '139\u202f201\u202f€');
+  assert.equal(num(4620), '4\u202f620');
+  assert.equal(dec(2.46), '2,5');
+});
+
+test('binEdge keeps neighbouring class edges distinct', () => {
+  assert.equal(binEdge(889), '889');
+  assert.equal(binEdge(1778), '1,8k');
+  assert.equal(binEdge(2667), '2,7k');
+});
+
+test('median handles odd, even and empty lists', () => {
+  assert.equal(median([3, 1, 2]), 2);
+  assert.equal(median([4, 1, 3, 2]), 2.5);
+  assert.equal(median([]), null);
+});
+
+test('scaleDomain ignores extreme values', () => {
+  const values = [...Array(98).keys()].map(i => 100 + i).concat([1, 1_000_000]);
+  const domain = scaleDomain(values);
+  assert.ok(domain.lo >= 100 && domain.hi <= 197, JSON.stringify(domain));
+  assert.equal(scaleDomain([]), null);
+});
+
+test('rampColor interpolates along the stops and clamps outside the domain', () => {
+  const stops = ['#000000', '#ff0000', '#ffffff'];
+  const domain = { lo: 0, hi: 10 };
+  assert.equal(rampColor(-5, domain, stops), '#000000');
+  assert.equal(rampColor(0, domain, stops), '#000000');
+  assert.equal(rampColor(5, domain, stops), '#ff0000');
+  assert.equal(rampColor(2.5, domain, stops), '#800000');
+  assert.equal(rampColor(99, domain, stops), '#ffffff');
+  assert.equal(rampColor(3, { lo: 4, hi: 4 }, stops), '#ff0000');
 });

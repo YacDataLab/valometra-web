@@ -1,11 +1,7 @@
 'use strict';
 (() => {
   const $ = id => document.getElementById(id),
-    esc = s =>
-      String(s ?? '').replace(
-        /[&<>"']/g,
-        c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c],
-      );
+    { esc } = window.ValometraFormat;
   async function load() {
     try {
       const r = await fetch('/api/my-requests');
