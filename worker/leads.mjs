@@ -32,8 +32,7 @@ function decodeLead(row, admin) {
   return lead;
 }
 
-export const closedSubmissions = () =>
-  json({ error: 'Les nouvelles demandes sont fermées.' }, 410);
+export const closedSubmissions = () => json({ error: 'Les nouvelles demandes sont fermées.' }, 410);
 
 // --- Espace du demandeur : ses propres demandes uniquement.
 
