@@ -1,9 +1,8 @@
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { test } from 'node:test';
-import '../public/config.js';
+import { config } from '../public/config.js';
 
-const config = globalThis.ValometraConfig;
 const read = path => readFileSync(new URL(path, import.meta.url), 'utf8');
 const html = read('../public/index.html');
 

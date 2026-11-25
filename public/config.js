@@ -1,7 +1,6 @@
-'use strict';
 // Valeurs de référence du modèle et de l'application, définies une seule fois.
 // Elles sont vérifiées par tests/config.test.mjs (pages HTML, métadonnées, modèle).
-globalThis.ValometraConfig = Object.freeze({
+export const config = Object.freeze({
   // Date de référence des prix et date limite des DPE retenus.
   referenceDate: '2026-06-30',
   referenceLabel: '30 juin 2026',

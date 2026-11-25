@@ -1,10 +1,10 @@
+import { $ } from './dom.js';
+import * as F from './format.js';
 // Historique local des estimations : stocké uniquement dans ce navigateur, sur
 // consentement (case à cocher), jamais envoyé au serveur.
 const LIST_KEY = 'valometra-history',
   ENABLED_KEY = 'valometra-history-enabled';
-const $ = id => document.getElementById(id);
-const F = () => window.ValometraFormat;
-const { money, roundMoney, esc } = window.ValometraFormat;
+const { money, roundMoney, esc } = F;
 const store = {
   get(key) {
     try {
@@ -32,7 +32,7 @@ const store = {
 let selected = [];
 
 const enabled = () => store.get(ENABLED_KEY) === '1';
-const entries = () => F().parseHistory(store.get(LIST_KEY));
+const entries = () => F.parseHistory(store.get(LIST_KEY));
 
 function renderCompare(list) {
   const [a, b] = selected.map(at => list.find(e => e.at === at));
@@ -41,10 +41,10 @@ function renderCompare(list) {
     box.textContent = selected.length ? 'Cochez une deuxième estimation pour comparer.' : '';
     return;
   }
-  const gap = F().compareEntries(a, b),
+  const gap = F.compareEntries(a, b),
     sign = n => (n > 0 ? '+' : n < 0 ? '−' : ''),
     euros = n => `${sign(n)}${money(Math.abs(n))}`,
-    percent = n => `${sign(n)}${F().dec(Math.abs(n))}\u202f%`,
+    percent = n => `${sign(n)}${F.dec(Math.abs(n))}\u202f%`,
     count = n => `${sign(n)}${Math.abs(n)}`;
   const row = (label, x, y, delta) =>
     `<tr><th scope="row">${label}</th><td>${x}</td><td>${y}</td><td>${delta}</td></tr>`;
@@ -52,8 +52,8 @@ function renderCompare(list) {
     `<div class="table-wrap"><table><thead><tr><th></th><th>Estimation A</th><th>Estimation B</th><th>Écart (B − A)</th></tr></thead><tbody>` +
     row(
       'Bien',
-      esc(a.query ? F().parseShare(a.query).adresse : ''),
-      esc(F().parseShare(b.query).adresse),
+      esc(a.query ? F.parseShare(a.query).adresse : ''),
+      esc(F.parseShare(b.query).adresse),
       '',
     ) +
     row(
@@ -87,8 +87,8 @@ function render() {
   $('history-list').innerHTML = list.length
     ? list
         .map(e => {
-          const shared = F().parseShare(e.query);
-          return `<li><div><b>${esc(shared.adresse)}</b><span class="hint">${esc(e.town)} · ${shared.surface}\u202fm² · ${shared.pieces} pièces · ${esc(F().frDate(e.at))}</span></div><div class="history-values"><b>${roundMoney(e.point)}</b><span class="hint">de ${roundMoney(e.low)} à ${roundMoney(e.high)}</span></div><div class="history-actions"><label class="check"><input type="checkbox" data-compare="${esc(e.at)}"${selected.includes(e.at) ? ' checked' : ''}>Comparer</label><button type="button" class="link" data-reopen="${esc(e.at)}">Rouvrir</button></div></li>`;
+          const shared = F.parseShare(e.query);
+          return `<li><div><b>${esc(shared.adresse)}</b><span class="hint">${esc(e.town)} · ${shared.surface}\u202fm² · ${shared.pieces} pièces · ${esc(F.frDate(e.at))}</span></div><div class="history-values"><b>${roundMoney(e.point)}</b><span class="hint">de ${roundMoney(e.low)} à ${roundMoney(e.high)}</span></div><div class="history-actions"><label class="check"><input type="checkbox" data-compare="${esc(e.at)}"${selected.includes(e.at) ? ' checked' : ''}>Comparer</label><button type="button" class="link" data-reopen="${esc(e.at)}">Rouvrir</button></div></li>`;
         })
         .join('')
     : on
@@ -126,9 +126,7 @@ $('history-list').addEventListener('click', event => {
   const at = event.target.dataset?.reopen;
   const entry = at && entries().find(e => e.at === at);
   if (!entry) return;
-  window.dispatchEvent(
-    new CustomEvent('valometra:reopen', { detail: F().parseShare(entry.query) }),
-  );
+  window.dispatchEvent(new CustomEvent('valometra:reopen', { detail: F.parseShare(entry.query) }));
   window.scrollTo({ top: 0, behavior: 'smooth' });
 });
 
@@ -136,7 +134,7 @@ export const localHistory = {
   // Appelé après une estimation lancée par l'utilisateur ; sans effet si la case est décochée.
   record(entry) {
     if (!enabled()) return;
-    const next = F().addHistory(entries(), { ...entry, at: new Date().toISOString() });
+    const next = F.addHistory(entries(), { ...entry, at: new Date().toISOString() });
     store.set(LIST_KEY, JSON.stringify(next));
     render();
   },

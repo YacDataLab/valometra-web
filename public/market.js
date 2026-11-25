@@ -1,9 +1,11 @@
 // Explorateur du marché : filtres, statistiques, carte, graphiques, classement et tableau.
-import { $, state } from './store.js';
+import { $ } from './dom.js';
+import * as F from './format.js';
+import { config } from './config.js';
+import { state } from './store.js';
 import { hasMap, inView, drawSales, initMap, resetView } from './map.js';
 import { combobox, segmented, syncChoice } from './ui.js';
 
-const F = window.ValometraFormat;
 const { esc, money, num, median, measure, binEdge, frDate } = F;
 
 let filtered = [],
@@ -76,7 +78,7 @@ function renderMarket() {
   renderTable();
 }
 function drawTrend() {
-  const { monthlyMedian, frMonth } = window.ValometraFormat,
+  const { monthlyMedian, frMonth } = F,
     series = monthlyMedian(filtered),
     points = series.filter(m => m.reliable),
     box = $('market-trend');
@@ -205,8 +207,8 @@ $('reset-market').onclick = () => {
     $(id).value = '';
   syncChoice($('market-town'));
   syncChoice($('market-dpe'));
-  $('from-date').value = ValometraConfig.marketStart;
-  $('to-date').value = ValometraConfig.referenceDate;
+  $('from-date').value = config.marketStart;
+  $('to-date').value = config.referenceDate;
   $('map-color').value = 'm2';
   syncChoice($('map-color'));
   syncChoice($('hist-measure'));

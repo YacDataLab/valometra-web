@@ -1,7 +1,6 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import '../public/config.js';
-import '../public/format.js';
+import * as format from '../public/format.js';
 import { readFileSync } from 'node:fs';
 import { decodeMarket } from '../public/store.js';
 
@@ -35,7 +34,7 @@ const {
   median,
   scaleDomain,
   rampColor,
-} = globalThis.ValometraFormat;
+} = format;
 
 test('dates are shown day first', () => {
   assert.equal(frDate('2026-06-30'), '30/06/2026');

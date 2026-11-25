@@ -1,11 +1,13 @@
 // Estimation : formulaire, moteur de calcul (Worker), résultat, simulateur, retour anonyme, partage.
-import { $, state, loadMarket } from './store.js';
+import { $ } from './dom.js';
+import * as F from './format.js';
+import { config } from './config.js';
+import { state, loadMarket } from './store.js';
 import { combobox, syncChoice } from './ui.js';
 import { addressData } from './enrichment.js';
 import { addressSearch } from './address.js';
 import { localHistory } from './history.js';
 
-const F = window.ValometraFormat;
 const { esc, money, roundMoney, num, median } = F;
 // Pictogramme du sprite SVG icons.svg (jeu Tabler, licence MIT).
 const icon = name =>
@@ -91,12 +93,9 @@ $('estimate-form').addEventListener('submit', async e => {
       'Cette commune n’est pas couverte. Choisissez une adresse dans l’une des communes proposées.';
     return;
   }
-  if (
-    $('dpe').value &&
-    (!$('dpe-date').value || $('dpe-date').value > ValometraConfig.referenceDate)
-  ) {
+  if ($('dpe').value && (!$('dpe-date').value || $('dpe-date').value > config.referenceDate)) {
     $('model-status').textContent =
-      `Indiquez la date du DPE, au plus tard le ${ValometraConfig.referenceLabel}, ou laissez le DPE non renseigné.`;
+      `Indiquez la date du DPE, au plus tard le ${config.referenceLabel}, ou laissez le DPE non renseigné.`;
     return;
   }
   const lat = address.lat,
@@ -115,7 +114,7 @@ $('estimate-form').addEventListener('submit', async e => {
     bdnb_annee_construction: $('year').value,
     longitude: lon,
     latitude: lat,
-    jours_depuis_2025: ValometraConfig.daysSince2025,
+    jours_depuis_2025: config.daysSince2025,
     dpe_disponible: $('dpe').value ? 1 : 0,
     carrez_disponible: $('carrez').value ? 1 : 0,
     coordonnees_disponibles: lat ? 1 : 0,
@@ -162,7 +161,7 @@ const precisionHtml = precision =>
     : '—';
 
 const priceBlock = (value, input) =>
-  `<div class="result-top"><div class="section-head"><div><span class="eyebrow">Votre estimation</span><h2 tabindex="-1">${esc(input.town.name)} · ${num(input.surface)} m²</h2></div></div><p class="hint">${esc(input.address)}</p><div class="price">${roundMoney(value)}</div><span class="price-unit">Estimation indicative · référence au ${ValometraConfig.referenceLabel}</span></div>`;
+  `<div class="result-top"><div class="section-head"><div><span class="eyebrow">Votre estimation</span><h2 tabindex="-1">${esc(input.town.name)} · ${num(input.surface)} m²</h2></div></div><p class="hint">${esc(input.address)}</p><div class="price">${roundMoney(value)}</div><span class="price-unit">Estimation indicative · référence au ${config.referenceLabel}</span></div>`;
 
 const rangeBlock = (value, intervals) => {
   const [low, high] = intervals['80'],
@@ -172,7 +171,7 @@ const rangeBlock = (value, intervals) => {
       position === null
         ? '<div class="range-bar"></div>'
         : `<div class="gauge" role="img" aria-label="${label}"><span class="gauge-point" style="left:${position}%"></span></div><ul class="gauge-legend" aria-hidden="true"><li><i class="point"></i>Estimation</li><li><i class="extended"></i>Étendue 80 %</li></ul>`;
-  return `<div class="range-box"><h3>Fourchette étendue · objectif 80 %</h3>${bar}<div class="range-values"><span>${roundMoney(low)}</span><span>${roundMoney(high)}</span></div><p class="hint">Bornes personnalisées à partir des caractéristiques du bien. La couverture mesurée sur les ventes de juin 2026 est de ${ValometraConfig.coverage[80]} %.</p></div>`;
+  return `<div class="range-box"><h3>Fourchette étendue · objectif 80 %</h3>${bar}<div class="range-values"><span>${roundMoney(low)}</span><span>${roundMoney(high)}</span></div><p class="hint">Bornes personnalisées à partir des caractéristiques du bien. La couverture mesurée sur les ventes de juin 2026 est de ${config.coverage[80]} %.</p></div>`;
 };
 
 const figure = (name, title, value, note) =>
@@ -210,14 +209,14 @@ const contextBlock = input => {
     located = features.latitude
       ? `Adresse localisée · bâtiment ${enrichment?.building ? 'retrouvé' : 'renseigné manuellement ou absent'} · DPE ${enrichment?.dpe ? 'confirmé depuis l’ADEME' : 'saisi manuellement ou absent'}.`
       : 'Coordonnées non renseignées';
-  return `<dl class="context"><dt>Localisation</dt><dd>${located}</dd></dl><p class="hint">Une expertise sur place reste utile pour l’état, l’étage, la vue et les travaux. Aucun ajustement de marché après ${ValometraConfig.referenceLabel.slice(3)}.</p>`;
+  return `<dl class="context"><dt>Localisation</dt><dd>${located}</dd></dl><p class="hint">Une expertise sur place reste utile pour l’état, l’étage, la vue et les travaux. Aucun ajustement de marché après ${config.referenceLabel.slice(3)}.</p>`;
 };
 
 const actionsBlock = () =>
   `<div class="result-actions"><a class="secondary" href="#method">Comprendre ces repères</a><button type="button" class="secondary" id="share-link">${icon('link')}<span>Copier le lien de cette estimation</span></button><button type="button" class="secondary" id="print-result">${icon('printer')}Imprimer</button></div>`;
 
 const printNote = () =>
-  `<p class="print-only">Document généré le ${F.frDate(new Date().toISOString())} par Valometra (open source, licence AGPL-3.0). Estimation indicative, référence au ${ValometraConfig.referenceLabel} : elle ne remplace pas une expertise.</p>`;
+  `<p class="print-only">Document généré le ${F.frDate(new Date().toISOString())} par Valometra (open source, licence AGPL-3.0). Estimation indicative, référence au ${config.referenceLabel} : elle ne remplace pas une expertise.</p>`;
 
 function showResult(value, input, intervals) {
   hasResult = true;
@@ -338,7 +337,7 @@ function gapText(pricePerM2, median) {
 
 function comparablesTable(rows) {
   if (!rows.length) return '';
-  const { frDate, frDistance } = window.ValometraFormat;
+  const { frDate, frDistance } = F;
   return (
     `<div class="comparables"><h3>Ventes comparables les plus proches</h3><div class="table-wrap"><table><thead><tr><th>Distance</th><th>Date</th><th>Surface</th><th>Prix</th></tr></thead><tbody>` +
     rows

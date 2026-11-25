@@ -1,6 +1,6 @@
 # Architecture de Valometra-web
 
-État après la refonte du Worker (branche `refactor/worker`). Les chapitres « Front » décrivent le code tel qu'il est : il n'a pas encore été restructuré (voir [Évolutions prévues](#évolutions-prévues)).
+État après la refonte du Worker (lot 1) et le socle du front (lot 2). `estimate.js` et l'organisation des dossiers de `public/` n'ont pas encore été restructurés (voir [Évolutions prévues](#évolutions-prévues)).
 
 ## Vue d'ensemble
 
@@ -102,9 +102,9 @@ Le build écrit aussi `dist/server/wrangler.json` (liaison D1 `DB`, migrations) 
 
 | Page | Scripts | Contenu |
 | --- | --- | --- |
-| `index.html` | `config.js`, `format.js`, modules ES, `shell.js`, `theme.js` | Application : 4 vues (Estimer, Marché, Statistiques, Méthode) |
+| `index.html` | `app.js` (module, point d'entrée unique), `shell.js`, `theme.js` | Application : 4 vues (Estimer, Marché, Statistiques, Méthode) |
 | `credits.html` | `shell.js`, `theme.js` | Crédits des ressources tierces |
-| `admin.html`, `my-requests.html` | `format.js`, `shell.js`, `admin.js` / `my-requests.js` | Espaces privés |
+| `admin.html`, `my-requests.html` | `shell.js`, `admin.js` / `my-requests.js` (modules) | Espaces privés |
 
 Le même en-tête et pied de page sont répétés dans chaque page ; ils sont générés par `scripts/chrome.py`.
 
@@ -123,9 +123,17 @@ Le même en-tête et pied de page sont répétés dans chaque page ; ils sont g�
 | `history.js` | Historique local sur consentement (`localStorage`) et comparaison de deux biens |
 | `ui.js` | Contrôle segmenté et liste personnalisée (le `<select>` reste la source de vérité) |
 
-Scripts classiques : `config.js` (constantes `ValometraConfig`), `format.js` (fonctions pures `ValometraFormat`, sans DOM, testées dans `tests/format.test.mjs`), `shell.js` (lien d'évitement, lien « gestion »), `theme.js` (thème clair/sombre), `sw.js` (service worker : réseau d'abord, jamais d'API ni de page privée).
+Modules partagés, sans dépendance au reste de l'application :
 
-Communication entre modules : imports ES, globales `window.ValometraFormat` et `ValometraConfig`, et événements `valometra:estimated`, `valometra:reopen`, `valometra:dpe-confirmed`.
+| Module | Rôle |
+| --- | --- |
+| `config.js` | `config` : valeurs de référence (date, couvertures, nombre de communes, jours depuis 2025), vérifiées par `tests/config.test.mjs` |
+| `format.js` | Fonctions pures sans DOM (formats, statistiques, échelle de couleurs, liens partagés, historique), testées dans `tests/format.test.mjs` ; importe seulement `config.js` |
+| `dom.js` | `$(id)` : seul accès par identifiant au DOM |
+
+Scripts classiques, chargés hors du graphe de modules : `shell.js` (lien d'évitement, lien « gestion »), `theme.js` (thème clair/sombre, chargé dans `<head>` pour éviter un flash), `sw.js` (service worker : réseau d'abord, jamais d'API ni de page privée).
+
+**Graphe de dépendances.** Chaque module déclare ses dépendances par `import` ; il n'y a plus de globale `window`. `index.html` ne charge que `app.js`, qui importe tout le reste (dont `history.js` et `form-flow.js` pour leurs effets). Les modules d'interface communiquent par trois événements : `valometra:estimated`, `valometra:reopen`, `valometra:dpe-confirmed`. **Ajouter un module** : l'importer depuis `app.js` ou depuis le module qui l'utilise, sans toucher aux pages HTML.
 
 ### Parcours d'une estimation
 
@@ -145,4 +153,4 @@ Communication entre modules : imports ES, globales `window.ValometraFormat` et `
 
 ## Évolutions prévues
 
-Lots non réalisés à ce jour : passage de `format.js` et `config.js` en modules ES (suppression des globales `window`), découpage de `estimate.js` (moteur, formulaire, résultat, simulateur), alignement de `admin.js` et `my-requests.js`, réorganisation de `public/` (`js/`, `data/`, `models/`).
+Lots non réalisés à ce jour : découpage de `estimate.js` (moteur, formulaire, résultat, simulateur) et réorganisation de `public/` (`js/`, `data/`, `models/`).

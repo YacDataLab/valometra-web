@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { readFileSync } from 'node:fs';
+import { readFileSync, readdirSync } from 'node:fs';
 import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import { test } from 'node:test';
@@ -232,4 +232,20 @@ test('view changes use a short fade that respects reduced motion', () => {
   assert.match(app, /!reduceMotion\.matches/);
   assert.match(css, /::view-transition-old\(root\)/);
   assert.match(css, /@media \(prefers-reduced-motion: reduce\) \{\s*::view-transition-group\(\*\)/);
+});
+
+// Chaque module déclare ses dépendances par import : plus de globale partagée, un seul point d'entrée.
+test('the page scripts share code through imports, not globals', () => {
+  const dir = new URL('../public/', import.meta.url);
+  for (const file of readdirSync(dir).filter(f => f.endsWith('.js'))) {
+    const code = readFileSync(new URL(file, dir), 'utf8');
+    assert.doesNotMatch(code, /Valometra(Format|Config)/, file);
+  }
+  const index = read('index');
+  assert.deepEqual(
+    [...index.matchAll(/<script[^>]*type="module"[^>]*src="([^"]+)"/g)].map(m => m[1]),
+    ['app.js'],
+  );
+  for (const page of ['admin', 'my-requests'])
+    assert.match(read(page), new RegExp(`<script type="module" src="${page}\\.js">`));
 });
