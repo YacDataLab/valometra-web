@@ -1,7 +1,6 @@
 // Carte des ventes (Leaflet, chargé à la demande) : marqueurs, échelle de couleurs et légende.
-import { $ } from './store.js';
-
-const { esc, money, num, median, measure, scaleDomain, rampColor, frDate } = window.ValometraFormat;
+import { $ } from './dom.js';
+import { esc, money, num, median, measure, scaleDomain, rampColor, frDate } from './format.js';
 
 const CENTER = [45.18, 5.73];
 // Plan IGN de la Géoplateforme (Licence ouverte, sans clé), affiché en couleur.

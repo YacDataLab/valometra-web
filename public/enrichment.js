@@ -1,6 +1,7 @@
+import { $ } from './dom.js';
+import { config } from './config.js';
 import { syncChoice } from './ui.js';
 
-const $ = id => document.getElementById(id);
 // Après une écriture de valeur par ce script, l'affichage des listes personnalisées se met à jour.
 const sync = element => syncChoice(element);
 let seq = 0,
@@ -252,8 +253,8 @@ async function lookup(a) {
         r =>
           r.numero_dpe &&
           /^[0-9]{4}-[0-9]{2}-[0-9]{2}$/.test(r.date_etablissement_dpe || '') &&
-          r.date_etablissement_dpe <= ValometraConfig.referenceDate &&
-          (!r.date_fin_validite_dpe || r.date_fin_validite_dpe >= ValometraConfig.referenceDate) &&
+          r.date_etablissement_dpe <= config.referenceDate &&
+          (!r.date_fin_validite_dpe || r.date_fin_validite_dpe >= config.referenceDate) &&
           Number(r.surface_habitable_logement) > 0,
       )
       .sort((a, b) => b.date_etablissement_dpe.localeCompare(a.date_etablissement_dpe));

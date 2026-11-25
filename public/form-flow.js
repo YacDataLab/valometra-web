@@ -1,7 +1,7 @@
 import { addressData } from './enrichment.js';
+import { $ } from './dom.js';
 import { syncChoice } from './ui.js';
 
-const $ = id => document.getElementById(id);
 const mode = $('dpe-mode');
 let previous = 'none';
 function clearDPE() {

@@ -1,10 +1,12 @@
 // Point d'entrée de la page d'accueil : navigation entre les vues, chargement des communes.
-import { $, state, readJson, loadMarket } from './store.js';
+import { $ } from './dom.js';
+import * as F from './format.js';
+import { state, readJson, loadMarket } from './store.js';
 import { loadLeaflet } from './map.js';
 import { initMarket, showMarket, marketReady, renderMarket } from './market.js';
 import { initEstimate } from './estimate.js';
-
-const F = window.ValometraFormat;
+import './history.js';
+import './form-flow.js';
 
 // Registre des vues : une entrée par <section class="page"> de index.html, dans le même ordre que la navigation.
 // Ajouter une page : la section, son lien dans <nav class="site-nav">, puis une entrée ici.

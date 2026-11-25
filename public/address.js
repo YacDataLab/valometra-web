@@ -1,4 +1,5 @@
 import { addressData } from './enrichment.js';
+import { config } from './config.js';
 
 const input = document.getElementById('address'),
   list = document.getElementById('address-suggestions'),
@@ -118,7 +119,7 @@ async function search(query, token, expected) {
     status.textContent = rows.some(eligible)
       ? 'Choisissez votre adresse dans les suggestions.'
       : 'Aucune adresse précise couverte. Ajoutez un numéro et une commune parmi les ' +
-        ValometraConfig.townCount +
+        config.townCount +
         ' communes couvertes.';
   } catch (e) {
     if (e.name === 'AbortError' || token !== sequence) return;
@@ -170,7 +171,7 @@ export const addressSearch = {
     towns = items;
     input.disabled = false;
     status.textContent =
-      ValometraConfig.townCount + ' communes autour de Grenoble. Entrez une adresse complète.';
+      config.townCount + ' communes autour de Grenoble. Entrez une adresse complète.';
   },
   // Lien partagé : recherche l'adresse et la sélectionne si le libellé est identique.
   restore(label, firstSuggestion = false) {

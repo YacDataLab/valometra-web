@@ -1,6 +1,4 @@
 // État partagé entre les modules de l'application et accès aux données.
-export const $ = id => document.getElementById(id);
-
 export const state = { metadata: null, market: [] };
 
 export function readJson(path) {
