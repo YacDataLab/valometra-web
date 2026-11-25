@@ -80,3 +80,17 @@ Le site omet les entrées Filosofi si le contrôle échoue, si un fichier ou
 un indicateur manque, ou si le bâtiment est hors Grenoble. Une nouvelle
 adresse ou un autre bâtiment efface les valeurs précédentes et invalide
 les réponses en cours.
+
+## Vérifications réalisées
+
+- Les 70 codes IRIS de Grenoble concordent entre le CSV Filosofi, les contours
+  IGN 2022 et 2026 et le référentiel administratif BDNB. La comparaison
+  géométrique confirme que les tracés IGN 2022 et 2026 diffèrent. Une
+  correspondance de codes seule ne valide donc pas l’affectation d’un bâtiment.
+- Les tests de `tests/enrichment.test.mjs` simulent un bâtiment dont le code
+  concorde, un code différent, une empreinte qui traverse une limite, une
+  valeur masquée et une réponse tardive après un changement de sélection.
+  La commande `npm test` exécute ces vérifications.
+- Le parcours complet dans le navigateur sur de vraies adresses, de la
+  sélection de l’adresse à l’estimation, reste à vérifier. Le taux de
+  bâtiments qui passent le contrôle géographique à Grenoble reste à mesurer.
