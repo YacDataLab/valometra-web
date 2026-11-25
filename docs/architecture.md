@@ -173,3 +173,5 @@ Scripts classiques, chargés hors du graphe de modules : `shell.js` (lien d'évi
 ## Pistes d'évolution
 
 Aucun lot en cours. `enrichment.js` et `market.js` restent de longs modules à état global : candidats au même découpage.
+
+[Audit d’architecture du 25 novembre 2026](audits/2026-11-25-architecture.md) · [Suivi de l’objectif 8/10](https://github.com/YacDataLab/valometra-web/issues/14)
