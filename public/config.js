@@ -9,7 +9,7 @@ globalThis.ValometraConfig = Object.freeze({
   marketStart: '2025-07-01',
   // Variable `jours_depuis_2025` envoyée au modèle (nombre de jours à la date de référence).
   daysSince2025: 545,
-  // Couverture mesurée sur les 239 ventes de juin 2026, par objectif de la fourchette.
-  coverage: Object.freeze({ 80: '84,9', 50: '48,5' }),
+  // Couverture mesurée sur les 239 ventes de juin 2026 pour la fourchette affichée (objectif 80 %).
+  coverage: Object.freeze({ 80: '84,9' }),
   townCount: 39,
 });

@@ -1000,13 +1000,6 @@ details[open] > summary::after {
   border-radius: var(--vm-radius-full);
   background: var(--tone-100);
 }
-.gauge-central {
-  position: absolute;
-  top: 0;
-  bottom: 0;
-  border-radius: var(--vm-radius-full);
-  background: var(--tone-300);
-}
 .gauge-point {
   position: absolute;
   top: -5px;
@@ -1040,9 +1033,6 @@ details[open] > summary::after {
   width: 4px;
   height: 14px;
   background: var(--vm-action);
-}
-.gauge-legend .central {
-  background: var(--tone-300);
 }
 .gauge-legend .extended {
   background: var(--tone-100);

@@ -22,7 +22,6 @@ test('the reference date is the same everywhere in the page', () => {
 
 test('the measured coverage figures are the ones shown on the method page', () => {
   assert.ok(html.includes(`${config.coverage[80]} %`));
-  assert.ok(html.includes(`${config.coverage[50]} %`));
 });
 
 test('the model days feature matches the reference date', () => {

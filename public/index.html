@@ -344,15 +344,6 @@
 </div>
 <p class="hint">L’étage, l’état intérieur, la vue, l’ascenseur et les travaux ne sont pas encore pris en compte par le modèle.</p>
 </details>
-<details class="advanced-section">
-<summary>Choisir le niveau de fourchette</summary>
-<label>Fourchette de prix<select id="interval-coverage">
-<option value="80">Étendue · 80 %</option>
-<option value="50">Centrale · 50 %</option>
-</select>
-</label>
-<p class="hint">Le chiffre est l’objectif de couverture : la part des ventes censées tomber dans la fourchette. La fourchette centrale (50 %) est plus étroite, mais contient moins souvent le prix réel. La fourchette étendue (80 %) est retenue par défaut.</p>
-</details>
 <p class="scope-note">Appartements existants uniquement · référence au 30 juin 2026.</p>
 <button type="submit" class="primary" id="estimate-button" disabled>Obtenir mon estimation</button>
 <p class="hint" id="model-status" role="status">Chargement des communes couvertes…</p>
@@ -595,7 +586,7 @@
 <h2>Une fourchette propre à chaque bien</h2>
 <p>Deux modèles estiment séparément une borne basse et une borne haute à partir de la surface, de la localisation, du DPE, du bâtiment et des autres caractéristiques disponibles.</p>
 <p>Les modèles apprennent sur 4 069 ventes antérieures à mai 2026. Leurs bornes sont ensuite ajustées à partir des erreurs de 317 ventes de mai 2026. La vérification est faite sur 239 autres ventes, en juin 2026.</p>
-<p>La fourchette étendue vise 80 % de couverture : elle contient le prix réel de 84,9 % de ces 239 ventes. La fourchette centrale vise 50 % : elle en contient 48,5 %.</p>
+<p>La fourchette affichée vise 80 % de couverture : elle contient le prix réel de 84,9 % de ces 239 ventes.</p>
 <p>L’indicateur de précision rapporte la largeur de la fourchette étendue au prix estimé : resserrée (moins de 60 %), moyenne (de 60 à 100 %) ou large (au-delà). Il décrit la dispersion du modèle pour ce bien, et non une probabilité d’exactitude.</p>
 <p>Ces résultats portent sur les données enrichies du jeu d’évaluation. La couverture n’est garantie ni pour chaque logement ni pour tous les niveaux d’information. Compléter le bien personnalise les bornes, sans garantir de les resserrer.</p>
 </article>

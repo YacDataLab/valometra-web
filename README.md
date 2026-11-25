@@ -9,7 +9,7 @@ L'objectif est de développer un outil d'estimation toujours plus précis, trans
 ## Fonctionnalités
 
 - Estimation locale avec le modèle CatBoost sauvegardé : l'inférence s'exécute dans le navigateur, sans serveur de prédiction.
-- Fourchettes de prix personnalisées (objectifs 80 % et 50 %).
+- Fourchette de prix personnalisée (objectif de couverture 80 %).
 - Rapprochement d'adresse avec les bases BDNB et ADEME (DPE).
 - Résultat détaillé : jauge de la fourchette, prix au m² situé par rapport à la médiane locale, indicateur de précision, ventes comparables les plus proches, simulateur « et si ? » (surface, pièces, dépendances, DPE), impression, lien partageable.
 - Explorateur du marché : carte, filtres partageables par l'URL, statistiques, courbe mensuelle du prix médian, classement des communes et export CSV.
@@ -26,7 +26,7 @@ Ce qui guide chaque choix du projet (le détail est dans la [documentation techn
 - **Aucun serveur de prédiction.** Cinq exports Python (estimation, bornes 80 % et 50 %) tournent via Pyodide dans le navigateur.
 - **Une adresse, des sources officielles.** Géocodage IGN, puis BDNB (bâtiment) et ADEME (DPE) par identifiant BAN exact, jamais par proximité.
 - **Le DPE est toujours confirmé par l'utilisateur.** Une adresse n'identifie pas un appartement : pas de DPE estimé, et la surface DPE ne remplace jamais la surface DVF/Carrez.
-- **Des fourchettes honnêtes.** Régressions quantiles calibrées (CQR) : 84,9 % de couverture mesurée pour l'objectif 80 %, 48,5 % pour l'objectif 50 %, sans garantie pour un bien précis.
+- **Des fourchettes honnêtes.** Régressions quantiles calibrées (CQR) : 84,9 % de couverture mesurée pour l'objectif 80 %, sans garantie pour un bien précis.
 - **Un prix de référence daté.** Valeur au 30 juin 2026, sans ajustement de marché ultérieur ; les API renvoient leur millésime courant, sans historique garanti.
 - **Vie privée.** Pas de clé API, pas de stockage des adresses côté serveur, pas de suivi publicitaire ; les pages privées et les API ne sont jamais mises en cache. L'historique des estimations reste dans le navigateur, sur consentement ; le retour sur une estimation est anonyme (voir Espace de suivi).
 - **Transparence.** Les limites du modèle sont affichées dans l'application (page « Méthode ») et les chiffres affichés sont ceux de l'évaluation historique.

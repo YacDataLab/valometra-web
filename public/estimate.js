@@ -1,6 +1,6 @@
 // Estimation : formulaire, moteur de calcul (Worker), résultat, simulateur, retour anonyme, partage.
 import { $, state, loadMarket } from './store.js';
-import { combobox, segmented, syncChoice } from './ui.js';
+import { combobox, syncChoice } from './ui.js';
 import { addressData } from './enrichment.js';
 import { addressSearch } from './address.js';
 import { localHistory } from './history.js';
@@ -147,10 +147,6 @@ $('estimate-form').addEventListener('submit', async e => {
     engineFailure(error.message);
   }
 });
-$('interval-coverage').addEventListener('change', () => {
-  if (lastPrediction && lastInputs)
-    showResult(lastPrediction.value, lastInputs, lastPrediction.intervals);
-});
 $('dpe').addEventListener('change', () => {
   $('dpe-date').required = Boolean($('dpe').value);
 });
@@ -160,8 +156,6 @@ $('estimate-form').addEventListener('input', () => {
       'Les caractéristiques ont changé. Actualisez l’estimation pour recalculer le résultat.';
 });
 
-const bandLabel = band => (band === '50' ? 'centrale' : 'étendue');
-
 const precisionHtml = precision =>
   precision
     ? `<span class="level"><span class="bars" data-level="${precision.bars}" role="img" aria-label="Précision de la fourchette : ${precision.label}, ${precision.bars} sur 3">${[1, 2, 3].map(i => `<i${i <= precision.bars ? ' class="on"' : ''}></i>`).join('')}</span>${precision.label}</span>`
@@ -170,18 +164,15 @@ const precisionHtml = precision =>
 const priceBlock = (value, input) =>
   `<div class="result-top"><div class="section-head"><div><span class="eyebrow">Votre estimation</span><h2 tabindex="-1">${esc(input.town.name)} · ${num(input.surface)} m²</h2></div></div><p class="hint">${esc(input.address)}</p><div class="price">${roundMoney(value)}</div><span class="price-unit">Estimation indicative · référence au ${ValometraConfig.referenceLabel}</span></div>`;
 
-const rangeBlock = (value, intervals, band) => {
-  const [low, high] = intervals[band],
-    gauge = F.gauge(value, intervals['50'], intervals['80']),
-    label = `Estimation ${roundMoney(value)}, fourchette centrale de ${roundMoney(intervals['50'][0])} à ${roundMoney(intervals['50'][1])}, fourchette étendue de ${roundMoney(intervals['80'][0])} à ${roundMoney(intervals['80'][1])}`,
-    bar = gauge
-      ? `<div class="gauge" role="img" aria-label="${label}"><span class="gauge-central" style="left:${gauge.low}%;width:${gauge.high - gauge.low}%"></span><span class="gauge-point" style="left:${gauge.point}%"></span></div><ul class="gauge-legend" aria-hidden="true"><li><i class="point"></i>Estimation</li><li><i class="central"></i>Centrale 50 %</li><li><i class="extended"></i>Étendue 80 %</li></ul>`
-      : '<div class="range-bar"></div>',
-    coverage =
-      band === '50'
-        ? 'Cette fourchette plus étroite couvre environ une vente sur deux dans l’évaluation historique.'
-        : `La couverture mesurée sur les ventes de juin 2026 est de ${ValometraConfig.coverage[80]} %.`;
-  return `<div class="range-box"><h3>Fourchette ${bandLabel(band)} · objectif ${band} %</h3>${bar}<div class="range-values"><span>${roundMoney(low)}</span><span>${roundMoney(high)}</span></div><p class="hint">Bornes personnalisées à partir des caractéristiques du bien. ${coverage}</p></div>`;
+const rangeBlock = (value, intervals) => {
+  const [low, high] = intervals['80'],
+    position = F.gauge(value, intervals['80']),
+    label = `Estimation ${roundMoney(value)}, fourchette étendue de ${roundMoney(low)} à ${roundMoney(high)}`,
+    bar =
+      position === null
+        ? '<div class="range-bar"></div>'
+        : `<div class="gauge" role="img" aria-label="${label}"><span class="gauge-point" style="left:${position}%"></span></div><ul class="gauge-legend" aria-hidden="true"><li><i class="point"></i>Estimation</li><li><i class="extended"></i>Étendue 80 %</li></ul>`;
+  return `<div class="range-box"><h3>Fourchette étendue · objectif 80 %</h3>${bar}<div class="range-values"><span>${roundMoney(low)}</span><span>${roundMoney(high)}</span></div><p class="hint">Bornes personnalisées à partir des caractéristiques du bien. La couverture mesurée sur les ventes de juin 2026 est de ${ValometraConfig.coverage[80]} %.</p></div>`;
 };
 
 const figure = (name, title, value, note) =>
@@ -230,7 +221,7 @@ const printNote = () =>
 
 function showResult(value, input, intervals) {
   hasResult = true;
-  const band = $('interval-coverage').value || '80',
+  const band = '80',
     bounds = intervals?.[band];
   if (!bounds || !bounds.every(Number.isFinite)) {
     $('model-status').textContent =
@@ -249,7 +240,7 @@ function showResult(value, input, intervals) {
     });
   $('result').innerHTML =
     priceBlock(value, input) +
-    rangeBlock(value, intervals, band) +
+    rangeBlock(value, intervals) +
     keyFigures(value, input, comps, intervals) +
     contextBlock(input) +
     simulatorHtml(input) +
@@ -474,9 +465,8 @@ function fillForm(shared, firstSuggestion = false) {
   addressSearch.restore(shared.adresse, firstSuggestion);
 }
 
-segmented($('interval-coverage'));
-// Listes du formulaire (sauf le choix segmenté) : même liste personnalisée que la commune.
-for (const select of document.querySelectorAll('#estimate-form select:not(#interval-coverage)'))
+// Listes du formulaire : même liste personnalisée que la commune.
+for (const select of document.querySelectorAll('#estimate-form select'))
   combobox(select, { filterable: false });
 
 window.addEventListener('valometra:estimated', () => {

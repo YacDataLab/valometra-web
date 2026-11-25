@@ -24,14 +24,11 @@
     return { ...PRECISION.find(level => width <= level.max), width };
   };
 
-  // Positions (en %) de l'estimation et de la fourchette centrale sur l'échelle de la
-  // fourchette étendue, pour la jauge du résultat.
-  const gauge = (value, inner, outer) => {
-    const valid = b => Array.isArray(b) && b.length === 2 && b.every(Number.isFinite);
-    if (!Number.isFinite(value) || !valid(inner) || !valid(outer) || outer[1] <= outer[0])
-      return null;
-    const at = n => Math.min(100, Math.max(0, ((n - outer[0]) / (outer[1] - outer[0])) * 100));
-    return { low: at(inner[0]), high: at(inner[1]), point: at(value) };
+  // Position (en %) de l'estimation sur l'échelle de la fourchette affichée, pour la jauge du résultat.
+  const gauge = (value, range) => {
+    const valid = Array.isArray(range) && range.length === 2 && range.every(Number.isFinite);
+    if (!Number.isFinite(value) || !valid || range[1] <= range[0]) return null;
+    return Math.min(100, Math.max(0, ((value - range[0]) / (range[1] - range[0])) * 100));
   };
 
   // Distance en mètres entre deux points GPS (formule de haversine).

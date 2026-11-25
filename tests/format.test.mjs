@@ -63,14 +63,14 @@ test('precision is unavailable for invalid input', () => {
   assert.equal(precision(100, undefined), null);
 });
 
-test('gauge places the estimate and the central range on the extended range', () => {
-  assert.deepEqual(gauge(150, [125, 175], [100, 200]), { low: 25, high: 75, point: 50 });
+test('gauge places the estimate on the displayed range', () => {
+  assert.equal(gauge(150, [100, 200]), 50);
   // Valeurs hors échelle : ramenées aux extrémités.
-  assert.equal(gauge(250, [50, 300], [100, 200]).point, 100);
-  assert.equal(gauge(250, [50, 300], [100, 200]).low, 0);
-  assert.equal(gauge(1, [1, 2], [5, 5]), null);
-  assert.equal(gauge(NaN, [1, 2], [0, 5]), null);
-  assert.equal(gauge(3, undefined, [0, 5]), null);
+  assert.equal(gauge(250, [100, 200]), 100);
+  assert.equal(gauge(50, [100, 200]), 0);
+  assert.equal(gauge(1, [5, 5]), null);
+  assert.equal(gauge(NaN, [0, 5]), null);
+  assert.equal(gauge(3, undefined), null);
 });
 
 test('distance and readable distance', () => {
