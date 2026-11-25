@@ -55,7 +55,7 @@ jobs:
             exit 0
           fi
           npx --yes wrangler@4.166.0 deploy --config dist/cloudflare/wrangler.json
-          for path in / /model.py; do
+          for path in / /js/inference-worker.js /models/model.py; do
             status=$(curl --silent --show-error --retry 4 --max-time 20 --output /dev/null --write-out '%{http_code}' "$test_url$path")
             if [[ "$status" != 401 ]]; then
               echo "::error::Expected authentication on $path, received HTTP $status."
@@ -94,6 +94,7 @@ jobs:
           fi
           npx --yes wrangler@4.166.0 deploy --config dist/cloudflare/wrangler.json
           site=https://valometra-estimation.valometra-grenoble.workers.dev
-          for path in / /inference-worker.js /model.py; do
+          for path in / /js/inference-worker.js /models/model.py; do
+            echo "Checking $path"
             curl --fail --silent --show-error --retry 4 --max-time 20 "$site$path" --output /dev/null
           done
