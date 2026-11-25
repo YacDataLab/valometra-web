@@ -1,6 +1,6 @@
 # Architecture de Valometra-web
 
-État après la refonte du Worker (lot 1) et le socle du front (lot 2). `estimate.js` et l'organisation des dossiers de `public/` n'ont pas encore été restructurés (voir [Évolutions prévues](#évolutions-prévues)).
+État après la refonte du Worker (lot 1), le socle du front (lot 2) et le découpage de l'estimation (lot 3). L'organisation des dossiers de `public/` n'a pas encore été restructurée (voir [Évolutions prévues](#évolutions-prévues)).
 
 ## Vue d'ensemble
 
@@ -114,7 +114,13 @@ Le même en-tête et pied de page sont répétés dans chaque page ; ils sont g�
 | --- | --- |
 | `app.js` | Point d'entrée : registre `PAGES`, routage par ancre (`#estimate`, `#market`…), mémoire du défilement, préchargement au survol, constellation du hero, chargement de `metadata.json` |
 | `store.js` | `$`, `state` (`metadata`, `market`), `readJson`, `loadMarket()` (`market.json` chargé au premier usage) |
-| `estimate.js` | Formulaire, dialogue avec le moteur, rendu du résultat, simulateur « et si ? », retour anonyme, lien partagé |
+| `estimate.js` | Orchestrateur de l'estimation : soumission, états du bouton, affichage, historique |
+| `form.js` | Lecture et validation du formulaire (`collectInputs`), préremplissage (`fillForm`), contrôles de choix |
+| `engine.js` | Moteur : Worker Pyodide derrière `predict(features)` (promesse) ; ignore tout du DOM |
+| `result.js` | Rendu du résultat (`resultHtml`) : fonctions pures qui renvoient du HTML |
+| `simulator.js` | Simulateur « et si ? » : rendu et relance du moteur avec une variante |
+| `feedback.js` | Retour anonyme sur la justesse (`POST /api/feedback`) |
+| `share.js` | Lien partageable (valeurs du formulaire dans l'URL) |
 | `address.js` | Saisie d'adresse : suggestions IGN, sélection, requêtes annulables |
 | `enrichment.js` | Rapprochement BDNB et ADEME par identifiant BAN exact, choix du bâtiment et du DPE |
 | `form-flow.js` | Mode DPE du formulaire (sans / saisi / confirmé) |
@@ -133,15 +139,15 @@ Modules partagés, sans dépendance au reste de l'application :
 
 Scripts classiques, chargés hors du graphe de modules : `shell.js` (lien d'évitement, lien « gestion »), `theme.js` (thème clair/sombre, chargé dans `<head>` pour éviter un flash), `sw.js` (service worker : réseau d'abord, jamais d'API ni de page privée).
 
-**Graphe de dépendances.** Chaque module déclare ses dépendances par `import` ; il n'y a plus de globale `window`. `index.html` ne charge que `app.js`, qui importe tout le reste (dont `history.js` et `form-flow.js` pour leurs effets). Les modules d'interface communiquent par trois événements : `valometra:estimated`, `valometra:reopen`, `valometra:dpe-confirmed`. **Ajouter un module** : l'importer depuis `app.js` ou depuis le module qui l'utilise, sans toucher aux pages HTML.
+**Graphe de dépendances.** Chaque module déclare ses dépendances par `import` ; il n'y a plus de globale `window`. `index.html` ne charge que `app.js`, qui importe tout le reste (dont `history.js` et `form-flow.js` pour leurs effets). L'état de la dernière estimation (`lastInputs`, `lastPrediction`) est dans `store.js`. Les modules d'interface communiquent par trois événements : `valometra:estimated`, `valometra:reopen`, `valometra:dpe-confirmed`. **Ajouter un module** : l'importer depuis `app.js` ou depuis le module qui l'utilise, sans toucher aux pages HTML.
 
 ### Parcours d'une estimation
 
 1. `app.js` charge `metadata.json` (communes) et active le formulaire.
 2. L'utilisateur choisit une adresse (`address.js`) ; `enrichment.js` interroge BDNB et ADEME et préremplit le bâtiment. Le DPE doit être confirmé par l'utilisateur.
-3. À la soumission, `estimate.js` construit les variables du modèle, démarre `inference-worker.js` (Pyodide depuis jsDelivr) et charge `market.json`.
-4. Le Worker du navigateur charge `model.py` et les 4 modèles de bornes, applique `preprocessing.json` et les corrections `intervals*.json`, puis renvoie l'estimation et les fourchettes 80 % et 50 %.
-5. `estimate.js` affiche prix, fourchette, repères locaux, comparables et simulateur, et enregistre l'historique si l'utilisateur y a consenti.
+3. À la soumission, `estimate.js` fait lire le formulaire par `form.js` (`collectInputs`), démarre le moteur (`engine.js` → `inference-worker.js`, Pyodide depuis jsDelivr) et charge `market.json`.
+4. Le Worker du navigateur, appelé par `predict()`, charge `model.py` et les 4 modèles de bornes, applique `preprocessing.json` et les corrections `intervals*.json`, puis renvoie l'estimation et les fourchettes 80 % et 50 %.
+5. `estimate.js` affiche le HTML de `result.js` (prix, fourchette, repères locaux, comparables, simulateur, retour) et enregistre l'historique si l'utilisateur y a consenti.
 
 ### Modèle et données
 
@@ -153,4 +159,4 @@ Scripts classiques, chargés hors du graphe de modules : `shell.js` (lien d'évi
 
 ## Évolutions prévues
 
-Lots non réalisés à ce jour : découpage de `estimate.js` (moteur, formulaire, résultat, simulateur) et réorganisation de `public/` (`js/`, `data/`, `models/`).
+Lot non réalisé à ce jour : réorganisation de `public/` (`js/`, `data/`, `models/`). `enrichment.js` et `market.js` restent de longs modules à état global : candidats au même découpage.

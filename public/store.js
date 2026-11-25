@@ -1,5 +1,6 @@
 // État partagé entre les modules de l'application et accès aux données.
-export const state = { metadata: null, market: [] };
+// `lastInputs` et `lastPrediction` : entrées et résultat de la dernière estimation affichée.
+export const state = { metadata: null, market: [], lastInputs: null, lastPrediction: null };
 
 export function readJson(path) {
   return fetch(path).then(response => {
