@@ -91,6 +91,38 @@ test('admin authorization, payload validation and closed submissions', async () 
   database.close();
 });
 
+test('routing keeps the same access order: sign-in, manager, then unknown routes', async () => {
+  const { request, database } = fixture();
+  const admin = { id: 'manager', email: 'admin@example.test' };
+  assert.equal((await request('/api/unknown')).status, 401);
+  assert.equal((await request('/api/unknown', { id: 'alice' })).status, 404);
+  assert.equal((await request('/api/admin/unknown', { id: 'alice' })).status, 403);
+  assert.equal((await request('/api/admin/unknown', admin)).status, 404);
+  const own = { id: 'alice', method: 'DELETE' };
+  assert.equal((await request('/api/my-requests/not-an-id', own)).status, 404);
+  const put = { ...admin, method: 'PUT' };
+  assert.equal((await request('/api/admin/leads/' + first, put)).status, 404);
+  const foreign = { ...own, source: 'https://evil.example' };
+  assert.equal((await request('/api/my-requests/' + first, foreign)).status, 403);
+  database.close();
+});
+
+test('the CSV export neutralizes spreadsheet formulas and keeps the BOM', async () => {
+  const { request, database } = fixture();
+  database.prepare('UPDATE leads SET name = ? WHERE id = ?').run('=HYPERLINK("x")', first);
+  const response = await request('/api/admin/leads/export', {
+    id: 'manager',
+    email: 'admin@example.test',
+  });
+  assert.match(response.headers.get('Content-Type'), /^text\/csv/);
+  const bytes = new Uint8Array(await response.arrayBuffer());
+  assert.deepEqual([...bytes.slice(0, 3)], [0xef, 0xbb, 0xbf]);
+  const text = new TextDecoder().decode(bytes);
+  assert.ok(text.startsWith('"Date";"Nom"'));
+  assert.ok(text.includes('"\'=HYPERLINK(""x"")"'));
+  database.close();
+});
+
 test('the published HTML contains the required estimation fields and no contact form', async () => {
   const { request, database } = fixture();
   const page = await request('/');
