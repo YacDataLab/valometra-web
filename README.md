@@ -70,6 +70,8 @@ Code sous licence GNU AGPL v3, voir [LICENSE](LICENSE). Les ressources tierces (
 
 ## Documentation technique
 
+L'organisation du code (Worker, front, assemblage) est détaillée dans [docs/architecture.md](docs/architecture.md).
+
 ### Inférence
 
 Modèle ponctuel initial inchangé, 77 variables. Jusqu'à 40 variables sont alimentées par le formulaire et le rapprochement d'adresse ; les autres restent manquantes et suivent les règles de préparation de `preprocessing.json`.
@@ -96,7 +98,6 @@ Cinq exports Python autonomes (point, bornes 80 % et 50 %) sont exécutés via P
 ### Espace de suivi
 
 - Les demandes d'accompagnement sont distinctes de l'estimation. La création de nouvelles demandes est désactivée ; les demandes existantes restent stockées en D1 (migration `drizzle/0000_leads.sql`).
-- Aucun e-mail ni SMS n'est envoyé automatiquement par le code. La date et la version du consentement sont enregistrées avec chaque demande.
 - `/gestion` et `/api/admin/*` : identité authentifiée et e-mail du gestionnaire vérifiés côté serveur contre le secret `ADMIN_EMAIL`, jamais présent dans le code. Lecture, filtre, export CSV, notes privées, statut et suppression.
 - `/mes-demandes` : chaque visiteur ne voit et ne supprime que ses propres demandes.
 - Écritures protégées par vérification de l'origine, paramètres SQL liés et validation. Les pages privées et leurs données ne sont jamais mises en cache.
@@ -108,7 +109,7 @@ Cinq exports Python autonomes (point, bornes 80 % et 50 %) sont exécutés via P
 
 ### Sécurité et hors connexion
 
-- Le Worker ajoute à chaque page une politique de sécurité du contenu (`script-src` sans script en ligne, sources limitées à jsDelivr pour Pyodide, IGN pour le géocodage et le Plan IGN, BDNB, ADEME), `X-Frame-Options: DENY` et une `Permissions-Policy` restrictive. Toute nouvelle source externe doit être ajoutée à `contentSecurityPolicy` dans `worker/service.mjs`, avec son test.
+- Le Worker ajoute à chaque page une politique de sécurité du contenu (`script-src` sans script en ligne, sources limitées à jsDelivr pour Pyodide, IGN pour le géocodage et le Plan IGN, BDNB, ADEME), `X-Frame-Options: DENY` et une `Permissions-Policy` restrictive. Toute nouvelle source externe doit être ajoutée à `contentSecurityPolicy` dans `worker/security.mjs`, avec son test.
 - Limite connue : Pyodide est chargé depuis jsDelivr sans contrôle d'intégrité (le chargeur ne le permet pas). L'auto-hébergement du moteur supprimerait cette dépendance, mais alourdirait le Worker de plusieurs mégaoctets.
 - `public/sw.js` garde une copie locale des pages publiques (réseau d'abord, copie en secours). Il n'intercepte jamais `/api/`, `/gestion` ni `/mes-demandes`. Modifier `CACHE` pour forcer le renouvellement.
 - Les valeurs de référence (date, couvertures, nombre de communes, jours depuis 2025) sont dans `public/config.js` ; `tests/config.test.mjs` vérifie leur cohérence avec les pages et les métadonnées.
