@@ -274,8 +274,10 @@ test('every script, module, dataset and model the pages load is published', asyn
     ...['preprocessing.json', 'intervals.json', 'intervals50.json'].map(f => '/models/' + f),
   ]);
   for (const page of ['index', 'credits', 'admin', 'my-requests'])
-    for (const [, src] of readFileSync(new URL(`../public/${page}.html`, import.meta.url), 'utf8')
-      .matchAll(/<script[^>]*\ssrc="([^"]+)"/g))
+    for (const [, src] of readFileSync(
+      new URL(`../public/${page}.html`, import.meta.url),
+      'utf8',
+    ).matchAll(/<script[^>]*\ssrc="([^"]+)"/g))
       urls.add('/' + src);
   const scripts = new URL('../public/js/', import.meta.url);
   for (const file of readdirSync(scripts).filter(f => f.endsWith('.js')))
