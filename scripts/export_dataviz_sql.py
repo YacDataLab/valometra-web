@@ -20,6 +20,7 @@ TABLES = (
 
 
 def export(db, stream):
+    """Write the schema and data as D1-compatible SQL statements."""
     stream.write(SCHEMA.read_text(encoding="utf-8"))
     for table in TABLES:
         columns = [
@@ -41,6 +42,7 @@ def export(db, stream):
 
 
 def main():
+    """Export a SQLite snapshot to the requested path."""
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--database", type=Path, required=True)
     parser.add_argument("--output", type=Path, required=True)

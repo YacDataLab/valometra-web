@@ -9,17 +9,36 @@ import tempfile
 import unittest
 from datetime import date
 from pathlib import Path
-from types import SimpleNamespace
+from unittest.mock import patch
 from zipfile import ZipFile
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
 
-from build_dataviz import BDNB_COLUMNS, DVF_COLUMNS, build  # noqa: E402
-from export_dataviz_sql import export  # noqa: E402
+# The scripts are imported after adding their directory to the module path.
+# pylint: disable=wrong-import-position
+from build_dataviz import (  # noqa: E402
+    BDNB_COLUMNS,
+    DVF_COLUMNS,
+    build,
+    parse_args,
+    read_csv,
+)
+from export_dataviz_sql import main as export_sql  # noqa: E402
+
+# pylint: enable=wrong-import-position
 
 
 class DatavizDataTest(unittest.TestCase):
+    """Exercise the build and export with synthetic source files."""
+
+    def test_invalid_csv(self):
+        """Reject a CSV that omits a required column or has a truncated row."""
+        for contents in ("id\n1\n", "id,date\n1\n"):
+            with self.subTest(contents=contents), self.assertRaises(ValueError):
+                list(read_csv(io.StringIO(contents), "dvf.csv", ("id", "date")))
+
     def test_import_and_export(self):
+        """Preserve sale totals and missing values across imports and SQL export."""
         with tempfile.TemporaryDirectory() as directory:
             folder = Path(directory)
             for year in range(2021, 2027):
@@ -53,21 +72,42 @@ class DatavizDataTest(unittest.TestCase):
             writer.writerow(("bdnb-'a", "38185", ""))
             with ZipFile(bdnb, "w") as archive:
                 archive.writestr("csv/batiment_groupe.csv", stream.getvalue())
-            args = SimpleNamespace(
-                start=date(2021, 7, 1),
-                end=date(2026, 6, 30),
-                dvf_dir=folder,
-                bdnb_zip=bdnb,
-                output=folder / "dataviz.sqlite",
-            )
+            output = folder / "dataviz.sqlite"
+            with patch.object(
+                sys,
+                "argv",
+                [
+                    "build_dataviz.py",
+                    "--end",
+                    "2026-06-30",
+                    "--dvf-dir",
+                    str(folder),
+                    "--bdnb-zip",
+                    str(bdnb),
+                    "--output",
+                    str(output),
+                ],
+            ):
+                args = parse_args()
+            self.assertEqual(args.start, date(2021, 7, 1))
             build(args)
             build(args)
-            seed = io.StringIO()
-            with sqlite3.connect(args.output) as db:
-                export(db, seed)
+            seed = folder / "dataviz.sql"
+            with patch.object(
+                sys,
+                "argv",
+                [
+                    "export_dataviz_sql.py",
+                    "--database",
+                    str(output),
+                    "--output",
+                    str(seed),
+                ],
+            ):
+                export_sql()
             with sqlite3.connect(":memory:") as imported:
                 imported.execute("PRAGMA foreign_keys = ON")
-                imported.executescript(seed.getvalue())
+                imported.executescript(seed.read_text(encoding="utf-8"))
                 self.assertEqual(
                     imported.execute("PRAGMA foreign_key_check").fetchall(), []
                 )

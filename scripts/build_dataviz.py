@@ -41,6 +41,7 @@ BDNB_COLUMNS = ("batiment_groupe_id", "code_commune_insee", "code_iris")
 
 
 def read_csv(stream, name, columns, *, delimiter=","):
+    """Validate the CSV header and yield numbered records."""
     reader = csv.DictReader(stream, delimiter=delimiter)
     missing = set(columns).difference(reader.fieldnames or ())
     if missing:
@@ -52,6 +53,7 @@ def read_csv(stream, name, columns, *, delimiter=","):
 
 
 def record_source(db, dataset, path, rows):
+    """Record the input checksum and the number of rows loaded."""
     with path.open("rb") as stream:
         digest = hashlib.file_digest(stream, "sha256").hexdigest()
     db.execute(
@@ -60,6 +62,7 @@ def record_source(db, dataset, path, rows):
 
 
 def cents(raw):
+    """Convert a source amount to integer cents, preserving missing values."""
     if not raw:
         return None
     scaled = Decimal(raw.replace(",", ".")) * 100
@@ -68,7 +71,9 @@ def cents(raw):
     return int(scaled)
 
 
-def dvf_rows(stream, path, year, start, end, towns):
+def dvf_rows(stream, path, year, period, towns):
+    """Yield mutations and their source observations for the selected territory."""
+    start, end = period
     for line, row in read_csv(stream, path.name, DVF_COLUMNS):
         if row["code_commune"] not in towns or not start <= row["date_mutation"] <= end:
             continue
@@ -105,12 +110,13 @@ def dvf_rows(stream, path, year, start, end, towns):
         yield mutation, observation
 
 
-def load_dvf(db, year, path, start, end, towns):
+def load_dvf(db, year, path, period, towns):
+    """Load one DVF archive in bounded batches."""
     mutations = {}
     observations = []
     total = 0
     with gzip.open(path, "rt", encoding="utf-8-sig", newline="") as stream:
-        for mutation, observation in dvf_rows(stream, path, year, start, end, towns):
+        for mutation, observation in dvf_rows(stream, path, year, period, towns):
             previous = mutations.setdefault(mutation[0], mutation)
             if previous != mutation:
                 raise ValueError(f"{path.name}: conflicting mutation {mutation[0]}")
@@ -125,6 +131,7 @@ def load_dvf(db, year, path, start, end, towns):
 
 
 def write_dvf_batch(db, mutations, observations):
+    """Store a batch and reject conflicts with previously imported mutations."""
     db.executemany(
         """INSERT INTO mutation VALUES (?, ?, ?, ?)
            ON CONFLICT(id) DO UPDATE SET date = NULL
@@ -140,6 +147,7 @@ def write_dvf_batch(db, mutations, observations):
 
 
 def load_filosofi(db):
+    """Load the published Filosofi indicators for Grenoble."""
     path = PUBLIC / "filosofi.json"
     source = json.loads(path.read_text(encoding="utf-8"))
     commune = source["commune"]
@@ -158,6 +166,8 @@ def load_filosofi(db):
 
 
 def load_bdnb(db, path, towns):
+    """Load the building identifiers and IRIS codes for the selected towns."""
+
     def buildings(stream):
         for line, row in read_csv(stream, path.name, BDNB_COLUMNS, delimiter=";"):
             commune = row["code_commune_insee"]
@@ -189,6 +199,7 @@ def load_bdnb(db, path, towns):
 
 
 def parse_args():
+    """Read command-line options and calculate the five-year window."""
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--end", type=date.fromisoformat, required=True)
     parser.add_argument(
@@ -205,6 +216,7 @@ def parse_args():
 
 
 def build(args):
+    """Build and atomically replace the destination SQLite database."""
     towns = {
         town["code"]: town["name"]
         for town in json.loads((PUBLIC / "metadata.json").read_text(encoding="utf-8"))[
@@ -226,7 +238,7 @@ def build(args):
                 db.execute("INSERT INTO coverage VALUES (?, ?)", (start, end))
                 for year in range(args.start.year, args.end.year + 1):
                     load_dvf(
-                        db, year, args.dvf_dir / f"{year}.csv.gz", start, end, towns
+                        db, year, args.dvf_dir / f"{year}.csv.gz", (start, end), towns
                     )
                 load_filosofi(db)
                 load_bdnb(db, args.bdnb_zip, towns)
