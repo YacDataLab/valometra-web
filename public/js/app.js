@@ -120,7 +120,7 @@ for (const [id, page] of Object.entries(PAGES)) {
   });
 }
 
-// Constellation des communes couvertes (hero) : dessinée à partir de metadata.json.
+// Constellation des communes couvertes (hero) : dessinée à partir de data/metadata.json.
 function renderConstellation(towns) {
   const points = F.constellation(towns);
   if (!points.length) return;
@@ -146,7 +146,7 @@ function renderConstellation(towns) {
 window.addEventListener('hashchange', route);
 route();
 
-readJson('metadata.json')
+readJson('data/metadata.json')
   .then(data => {
     state.metadata = data;
     initEstimate(data.towns);

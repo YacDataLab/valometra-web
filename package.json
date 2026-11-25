@@ -11,8 +11,8 @@
   "scripts": {
     "build": "python3 scripts/chrome.py && python3 scripts/build.py",
     "test": "npm run build && node --test tests/service.test.mjs tests/format.test.mjs tests/estimate.test.mjs tests/config.test.mjs tests/contrast.test.mjs tests/accessibility.test.mjs tests/pwa.test.mjs tests/fonts.test.mjs && python3 tests/model_regression.py",
-    "format": "npx --yes prettier@3.6.2 --write worker tests/*.mjs public/*.js public/*.css",
-    "format:check": "npx --yes prettier@3.6.2 --check worker tests/*.mjs public/*.js public/*.css"
+    "format": "npx --yes prettier@3.6.2 --write worker tests/*.mjs public/js/*.js public/sw.js public/*.css",
+    "format:check": "npx --yes prettier@3.6.2 --check worker tests/*.mjs public/js/*.js public/sw.js public/*.css"
   },
   "engines": {
     "node": "24.x"

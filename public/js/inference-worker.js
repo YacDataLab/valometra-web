@@ -1,3 +1,5 @@
+// Modèles et paramètres : dossier models/, relatif à ce script (js/).
+const MODELS = '../models/';
 let ready;
 self.onmessage = async ({ data }) => {
   try {
@@ -10,15 +12,15 @@ self.onmessage = async ({ data }) => {
         const names = ['point', 'lower', 'upper', 'lower50', 'upper50'];
         const texts = await Promise.all(
           names.map(name =>
-            fetch(name === 'point' ? 'model.py' : 'model-' + name + '.py').then(r => {
+            fetch(MODELS + (name === 'point' ? 'model.py' : `model-${name}.py`)).then(r => {
               if (!r.ok) throw Error('Modèle indisponible');
               return r.text();
             }),
           ),
         );
         const [config, intervals, intervals50] = await Promise.all(
-          ['preprocessing.json', 'intervals.json', 'intervals50.json'].map(url =>
-            fetch(url).then(r => {
+          ['preprocessing.json', 'intervals.json', 'intervals50.json'].map(name =>
+            fetch(MODELS + name).then(r => {
               if (!r.ok) throw Error('Paramètres indisponibles');
               return r.text();
             }),

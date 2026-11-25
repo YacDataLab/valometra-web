@@ -5,21 +5,22 @@ import unittest
 from pathlib import Path
 
 PUBLIC = Path(__file__).resolve().parents[1] / "public"
+MODELS = PUBLIC / "models"
 
 
 def load_json(name):
-    return json.loads((PUBLIC / name).read_text())
+    return json.loads((MODELS / name).read_text())
 
 
 def load_estimator():
     models = {}
     for name in ("point", "lower", "upper", "lower50", "upper50"):
-        path = PUBLIC / ("model.py" if name == "point" else f"model-{name}.py")
+        path = MODELS / ("model.py" if name == "point" else f"model-{name}.py")
         namespace = {}
         exec(compile(path.read_bytes(), str(path), "exec"), namespace)
         models[name] = namespace["apply_catboost_model"]
 
-    source = (PUBLIC / "inference-worker.js").read_text()
+    source = (PUBLIC / "js" / "inference-worker.js").read_text()
     code = re.search(r"py\.runPython\(`(.*?)`\);\s*return py", source, re.S)[1]
     context = dict(
         models=models,

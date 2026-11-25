@@ -21,7 +21,7 @@ export function resetEngine() {
 // Démarre le moteur une seule fois (chargement de Pyodide et des modèles).
 export function startEngine() {
   enginePromise ??= new Promise((resolve, reject) => {
-    worker = new Worker('inference-worker.js');
+    worker = new Worker('js/inference-worker.js');
     worker.onmessage = ({ data }) => {
       if (data.type === 'ready') resolve();
       else if (data.id === undefined) {

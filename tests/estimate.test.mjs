@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { resultHtml } from '../public/result.js';
-import { state } from '../public/store.js';
+import { resultHtml } from '../public/js/result.js';
+import { state } from '../public/js/store.js';
 
 const input = {
   town: { code: '38185', name: 'Grenoble' },
@@ -70,7 +70,7 @@ test('the engine starts once, resolves each prediction by its own id and can be 
         data: { type: 'prediction', id: message.id, value: message.features.value, intervals: {} },
       });
   });
-  const { predict, resetEngine } = await import('../public/engine.js');
+  const { predict, resetEngine } = await import('../public/js/engine.js');
   const [a, b] = await Promise.all([predict({ value: 1 }), predict({ value: 2 })]);
   assert.deepEqual([a.value, b.value], [1, 2]);
   assert.equal(created.length, 1);
@@ -87,6 +87,6 @@ test('a crash of the engine rejects the calculations in progress', async () => {
     if (message.type === 'init') worker.onmessage({ data: { type: 'ready' } });
     else worker.onerror();
   });
-  const { predict } = await import('../public/engine.js');
+  const { predict } = await import('../public/js/engine.js');
   await assert.rejects(predict({ value: 1 }), /n’a pas pu démarrer/);
 });

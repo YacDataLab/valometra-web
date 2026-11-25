@@ -1,8 +1,8 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import * as format from '../public/format.js';
+import * as format from '../public/js/format.js';
 import { readFileSync } from 'node:fs';
-import { decodeMarket } from '../public/store.js';
+import { decodeMarket } from '../public/js/store.js';
 
 const {
   scenarioFeatures,
@@ -377,7 +377,9 @@ test('rampColor interpolates along the stops and clamps outside the domain', () 
 });
 
 test('market data is stored in columns and decodes to one object per sale', () => {
-  const data = JSON.parse(readFileSync(new URL('../public/market.json', import.meta.url), 'utf8'));
+  const data = JSON.parse(
+    readFileSync(new URL('../public/data/market.json', import.meta.url), 'utf8'),
+  );
   assert.ok(data.rows.length > 0);
   assert.ok(data.rows.every(row => row.length === data.columns.length));
   const [sale] = decodeMarket({ columns: ['town', 'price'], rows: [['Grenoble', 55000]] });
