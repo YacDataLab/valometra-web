@@ -1,6 +1,7 @@
 import { $ } from './dom.js';
 import { config } from './config.js';
 import { syncChoice } from './ui.js';
+import { historicalIris } from './iris.js';
 
 // Après une écriture de valeur par ce script, l'affichage des listes personnalisées se met à jour.
 const sync = element => syncChoice(element);
@@ -13,6 +14,17 @@ let seq = 0,
   dpeFeatures = {},
   applied = new Map(),
   busy = false;
+let filosofiPromise,
+  contoursPromise,
+  filosofiFeatures = {},
+  buildingVersion = 0,
+  filosofiPending = false;
+const filosofiIndicators = [
+  'insee_niveau_vie_median',
+  'insee_taux_pauvrete',
+  'insee_niveau_vie_d9',
+  'insee_rapport_interdecile',
+];
 const buildingMap = {
   code_iris: 'bdnb_code_iris',
   annee_construction: 'bdnb_annee_construction',
@@ -68,7 +80,12 @@ function undo(group) {
       delete $('dpe-date').dataset.auto;
     }
     dpeFeatures = {};
-  } else buildingFeatures = {};
+  } else {
+    buildingFeatures = {};
+    buildingVersion++;
+    filosofiFeatures = {};
+    filosofiPending = false;
+  }
 }
 function populate(features, group) {
   for (const [k, value] of Object.entries(features)) {
@@ -122,6 +139,41 @@ async function getJSON(url, signal) {
   if (!r.ok) throw Error('HTTP ' + r.status);
   return r.json();
 }
+async function applyFilosofi(building, version) {
+  const iris = building.code_iris;
+  if (address?.code !== '38185' || typeof iris !== 'string' || !/^38185[0-9]{4}$/.test(iris))
+    return;
+  filosofiPending = true;
+  try {
+    filosofiPromise ??= getJSON('data/filosofi.json', AbortSignal.timeout(5000)).catch(() => null);
+    const data = await filosofiPromise;
+    if (
+      version !== buildingVersion ||
+      data?.commune !== '38185' ||
+      data.provenance?.iris_geography !== '2022-01-01' ||
+      !data.iris ||
+      !Object.hasOwn(data.iris, iris) ||
+      !building.geom_groupe
+    )
+      return;
+    contoursPromise ??= getJSON('data/iris-grenoble-2022.geojson', AbortSignal.timeout(5000)).catch(
+      () => null,
+    );
+    const contours = await contoursPromise;
+    if (version !== buildingVersion || historicalIris(building.geom_groupe, contours) !== iris)
+      return;
+    const row = data.iris[iris];
+    if (!row || typeof row !== 'object') return;
+    filosofiFeatures = { insee_code_iris: iris };
+    for (const feature of filosofiIndicators) {
+      if (Number.isFinite(row[feature])) filosofiFeatures[feature] = row[feature];
+    }
+  } catch {
+    // Optional enrichment must never interrupt the estimate.
+  } finally {
+    if (version === buildingVersion) filosofiPending = false;
+  }
+}
 function applyBuilding(index) {
   undo('building');
   undo('dpe');
@@ -132,6 +184,7 @@ function applyBuilding(index) {
   const b = buildings[+index];
   buildingFeatures = mapValues(b, buildingMap);
   populate(buildingFeatures, 'building');
+  void applyFilosofi(b, buildingVersion);
   $('building-status').textContent =
     `Fiche ${b.batiment_groupe_id} · ${Object.keys(buildingFeatures).length} caractéristiques récupérées. Vérifiez les valeurs préremplies.`;
 }
@@ -191,6 +244,7 @@ async function lookup(a) {
     'cle_interop_adr',
     'libelle_adr_principale_ban',
     ...Object.keys(buildingMap),
+    ...(a.code === '38185' ? ['geom_groupe'] : []),
   ].join(',');
   const dKeys = [
     'numero_dpe',
@@ -299,9 +353,9 @@ export const addressData = {
     $('dpe-confirm').hidden = true;
   },
   lookup,
-  isBusy: () => busy,
+  isBusy: () => busy || filosofiPending,
   getFeatures() {
-    const f = { ...buildingFeatures, ...dpeFeatures };
+    const f = { ...buildingFeatures, ...dpeFeatures, ...filosofiFeatures };
     for (const [k, a] of applied) {
       const el = field(k);
       if (el && el.value === '') delete f[k];

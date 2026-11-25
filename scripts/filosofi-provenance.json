@@ -1,0 +1,20 @@
+{
+  "source": "https://www.insee.fr/fr/statistiques/8229323",
+  "vintage": 2021,
+  "iris_geography": "2022-01-01",
+  "training_reference": "Valometra — Atelier de prédiction, dist/dataset.csv et dist/models/catboost-v1/metrics.json (source_sha256 93fd801b6f9aa79db3e2aa97714215e48dcadf619231d5d4f9c93f6d0e172d27)",
+  "bdnb_iris_reference": "Référentiel administratif BDNB et empreinte Lambert-93 du bâtiment contrôlée sur les contours IGN au 2022-01-01",
+  "definitions": {
+    "insee_niveau_vie_median": "Médiane du revenu disponible par unité de consommation, en euros",
+    "insee_taux_pauvrete": "Taux de pauvreté au seuil de 60 %, en points de pourcentage (15 % est encodé 15)",
+    "insee_niveau_vie_d9": "Neuvième décile du revenu disponible par unité de consommation, en euros",
+    "insee_rapport_interdecile": "Rapport D9/D1, sans unité"
+  },
+  "columns": {
+    "iris": "IRIS",
+    "insee_niveau_vie_median": "DISP_MED21",
+    "insee_taux_pauvrete": "DISP_TP6021",
+    "insee_niveau_vie_d9": "DISP_D921",
+    "insee_rapport_interdecile": "DISP_RD21"
+  }
+}
