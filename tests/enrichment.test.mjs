@@ -262,3 +262,43 @@ test('published INSEE values and IGN contours cover the same 70 codes', () => {
   assert.deepEqual(Object.keys(bundled.iris).sort(), codes);
   assert.equal(bundled.provenance.iris_geography, '2022-01-01');
 });
+
+test('a diagonal footprint can fit an IRIS even when its rectangle crosses the limit', () => {
+  const diagonalDistrict = structuredClone(contours);
+  diagonalDistrict.features = [
+    {
+      properties: { CODE_IRIS: first },
+      geometry: {
+        type: 'Polygon',
+        coordinates: [
+          [
+            [0, 0],
+            [100, 0],
+            [0, 100],
+            [0, 0],
+          ],
+        ],
+      },
+    },
+  ];
+  const building = polygon(0, 0, 1, 1);
+  building.coordinates = [
+    [
+      [15, 65],
+      [65, 15],
+      [68, 18],
+      [18, 68],
+      [15, 65],
+    ],
+  ];
+  assert.equal(historicalIris(building, diagonalDistrict), first);
+  assert.equal(historicalIris(polygon(40, 40, 60, 60), diagonalDistrict), null);
+});
+
+test('touching a boundary or enclosing an IRIS enclave is rejected', () => {
+  const district = structuredClone(contours);
+  district.features[0].geometry.coordinates.push(polygon(40, 40, 50, 50).coordinates[0]);
+  assert.equal(historicalIris(polygon(80, 10, 100, 20), district), null);
+  assert.equal(historicalIris(polygon(30, 30, 60, 60), district), null);
+  assert.equal(historicalIris(polygon(30, 30, 39, 39), district), first);
+});

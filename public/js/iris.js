@@ -1,71 +1,105 @@
 function polygons(geometry) {
-  if (geometry?.type === 'Polygon') return [geometry.coordinates];
-  if (geometry?.type === 'MultiPolygon') return geometry.coordinates;
+  if (!Array.isArray(geometry?.coordinates)) return [];
+  if (geometry.type === 'Polygon') return [geometry.coordinates];
+  if (geometry.type === 'MultiPolygon') return geometry.coordinates;
   return [];
 }
 
-function footprintBounds(geometry) {
-  const parts = polygons(geometry);
-  if (!parts.length) return null;
-  const points = parts.flat(2);
-  if (!points.length || !points.every(([x, y]) => Number.isFinite(x) && Number.isFinite(y)))
-    return null;
-  const bounds = [Infinity, Infinity, -Infinity, -Infinity];
-  for (const [x, y] of points) {
-    bounds[0] = Math.min(bounds[0], x);
-    bounds[1] = Math.min(bounds[1], y);
-    bounds[2] = Math.max(bounds[2], x);
-    bounds[3] = Math.max(bounds[3], y);
-  }
-  return bounds[0] < bounds[2] && bounds[1] < bounds[3] ? bounds : null;
+function validRing(ring) {
+  if (!Array.isArray(ring) || ring.length < 4) return false;
+  const [x, y] = ring[0] ?? [];
+  const [lastX, lastY] = ring.at(-1) ?? [];
+  return (
+    x === lastX &&
+    y === lastY &&
+    ring.every(
+      point => Array.isArray(point) && Number.isFinite(point[0]) && Number.isFinite(point[1]),
+    )
+  );
 }
 
-function relation(ring, [minX, minY, maxX, maxY]) {
-  const x = (minX + maxX) / 2;
-  const y = (minY + maxY) / 2;
+function pointInRing([x, y], ring) {
   let inside = false;
   for (let i = 1; i < ring.length; i++) {
     const [ax, ay] = ring[i - 1];
     const [bx, by] = ring[i];
-    // The bounding boxes can overlap without the edges touching.
-    // In that case we conservatively classify the footprint as ambiguous.
-    if (
-      Math.max(ax, bx) >= minX &&
-      Math.min(ax, bx) <= maxX &&
-      Math.max(ay, by) >= minY &&
-      Math.min(ay, by) <= maxY
-    )
-      return 'boundary';
     if (ay > y !== by > y && x < ((bx - ax) * (y - ay)) / (by - ay) + ax) {
       inside = !inside;
     }
   }
-  return inside ? 'inside' : 'outside';
+  return inside;
 }
 
-// Accept a footprint only when its entire bounding box fits inside one IRIS.
+function orientation([ax, ay], [bx, by], [cx, cy]) {
+  return Math.sign((bx - ax) * (cy - ay) - (by - ay) * (cx - ax));
+}
+
+function segmentsMeet(a, b, c, d) {
+  for (const axis of [0, 1]) {
+    if (
+      Math.max(a[axis], b[axis]) < Math.min(c[axis], d[axis]) ||
+      Math.max(c[axis], d[axis]) < Math.min(a[axis], b[axis])
+    )
+      return false;
+  }
+  return (
+    orientation(a, b, c) * orientation(a, b, d) <= 0 &&
+    orientation(c, d, a) * orientation(c, d, b) <= 0
+  );
+}
+
+function ringsMeet(a, b) {
+  for (let i = 1; i < a.length; i++) {
+    for (let j = 1; j < b.length; j++) {
+      if (segmentsMeet(a[i - 1], a[i], b[j - 1], b[j])) return true;
+    }
+  }
+  return false;
+}
+
+function strictlyContains(building, district) {
+  const [exterior, ...holes] = district;
+  const [footprint, ...courtyards] = building;
+  if (!pointInRing(footprint[0], exterior) || holes.some(hole => pointInRing(footprint[0], hole)))
+    return false;
+  if (building.some(ring => district.some(boundary => ringsMeet(ring, boundary)))) return false;
+  // An enclave wholly surrounded by the building will not cross its edges.
+  return !holes.some(
+    hole =>
+      pointInRing(hole[0], footprint) &&
+      !courtyards.some(courtyard => pointInRing(hole[0], courtyard)),
+  );
+}
+
+// All footprint polygons must lie strictly within a single IRIS feature.
 export function historicalIris(geometry, contours) {
   if (
     geometry?.crs?.properties?.name !== 'EPSG:2154' ||
     contours?.crs?.properties?.name !== 'urn:ogc:def:crs:EPSG::2154'
   )
     return null;
-  const bounds = footprintBounds(geometry);
-  if (!bounds || !Array.isArray(contours.features)) return null;
+  const footprint = polygons(geometry);
+  if (
+    !Array.isArray(contours.features) ||
+    !footprint.length ||
+    footprint.some(part => !Array.isArray(part) || !part.length || !part.every(validRing))
+  )
+    return null;
   let result = null;
   for (const feature of contours.features) {
-    for (const [exterior, ...holes] of polygons(feature.geometry)) {
-      if (!exterior) continue;
-      const outer = relation(exterior, bounds);
-      if (outer === 'boundary') return null;
-      if (outer !== 'inside') continue;
-      const inner = holes.map(ring => relation(ring, bounds));
-      if (inner.includes('boundary')) return null;
-      if (inner.includes('inside')) continue;
-      const code = feature.properties?.CODE_IRIS;
-      if (result !== null || !/^38185[0-9]{4}$/.test(code ?? '')) return null;
-      result = code;
-    }
+    const districts = polygons(feature.geometry);
+    if (
+      !footprint.every(part =>
+        districts.some(
+          district =>
+            district.length && district.every(validRing) && strictlyContains(part, district),
+        ),
+      )
+    )
+      continue;
+    const code = feature.properties?.CODE_IRIS;
+    if (result !== null || !/^38185[0-9]{4}$/.test(code ?? '')) return null;
+    result = code;
   }
   return result;
 }

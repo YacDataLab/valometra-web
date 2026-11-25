@@ -73,9 +73,9 @@ npm test
 
 ## Contrôle géographique
 
-Le rectangle englobant l’empreinte BDNB doit tenir à l’intérieur d’un
-seul IRIS historique, sans toucher la frontière ni une enclave. Ce
-contrôle prudent peut écarter une empreinte proche d’une limite oblique.
+Le contour réel de l’empreinte BDNB doit tenir à l’intérieur d’un seul IRIS
+historique, sans toucher la frontière ni recouvrir une enclave. Le code
+trouvé doit correspondre à celui de la BDNB.
 Le site omet les entrées Filosofi si le contrôle échoue, si un fichier ou
 un indicateur manque, ou si le bâtiment est hors Grenoble. Une nouvelle
 adresse ou un autre bâtiment efface les valeurs précédentes et invalide
@@ -91,6 +91,14 @@ les réponses en cours.
   concorde, un code différent, une empreinte qui traverse une limite, une
   valeur masquée et une réponse tardive après un changement de sélection.
   La commande `npm test` exécute ces vérifications.
-- Le parcours complet dans le navigateur sur de vraies adresses, de la
-  sélection de l’adresse à l’estimation, reste à vérifier. Le taux de
-  bâtiments qui passent le contrôle géographique à Grenoble reste à mesurer.
+- Sur un tirage aléatoire reproductible de 150 groupes de bâtiments parmi
+  1 260 groupes grenoblois du fichier de ventes historique (graine 38185,
+  identifiants uniques triés), la BDNB a renvoyé les 150 empreintes. Sur le
+  même échantillon, 103 bâtiments passaient le test du rectangle et 135
+  passent le test du contour réel (90 %). Les quatre chiffres Filosofi
+  sont disponibles pour les 135 bâtiments retenus. Le contrôle géographique
+  n’a pas trouvé d’IRIS unique pour 11 bâtiments et a trouvé un code différent
+  de la BDNB pour 4 bâtiments.
+- Le parcours complet dans le navigateur, de la sélection d’une adresse
+  à l’estimation, reste à vérifier. Le taux est celui de l’échantillon
+  historique de bâtiments et ne mesure pas la couverture du formulaire.
