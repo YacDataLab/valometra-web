@@ -1,60 +1,82 @@
 # Filosofi pour Grenoble
 
-L’enrichissement concerne les bâtiments de Grenoble (INSEE **38185**). Le
-code IRIS de la fiche BDNB sélectionnée sert de clé. Le site charge
-`public/filosofi.json` à la première sélection d’un bâtiment éligible et
-réutilise le résultat pour la session. Les valeurs manquantes restent à la
-charge du prétraitement du modèle.
+L’enrichissement s’applique aux bâtiments de la commune INSEE `38185`.
+Le navigateur recoupe le code IRIS actuel de la BDNB et l’empreinte du
+bâtiment avec les contours IGN du **1ᵉʳ janvier 2022**. Il utilise les
+valeurs de la ligne Filosofi uniquement si les deux codes concordent.
 
-## État de la provenance
+## Sources et vérification de l’entraînement
 
-`public/preprocessing.json` confirme que `insee_code_iris` est une catégorie
-et que les quatre mesures ci-dessous sont numériques. Il reste à retrouver
-le fichier ou le manifeste d’entraînement qui établit le millésime de revenu,
-le zonage IRIS, les colonnes et leurs unités ou transformations. Il faut
-également confirmer que le code IRIS fourni par la BDNB correspond au même
-zonage, ou disposer d’une correspondance vérifiée.
+- [INSEE Filosofi 2021 (IRIS)](https://www.insee.fr/fr/statistiques/8229323),
+  base CSV sur les revenus disponibles, géographie au 1ᵉʳ janvier 2022.
+- [Contours IRIS IGN 2022](https://data.geopf.fr/telechargement/download/CONTOURS-IRIS/CONTOURS-IRIS_2-1__SHP__FRA_2022-01-01/CONTOURS-IRIS_2-1__SHP__FRA_2022-01-01.7z),
+  couche métropolitaine en Lambert-93, licence ouverte.
+- [Référentiel administratif BDNB](https://bdnb.io/schema/latest/bdnb_v07_refadmin/tables/iris.html).
+  Les 70 codes grenoblois sont communs à la BDNB, à Filosofi 2021 et aux contours
+  IGN 2022 et 2026. Les géométries 2022 et 2026 diffèrent.
+- [Valometra — Atelier de prédiction](https://valometra-atelier-prediction.agreeablepoppy2.chatgpt.site)
+  contient `dist/dataset.csv`. Son SHA-256 correspond à `source_sha256`
+  dans `dist/models/catboost-v1/metrics.json`, qui liste les cinq entrées
+  `insee_*`. Le prétraitement de cet export est identique à celui du site.
+  Parmi les ventes grenobloises du CSV antérieures à mai 2026, les **2 199**
+  lignes rattachées à un IRIS ont les quatre valeurs du CSV INSEE correspondant
+  à leur code, masques compris. Sur ces lignes, **2 198** ont les quatre
+  valeurs numériques. Les diagnostics de la phase initiale d’entraînement
+  référencent 1 738 ventes grenobloises du CSV, dont 1 717 avec les cinq
+  entrées Filosofi renseignées. Les quatre noms bruts du CSV INSEE sont
+  remplacés par les noms Valometra ci-dessous. Le modèle natif CatBoost
+  de l’Atelier et l’export Python du site concordent à moins d’un centime
+  sur un échantillon de 100 ventes de Grenoble (écart maximal : 0,0022 €).
 
-La publication officielle [Filosofi 2021, Revenus, pauvreté et niveau de vie
-(Iris)](https://www.insee.fr/fr/statistiques/8229323) indique une géographie au
-**1ᵉʳ janvier 2022**. Son CSV « Base Iris sur les revenus disponibles » a
-servi à tester le générateur, avec 70 codes de Grenoble extraits. Le tableau
-décrit cette publication. La correspondance avec l’entraînement reste à
-confirmer.
-
-| Entrée du modèle | Colonne 2021 | Définition INSEE pour cette publication |
+| Entrée du modèle | Colonne INSEE | Valeur |
 | --- | --- | --- |
 | `insee_code_iris` | `IRIS` | Code IRIS, chaîne de neuf caractères |
 | `insee_niveau_vie_median` | `DISP_MED21` | Médiane du revenu disponible par unité de consommation, en euros |
-| `insee_taux_pauvrete` | `DISP_TP6021` | Taux au seuil de 60 % du revenu disponible par UC médian métropolitain, en pourcentage |
+| `insee_taux_pauvrete` | `DISP_TP6021` | Taux au seuil de 60 % du revenu médian métropolitain, en points de pourcentage |
 | `insee_niveau_vie_d9` | `DISP_D921` | Neuvième décile du revenu disponible par unité de consommation, en euros |
-| `insee_rapport_interdecile` | `DISP_RD21` | Rapport D9/D1 du revenu disponible par unité de consommation |
+| `insee_rapport_interdecile` | `DISP_RD21` | Rapport D9/D1, sans unité |
 
 ## Génération
 
-L’artefact livré est généré ainsi tant que la provenance d’entraînement n’est
-pas confirmée. Sa table IRIS est vide et aucune valeur Filosofi n’est envoyée
-au modèle.
+Télécharger le fichier officiel « Base Iris sur les revenus disponibles »
+et extraire `BASE_TD_FILO_IRIS_2021_DISP.csv`. Depuis la racine du dépôt :
 
 ```sh
-python3 scripts/build_filosofi.py --unverified
+python3 scripts/build_filosofi.py \
+  --csv BASE_TD_FILO_IRIS_2021_DISP.csv \
+  --provenance scripts/filosofi-provenance.json
 ```
 
-Après confirmation, télécharger le CSV officiel du millésime établi depuis
-la publication INSEE et extraire le fichier de données. Préparer un manifeste
-JSON comportant `source` (URL de publication INSEE), `vintage`,
-`iris_geography`, `training_reference`, `bdnb_iris_reference`,
-`definitions` (une définition d’entraînement par indicateur numérique) et
-`columns` (les quatre noms de variables du modèle et la clé `iris`, associés
-aux en-têtes du CSV). Puis lancer depuis la racine du dépôt :
+Le générateur produit `public/data/filosofi.json`. Les cellules vides ou
+masquées, notamment `ns` et `so`, deviennent `null`. Seules les données
+publiques INSEE sont intégrées au JSON.
+
+Pour régénérer les contours, extraire le Shapefile métropolitain
+`CONTOURS-IRIS.shp` de l’archive IGN, puis exécuter :
 
 ```sh
-python3 scripts/build_filosofi.py --csv chemin/revenus.csv --provenance chemin/provenance.json
+ogr2ogr -f GeoJSON /tmp/iris-grenoble-2022.json CONTOURS-IRIS.shp \
+  -where "INSEE_COM = '38185'" -select CODE_IRIS -t_srs EPSG:2154 \
+  -lco COORDINATE_PRECISION=3
+python3 - <<'PY'
+import json
+from pathlib import Path
+
+data = json.loads(Path('/tmp/iris-grenoble-2022.json').read_text())
+data['features'].sort(key=lambda feature: feature['properties']['CODE_IRIS'])
+Path('public/data/iris-grenoble-2022.geojson').write_text(
+    json.dumps(data, ensure_ascii=False, separators=(',', ':')) + '\n'
+)
+PY
 npm test
 ```
 
-Le script conserve uniquement les codes IRIS commençant par `38185`. Les
-cellules vides ou masquées, notamment `ns` et `so`, donnent `null`. En cas de
-fichier indisponible, d’IRIS inconnu ou d’indicateur manquant, le site omet les
-variables concernées. Une nouvelle adresse ou un autre bâtiment efface les
-valeurs précédentes.
+## Contrôle géographique
+
+Le rectangle englobant l’empreinte BDNB doit tenir à l’intérieur d’un
+seul IRIS historique, sans toucher la frontière ni une enclave. Ce
+contrôle prudent peut écarter une empreinte proche d’une limite oblique.
+Le site omet les entrées Filosofi si le contrôle échoue, si un fichier ou
+un indicateur manque, ou si le bâtiment est hors Grenoble. Une nouvelle
+adresse ou un autre bâtiment efface les valeurs précédentes et invalide
+les réponses en cours.

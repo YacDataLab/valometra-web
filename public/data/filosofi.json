@@ -1,0 +1,445 @@
+{
+  "commune": "38185",
+  "iris": {
+    "381850101": {
+      "insee_niveau_vie_d9": null,
+      "insee_niveau_vie_median": null,
+      "insee_rapport_interdecile": null,
+      "insee_taux_pauvrete": null
+    },
+    "381850102": {
+      "insee_niveau_vie_d9": 39420.0,
+      "insee_niveau_vie_median": 21670.0,
+      "insee_rapport_interdecile": 3.8,
+      "insee_taux_pauvrete": 22.0
+    },
+    "381850103": {
+      "insee_niveau_vie_d9": 40170.0,
+      "insee_niveau_vie_median": 23210.0,
+      "insee_rapport_interdecile": 4.0,
+      "insee_taux_pauvrete": 21.0
+    },
+    "381850104": {
+      "insee_niveau_vie_d9": 43810.0,
+      "insee_niveau_vie_median": 24550.0,
+      "insee_rapport_interdecile": 3.6,
+      "insee_taux_pauvrete": 15.0
+    },
+    "381850105": {
+      "insee_niveau_vie_d9": 45580.0,
+      "insee_niveau_vie_median": 26990.0,
+      "insee_rapport_interdecile": 3.8,
+      "insee_taux_pauvrete": 15.0
+    },
+    "381850106": {
+      "insee_niveau_vie_d9": 37030.0,
+      "insee_niveau_vie_median": 21230.0,
+      "insee_rapport_interdecile": 3.7,
+      "insee_taux_pauvrete": 24.0
+    },
+    "381850107": {
+      "insee_niveau_vie_d9": 42090.0,
+      "insee_niveau_vie_median": 24180.0,
+      "insee_rapport_interdecile": 3.9,
+      "insee_taux_pauvrete": 17.0
+    },
+    "381850108": {
+      "insee_niveau_vie_d9": 38490.0,
+      "insee_niveau_vie_median": 22690.0,
+      "insee_rapport_interdecile": 3.4,
+      "insee_taux_pauvrete": 17.0
+    },
+    "381850109": {
+      "insee_niveau_vie_d9": 42410.0,
+      "insee_niveau_vie_median": 24050.0,
+      "insee_rapport_interdecile": 3.9,
+      "insee_taux_pauvrete": 19.0
+    },
+    "381850110": {
+      "insee_niveau_vie_d9": 40360.0,
+      "insee_niveau_vie_median": 21820.0,
+      "insee_rapport_interdecile": 3.7,
+      "insee_taux_pauvrete": 18.0
+    },
+    "381850111": {
+      "insee_niveau_vie_d9": 44180.0,
+      "insee_niveau_vie_median": 25730.0,
+      "insee_rapport_interdecile": 3.5,
+      "insee_taux_pauvrete": 12.0
+    },
+    "381850201": {
+      "insee_niveau_vie_d9": 40700.0,
+      "insee_niveau_vie_median": 23180.0,
+      "insee_rapport_interdecile": 3.8,
+      "insee_taux_pauvrete": 17.0
+    },
+    "381850202": {
+      "insee_niveau_vie_d9": 40440.0,
+      "insee_niveau_vie_median": 18810.0,
+      "insee_rapport_interdecile": 4.3,
+      "insee_taux_pauvrete": 31.0
+    },
+    "381850203": {
+      "insee_niveau_vie_d9": 54330.0,
+      "insee_niveau_vie_median": 31010.0,
+      "insee_rapport_interdecile": 4.0,
+      "insee_taux_pauvrete": 11.0
+    },
+    "381850204": {
+      "insee_niveau_vie_d9": 65830.0,
+      "insee_niveau_vie_median": 31970.0,
+      "insee_rapport_interdecile": 4.9,
+      "insee_taux_pauvrete": 11.0
+    },
+    "381850205": {
+      "insee_niveau_vie_d9": 54910.0,
+      "insee_niveau_vie_median": 28410.0,
+      "insee_rapport_interdecile": 4.8,
+      "insee_taux_pauvrete": 15.0
+    },
+    "381850206": {
+      "insee_niveau_vie_d9": 55980.0,
+      "insee_niveau_vie_median": 30550.0,
+      "insee_rapport_interdecile": 4.5,
+      "insee_taux_pauvrete": 11.0
+    },
+    "381850207": {
+      "insee_niveau_vie_d9": 46130.0,
+      "insee_niveau_vie_median": 18670.0,
+      "insee_rapport_interdecile": 5.0,
+      "insee_taux_pauvrete": 33.0
+    },
+    "381850208": {
+      "insee_niveau_vie_d9": 48820.0,
+      "insee_niveau_vie_median": 28650.0,
+      "insee_rapport_interdecile": 3.3,
+      "insee_taux_pauvrete": 9.0
+    },
+    "381850209": {
+      "insee_niveau_vie_d9": 49300.0,
+      "insee_niveau_vie_median": 27330.0,
+      "insee_rapport_interdecile": 4.0,
+      "insee_taux_pauvrete": 13.0
+    },
+    "381850210": {
+      "insee_niveau_vie_d9": 49510.0,
+      "insee_niveau_vie_median": 27610.0,
+      "insee_rapport_interdecile": 3.8,
+      "insee_taux_pauvrete": 12.0
+    },
+    "381850211": {
+      "insee_niveau_vie_d9": 48860.0,
+      "insee_niveau_vie_median": 28130.0,
+      "insee_rapport_interdecile": 3.9,
+      "insee_taux_pauvrete": 12.0
+    },
+    "381850212": {
+      "insee_niveau_vie_d9": 62030.0,
+      "insee_niveau_vie_median": 29360.0,
+      "insee_rapport_interdecile": 4.2,
+      "insee_taux_pauvrete": 9.0
+    },
+    "381850213": {
+      "insee_niveau_vie_d9": 49210.0,
+      "insee_niveau_vie_median": 28030.0,
+      "insee_rapport_interdecile": 3.5,
+      "insee_taux_pauvrete": 9.0
+    },
+    "381850214": {
+      "insee_niveau_vie_d9": 45330.0,
+      "insee_niveau_vie_median": 25910.0,
+      "insee_rapport_interdecile": 3.7,
+      "insee_taux_pauvrete": 13.0
+    },
+    "381850215": {
+      "insee_niveau_vie_d9": 47860.0,
+      "insee_niveau_vie_median": 26410.0,
+      "insee_rapport_interdecile": 3.8,
+      "insee_taux_pauvrete": 13.0
+    },
+    "381850216": {
+      "insee_niveau_vie_d9": 37190.0,
+      "insee_niveau_vie_median": 19030.0,
+      "insee_rapport_interdecile": 3.7,
+      "insee_taux_pauvrete": 27.0
+    },
+    "381850301": {
+      "insee_niveau_vie_d9": 37780.0,
+      "insee_niveau_vie_median": 22770.0,
+      "insee_rapport_interdecile": 3.2,
+      "insee_taux_pauvrete": 16.0
+    },
+    "381850302": {
+      "insee_niveau_vie_d9": 34410.0,
+      "insee_niveau_vie_median": 21040.0,
+      "insee_rapport_interdecile": 3.2,
+      "insee_taux_pauvrete": 19.0
+    },
+    "381850303": {
+      "insee_niveau_vie_d9": 34480.0,
+      "insee_niveau_vie_median": 20770.0,
+      "insee_rapport_interdecile": 3.2,
+      "insee_taux_pauvrete": 21.0
+    },
+    "381850304": {
+      "insee_niveau_vie_d9": 37020.0,
+      "insee_niveau_vie_median": 24130.0,
+      "insee_rapport_interdecile": 2.9,
+      "insee_taux_pauvrete": 13.0
+    },
+    "381850305": {
+      "insee_niveau_vie_d9": 39030.0,
+      "insee_niveau_vie_median": 22950.0,
+      "insee_rapport_interdecile": 3.1,
+      "insee_taux_pauvrete": 13.0
+    },
+    "381850306": {
+      "insee_niveau_vie_d9": 41920.0,
+      "insee_niveau_vie_median": 24580.0,
+      "insee_rapport_interdecile": 3.3,
+      "insee_taux_pauvrete": 13.0
+    },
+    "381850307": {
+      "insee_niveau_vie_d9": 36480.0,
+      "insee_niveau_vie_median": 22860.0,
+      "insee_rapport_interdecile": 3.0,
+      "insee_taux_pauvrete": 13.0
+    },
+    "381850308": {
+      "insee_niveau_vie_d9": 39400.0,
+      "insee_niveau_vie_median": 22580.0,
+      "insee_rapport_interdecile": 3.5,
+      "insee_taux_pauvrete": 19.0
+    },
+    "381850309": {
+      "insee_niveau_vie_d9": 23280.0,
+      "insee_niveau_vie_median": 13390.0,
+      "insee_rapport_interdecile": 2.8,
+      "insee_taux_pauvrete": 53.0
+    },
+    "381850310": {
+      "insee_niveau_vie_d9": 40640.0,
+      "insee_niveau_vie_median": 24340.0,
+      "insee_rapport_interdecile": 3.3,
+      "insee_taux_pauvrete": 14.0
+    },
+    "381850311": {
+      "insee_niveau_vie_d9": 35030.0,
+      "insee_niveau_vie_median": 20080.0,
+      "insee_rapport_interdecile": 3.5,
+      "insee_taux_pauvrete": 23.0
+    },
+    "381850401": {
+      "insee_niveau_vie_d9": 39950.0,
+      "insee_niveau_vie_median": 24090.0,
+      "insee_rapport_interdecile": 3.3,
+      "insee_taux_pauvrete": 15.0
+    },
+    "381850402": {
+      "insee_niveau_vie_d9": 39450.0,
+      "insee_niveau_vie_median": 24110.0,
+      "insee_rapport_interdecile": 3.3,
+      "insee_taux_pauvrete": 14.0
+    },
+    "381850403": {
+      "insee_niveau_vie_d9": 40090.0,
+      "insee_niveau_vie_median": 24900.0,
+      "insee_rapport_interdecile": 3.3,
+      "insee_taux_pauvrete": 15.0
+    },
+    "381850404": {
+      "insee_niveau_vie_d9": 48200.0,
+      "insee_niveau_vie_median": 27940.0,
+      "insee_rapport_interdecile": 3.7,
+      "insee_taux_pauvrete": 12.0
+    },
+    "381850405": {
+      "insee_niveau_vie_d9": 42360.0,
+      "insee_niveau_vie_median": 25380.0,
+      "insee_rapport_interdecile": 3.1,
+      "insee_taux_pauvrete": 10.0
+    },
+    "381850406": {
+      "insee_niveau_vie_d9": 42030.0,
+      "insee_niveau_vie_median": 25860.0,
+      "insee_rapport_interdecile": 2.9,
+      "insee_taux_pauvrete": 9.0
+    },
+    "381850407": {
+      "insee_niveau_vie_d9": 35710.0,
+      "insee_niveau_vie_median": 19770.0,
+      "insee_rapport_interdecile": 3.7,
+      "insee_taux_pauvrete": 25.0
+    },
+    "381850408": {
+      "insee_niveau_vie_d9": 42890.0,
+      "insee_niveau_vie_median": 25360.0,
+      "insee_rapport_interdecile": 3.6,
+      "insee_taux_pauvrete": 13.0
+    },
+    "381850409": {
+      "insee_niveau_vie_d9": 41240.0,
+      "insee_niveau_vie_median": 24210.0,
+      "insee_rapport_interdecile": 3.7,
+      "insee_taux_pauvrete": 17.0
+    },
+    "381850410": {
+      "insee_niveau_vie_d9": 40550.0,
+      "insee_niveau_vie_median": 24870.0,
+      "insee_rapport_interdecile": 3.2,
+      "insee_taux_pauvrete": 14.0
+    },
+    "381850411": {
+      "insee_niveau_vie_d9": 36230.0,
+      "insee_niveau_vie_median": 21650.0,
+      "insee_rapport_interdecile": 3.4,
+      "insee_taux_pauvrete": 20.0
+    },
+    "381850412": {
+      "insee_niveau_vie_d9": 31020.0,
+      "insee_niveau_vie_median": 17780.0,
+      "insee_rapport_interdecile": 3.3,
+      "insee_taux_pauvrete": 29.0
+    },
+    "381850413": {
+      "insee_niveau_vie_d9": 31240.0,
+      "insee_niveau_vie_median": 20450.0,
+      "insee_rapport_interdecile": 2.8,
+      "insee_taux_pauvrete": 19.0
+    },
+    "381850414": {
+      "insee_niveau_vie_d9": 34850.0,
+      "insee_niveau_vie_median": 22140.0,
+      "insee_rapport_interdecile": 2.9,
+      "insee_taux_pauvrete": 16.0
+    },
+    "381850501": {
+      "insee_niveau_vie_d9": 35590.0,
+      "insee_niveau_vie_median": 19800.0,
+      "insee_rapport_interdecile": 3.5,
+      "insee_taux_pauvrete": 23.0
+    },
+    "381850502": {
+      "insee_niveau_vie_d9": 38470.0,
+      "insee_niveau_vie_median": 22810.0,
+      "insee_rapport_interdecile": 3.6,
+      "insee_taux_pauvrete": 17.0
+    },
+    "381850503": {
+      "insee_niveau_vie_d9": 34930.0,
+      "insee_niveau_vie_median": 20280.0,
+      "insee_rapport_interdecile": 3.3,
+      "insee_taux_pauvrete": 25.0
+    },
+    "381850504": {
+      "insee_niveau_vie_d9": 28460.0,
+      "insee_niveau_vie_median": 15250.0,
+      "insee_rapport_interdecile": 3.2,
+      "insee_taux_pauvrete": 41.0
+    },
+    "381850505": {
+      "insee_niveau_vie_d9": 30470.0,
+      "insee_niveau_vie_median": 17400.0,
+      "insee_rapport_interdecile": 3.3,
+      "insee_taux_pauvrete": 35.0
+    },
+    "381850506": {
+      "insee_niveau_vie_d9": 28490.0,
+      "insee_niveau_vie_median": 16510.0,
+      "insee_rapport_interdecile": 3.2,
+      "insee_taux_pauvrete": 36.0
+    },
+    "381850507": {
+      "insee_niveau_vie_d9": 26640.0,
+      "insee_niveau_vie_median": 14970.0,
+      "insee_rapport_interdecile": 3.2,
+      "insee_taux_pauvrete": 43.0
+    },
+    "381850601": {
+      "insee_niveau_vie_d9": 32550.0,
+      "insee_niveau_vie_median": 18310.0,
+      "insee_rapport_interdecile": 3.5,
+      "insee_taux_pauvrete": 29.0
+    },
+    "381850602": {
+      "insee_niveau_vie_d9": 38910.0,
+      "insee_niveau_vie_median": 23920.0,
+      "insee_rapport_interdecile": 3.4,
+      "insee_taux_pauvrete": 15.0
+    },
+    "381850603": {
+      "insee_niveau_vie_d9": null,
+      "insee_niveau_vie_median": null,
+      "insee_rapport_interdecile": null,
+      "insee_taux_pauvrete": null
+    },
+    "381850604": {
+      "insee_niveau_vie_d9": null,
+      "insee_niveau_vie_median": null,
+      "insee_rapport_interdecile": null,
+      "insee_taux_pauvrete": null
+    },
+    "381850605": {
+      "insee_niveau_vie_d9": 27540.0,
+      "insee_niveau_vie_median": 15500.0,
+      "insee_rapport_interdecile": 3.3,
+      "insee_taux_pauvrete": 39.0
+    },
+    "381850606": {
+      "insee_niveau_vie_d9": 40720.0,
+      "insee_niveau_vie_median": 21430.0,
+      "insee_rapport_interdecile": 3.8,
+      "insee_taux_pauvrete": 23.0
+    },
+    "381850607": {
+      "insee_niveau_vie_d9": 28880.0,
+      "insee_niveau_vie_median": 16930.0,
+      "insee_rapport_interdecile": 3.2,
+      "insee_taux_pauvrete": 39.0
+    },
+    "381850608": {
+      "insee_niveau_vie_d9": 31410.0,
+      "insee_niveau_vie_median": 18550.0,
+      "insee_rapport_interdecile": 3.2,
+      "insee_taux_pauvrete": 29.0
+    },
+    "381850609": {
+      "insee_niveau_vie_d9": 26650.0,
+      "insee_niveau_vie_median": 14240.0,
+      "insee_rapport_interdecile": 3.1,
+      "insee_taux_pauvrete": 47.0
+    },
+    "381850610": {
+      "insee_niveau_vie_d9": null,
+      "insee_niveau_vie_median": null,
+      "insee_rapport_interdecile": null,
+      "insee_taux_pauvrete": null
+    },
+    "381850611": {
+      "insee_niveau_vie_d9": null,
+      "insee_niveau_vie_median": null,
+      "insee_rapport_interdecile": null,
+      "insee_taux_pauvrete": null
+    }
+  },
+  "provenance": {
+    "bdnb_iris_reference": "Référentiel administratif BDNB et empreinte Lambert-93 du bâtiment contrôlée sur les contours IGN au 2022-01-01",
+    "columns": {
+      "insee_niveau_vie_d9": "DISP_D921",
+      "insee_niveau_vie_median": "DISP_MED21",
+      "insee_rapport_interdecile": "DISP_RD21",
+      "insee_taux_pauvrete": "DISP_TP6021",
+      "iris": "IRIS"
+    },
+    "definitions": {
+      "insee_niveau_vie_d9": "Neuvième décile du revenu disponible par unité de consommation, en euros",
+      "insee_niveau_vie_median": "Médiane du revenu disponible par unité de consommation, en euros",
+      "insee_rapport_interdecile": "Rapport D9/D1, sans unité",
+      "insee_taux_pauvrete": "Taux de pauvreté au seuil de 60 %, en points de pourcentage (15 % est encodé 15)"
+    },
+    "iris_geography": "2022-01-01",
+    "source": "https://www.insee.fr/fr/statistiques/8229323",
+    "training_reference": "Valometra — Atelier de prédiction, dist/dataset.csv et dist/models/catboost-v1/metrics.json (source_sha256 93fd801b6f9aa79db3e2aa97714215e48dcadf619231d5d4f9c93f6d0e172d27)",
+    "vintage": 2021
+  }
+}

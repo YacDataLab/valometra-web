@@ -1,0 +1,12 @@
+# Optionnel : lancement local en conteneur. `npm test` fonctionne sans Docker.
+services:
+  web:
+    build: .
+    image: valometra-web
+    ports:
+      - "8787:8787"
+    volumes:
+      - web-data:/data   # base D1 locale (SQLite)
+
+volumes:
+  web-data:

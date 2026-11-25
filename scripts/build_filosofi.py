@@ -14,7 +14,7 @@ INDICATORS = (
     "insee_niveau_vie_d9",
     "insee_rapport_interdecile",
 )
-OUTPUT = Path(__file__).resolve().parents[1] / "public" / "filosofi.json"
+OUTPUT = Path(__file__).resolve().parents[1] / "public" / "data" / "filosofi.json"
 
 
 def as_number(value):

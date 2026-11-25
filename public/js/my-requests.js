@@ -1,0 +1,38 @@
+import { $ } from './dom.js';
+import { esc, frDateTime } from './format.js';
+
+async function load() {
+  try {
+    const r = await fetch('/api/my-requests');
+    const data = await r.json();
+    if (!r.ok) throw Error(data.error);
+    $('my-status').textContent = `${data.rows.length} demande(s)`;
+    $('my-list').innerHTML =
+      data.rows
+        .map(
+          row =>
+            `<article class="panel"><h2>${esc(row.property.address || 'Projet immobilier')}</h2><p class="hint">Envoyée le ${esc(frDateTime(row.createdAt))}</p><p>${esc(row.email || row.phone)}</p><p class="lead-message">${esc(row.message)}</p><button class="secondary" data-delete="${row.id}">Supprimer ma demande</button></article>`,
+        )
+        .join('') || '<p>Vous n’avez pas encore envoyé de demande.</p>';
+  } catch (e) {
+    $('my-status').textContent = e.message;
+  }
+}
+$('my-list').addEventListener('click', async e => {
+  const button = e.target.closest('[data-delete]');
+  if (!button || !confirm('Supprimer votre demande et les coordonnées associées ?')) return;
+  try {
+    button.disabled = true;
+    const r = await fetch('/api/my-requests/' + button.dataset.delete, {
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json' },
+    });
+    const data = await r.json();
+    if (!r.ok) throw Error(data.error);
+    await load();
+  } catch (error) {
+    $('my-status').textContent = error.message;
+    button.disabled = false;
+  }
+});
+load();
