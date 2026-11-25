@@ -96,6 +96,7 @@ Cinq exports Python autonomes (point, bornes 80 % et 50 %) sont exécutés via P
 ### Espace de suivi
 
 - Les demandes d'accompagnement sont distinctes de l'estimation. La création de nouvelles demandes est désactivée ; les demandes existantes restent stockées en D1 (migration `drizzle/0000_leads.sql`).
+- Aucun e-mail ni SMS n'est envoyé automatiquement par le code. La date et la version du consentement sont enregistrées avec chaque demande.
 - `/gestion` et `/api/admin/*` : identité authentifiée et e-mail du gestionnaire vérifiés côté serveur contre le secret `ADMIN_EMAIL`, jamais présent dans le code. Lecture, filtre, export CSV, notes privées, statut et suppression.
 - `/mes-demandes` : chaque visiteur ne voit et ne supprime que ses propres demandes.
 - Écritures protégées par vérification de l'origine, paramètres SQL liés et validation. Les pages privées et leurs données ne sont jamais mises en cache.
