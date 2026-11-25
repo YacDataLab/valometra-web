@@ -71,6 +71,7 @@ Code sous licence GNU AGPL v3, voir [LICENSE](LICENSE). Les ressources tierces (
 ## Documentation technique
 
 L'organisation du code (Worker, front, assemblage) est détaillée dans [docs/architecture.md](docs/architecture.md).
+Les sources et l’import de la base de visualisation sont décrits dans [docs/dataviz-data.md](docs/dataviz-data.md).
 
 ### Inférence
 
