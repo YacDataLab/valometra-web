@@ -1,7 +1,7 @@
 'use strict';
 // Pictogramme du sprite SVG de index.html (jeu Tabler, licence MIT).
 const icon = name =>
-    `<svg class="icon" aria-hidden="true" focusable="false"><use href="#i-${name}"/></svg>`,
+    `<svg class="icon" aria-hidden="true" focusable="false"><use href="icons.svg#i-${name}"/></svg>`,
   $ = id => document.getElementById(id),
   money = n =>
     // Charte : espace fine insécable (U+202F) avant € et entre les milliers.
@@ -94,7 +94,7 @@ const PAGE_TITLES = {
   method: 'Méthode et limites — Valometra',
 };
 
-async function route() {
+async function route(event) {
   const view = ++marketView;
   const hash = location.hash.slice(1);
   const id = ['estimate', 'market', 'method'].includes(hash) ? hash : 'estimate';
@@ -102,12 +102,17 @@ async function route() {
     element.hidden = element.id !== id;
   });
   document.title = PAGE_TITLES[id];
-  document.querySelectorAll('nav a').forEach(link => {
-    const active = link.hash === '#' + id;
-    link.classList.toggle('active', active);
-    if (active) link.setAttribute('aria-current', 'page');
+  document.querySelectorAll('.site-nav a[href^="#"]').forEach(link => {
+    if (link.hash === '#' + id) link.setAttribute('aria-current', 'page');
     else link.removeAttribute('aria-current');
   });
+  window.scrollTo(0, 0);
+  // Navigation au clavier ou au lecteur d'écran : le focus suit le titre de la page.
+  if (event?.type === 'hashchange') {
+    const heading = document.querySelector('.page:not([hidden]) h1');
+    heading?.setAttribute('tabindex', '-1');
+    heading?.focus({ preventScroll: true });
+  }
   if (id !== 'market') return;
   const status = $('market-stats');
   status.textContent = 'Chargement des ventes…';
@@ -123,12 +128,17 @@ async function route() {
   }
 }
 
-// Les couleurs de la carte dépendent du thème : on redessine les ventes au changement.
-window.addEventListener('valometra:theme', () => {
-  if (layer && !$('market').hidden) renderMarket();
-});
 window.addEventListener('hashchange', route);
 route();
+
+$('start-estimate').addEventListener('click', () => {
+  const target = $('address').disabled ? $('estimate-form') : $('address');
+  target.focus?.();
+  target.scrollIntoView({ block: $('address').disabled ? 'start' : 'center' });
+});
+window.addEventListener('valometra:estimated', () => {
+  $('result').scrollIntoView({ block: 'start' });
+});
 
 function resetEngine() {
   worker?.terminate();
@@ -634,14 +644,10 @@ function renderMarket() {
       vals = base.map(r => measure(r, key)).sort((a, b) => a - b),
       q1 = vals[Math.floor(vals.length / 3)] || 0,
       q2 = vals[Math.floor((vals.length * 2) / 3)] || 0,
-      // Du plus bas au plus haut : sombre sur fond clair, clair sur fond sombre.
-      steps =
-        document.documentElement.dataset.vmTheme === 'sombre'
-          ? ['500', '300', '100']
-          : ['300', '500', '800'],
-      palette = steps.map(step =>
+      // Du plus bas au plus haut : teintes cuivre, lisibles sur le Plan IGN en couleur.
+      palette = ['300', '500', '700'].map(step =>
         getComputedStyle(document.documentElement)
-          .getPropertyValue('--vm-color-ardoise-' + step)
+          .getPropertyValue('--vm-color-cuivre-' + step)
           .trim(),
       );
     const buckets = new Map();
@@ -727,6 +733,12 @@ function drawTrend() {
     `</svg>`;
 }
 
+// Bornes des classes de l'histogramme : une décimale en milliers pour que deux bornes voisines restent distinctes.
+const binEdge = value =>
+  value >= 1000
+    ? new Intl.NumberFormat('fr-FR', { maximumFractionDigits: 1 }).format(value / 1000) + 'k'
+    : num(value);
+
 function renderRanking() {
   const selected = $('market-town').value;
   $('town-ranking').innerHTML = window.ValometraFormat.communeRanking(getBase(true))
@@ -762,7 +774,7 @@ function drawHistogram() {
   $('market-hist').innerHTML = counts
     .map(
       (n, i) =>
-        `<div class="hist-bin" title="${num(i * step)} à ${num((i + 1) * step)} : ${n} ventes"><span>${n || ''}</span><div class="bar" style="height:${(n / largest) * 140}px"></div><span>${i * step >= 1000 ? num((i * step) / 1000) + 'k' : num(i * step)}</span></div>`,
+        `<div class="hist-bin" title="${num(i * step)} à ${num((i + 1) * step)} : ${n} ventes"><span>${n || ''}</span><div class="bar" style="height:${(n / largest) * 140}px"></div><span>${binEdge(i * step)}</span></div>`,
     )
     .join('');
 }
@@ -840,12 +852,6 @@ $('export-market').onclick = () => {
 readJson('metadata.json')
   .then(data => {
     metadata = data;
-    fetch('/api/session')
-      .then(response => response.json())
-      .then(session => {
-        if (session.admin) $('admin-link').hidden = false;
-      })
-      .catch(() => {});
     window.ValometraAddress.init(data.towns);
     applySharedLink();
     const options = data.towns

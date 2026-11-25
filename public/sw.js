@@ -1,7 +1,7 @@
 'use strict';
 // Service worker : le site reste ouvert sans réseau (formulaire, marché, méthode déjà visités).
 // Réseau d'abord, copie locale en secours. Jamais de mise en cache des API ni des pages privées.
-const CACHE = 'valometra-v1';
+const CACHE = 'valometra-v2';
 const PRIVATE = ['/api/', '/gestion', '/mes-demandes', '/admin', '/my-requests', '/signin'];
 
 self.addEventListener('install', () => self.skipWaiting());

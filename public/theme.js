@@ -16,11 +16,12 @@
   const current = () => root.dataset.vmTheme;
   const apply = theme => {
     root.dataset.vmTheme = theme;
-    window.dispatchEvent(new CustomEvent('valometra:theme'));
     const button = document.getElementById('theme-toggle');
     if (button) {
       button.querySelector('span').textContent = theme === 'sombre' ? 'Mode clair' : 'Mode sombre';
-      button.querySelector('use').setAttribute('href', theme === 'sombre' ? '#i-sun' : '#i-moon');
+      button
+        .querySelector('use')
+        .setAttribute('href', theme === 'sombre' ? 'icons.svg#i-sun' : 'icons.svg#i-moon');
     }
   };
   apply(stored() ?? system());

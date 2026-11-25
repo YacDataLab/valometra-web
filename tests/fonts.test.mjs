@@ -8,8 +8,7 @@ const read = path => readFileSync(new URL(`../public/${path}`, import.meta.url),
 test('fonts are self-hosted: no external font service in pages or styles', () => {
   for (const page of ['index.html', 'admin.html', 'my-requests.html', 'credits.html'])
     assert.ok(!/fonts\.(googleapis|gstatic)\.com/.test(read(page)), page);
-  for (const css of ['style.css', 'brand/experience.css'])
-    assert.ok(!/fonts\.(googleapis|gstatic)\.com/.test(read(css)), css);
+  assert.ok(!/fonts\.(googleapis|gstatic)\.com/.test(read('style.css')));
 });
 
 test('the two font families are declared with existing files', () => {
@@ -24,6 +23,6 @@ test('the two font families are declared with existing files', () => {
 });
 
 test('the interface no longer uses the monospace family', () => {
-  for (const file of ['style.css', 'brand/experience.css', 'app.js', 'history.js'])
+  for (const file of ['style.css', 'app.js', 'history.js'])
     assert.ok(!read(file).includes('font-family-mono'), file);
 });
