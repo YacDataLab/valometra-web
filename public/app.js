@@ -1,130 +1,165 @@
-'use strict';
-const $=id=>document.getElementById(id),money=n=>new Intl.NumberFormat('fr-FR',{style:'currency',currency:'EUR',maximumFractionDigits:0}).format(n),num=n=>new Intl.NumberFormat('fr-FR',{maximumFractionDigits:0}).format(n),esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])),median=a=>{if(!a.length)return null;const s=[...a].sort((a,b)=>a-b),m=Math.floor(s.length/2);return s.length%2?s[m]:(s[m-1]+s[m])/2};
-let metadata,market=[],map,layer,filtered=[],page=0,worker,enginePromise,marketPromise,leafletPromise,marketView=0,lastInputs=null,requestId=0,hasResult=false;
-function readJson(path) {
-  return fetch(path).then(response => {
-    if (!response.ok) throw new Error('Données indisponibles.');
-    return response.json();
-  });
-}
+// Point d'entrée de la page d'accueil : navigation entre les vues, chargement des communes.
+import { $, state, readJson, loadMarket } from './store.js';
+import { loadLeaflet } from './map.js';
+import { initMarket, showMarket, marketReady, renderMarket } from './market.js';
+import { initEstimate } from './estimate.js';
 
-function loadMarket() {
-  marketPromise ??= readJson('market.json').then(rows => {
-    market = rows;
-  }).catch(error => {
-    marketPromise = undefined;
-    throw error;
-  });
-  return marketPromise;
-}
+const F = window.ValometraFormat;
 
-function loadLeaflet() {
-  if (window.L) return Promise.resolve();
-  leafletPromise ??= new Promise(resolve => {
-    const stylesheet = document.createElement('link');
-    stylesheet.rel = 'stylesheet';
-    stylesheet.href = 'vendor/leaflet/leaflet.css';
-    const script = document.createElement('script');
-    script.src = 'vendor/leaflet/leaflet.js';
-    script.addEventListener('load', resolve, { once: true });
-    script.addEventListener('error', () => {
-      script.remove();
-      stylesheet.remove();
-      leafletPromise = undefined;
-      resolve();
-    }, { once: true });
-    document.head.append(stylesheet, script);
-  });
-  return leafletPromise;
-}
+// Registre des vues : une entrée par <section class="page"> de index.html, dans le même ordre que la navigation.
+// Ajouter une page : la section, son lien dans <nav class="site-nav">, puis une entrée ici.
+// `prepare` charge les données avant l'affichage et `show` les affiche ; le lien de la vue est alors préchargé au survol.
+const PAGES = {
+  estimate: { title: 'Valometra — L’immobilier, en perspective' },
+  market: {
+    title: 'Le marché local — Valometra',
+    prepare: () => Promise.all([loadMarket(), loadLeaflet()]),
+    show: showMarket,
+  },
+  statistiques: {
+    title: 'Statistiques du marché — Valometra',
+    prepare: () => loadMarket(),
+    show: renderMarket,
+  },
+  method: { title: 'Méthode et limites — Valometra' },
+};
 
-async function route() {
-  const view = ++marketView;
+let navigation = 0;
+const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)');
+
+// Retour arrière : chaque entrée d'historique garde sa position de défilement (en mémoire),
+// et la vue revient à l'endroit où le visiteur l'avait laissée. Un lien neuf repart du haut.
+history.scrollRestoration = 'manual';
+const scrollByEntry = new Map();
+let entryKey = null;
+let routing = false;
+window.addEventListener(
+  'scroll',
+  () => {
+    if (!routing && entryKey) scrollByEntry.set(entryKey, window.scrollY);
+  },
+  { passive: true },
+);
+
+async function route(event) {
+  const current = ++navigation;
   const hash = location.hash.slice(1);
-  const id = ['estimate', 'market', 'method'].includes(hash) ? hash : 'estimate';
-  document.querySelectorAll('.page').forEach(element => { element.hidden = element.id !== id; });
-  document.querySelectorAll('nav a').forEach(link => {
-    const active = link.hash === '#' + id;
-    link.classList.toggle('active', active);
-    if (active) link.setAttribute('aria-current', 'page');
-    else link.removeAttribute('aria-current');
-  });
-  if (id !== 'market') return;
-  const status = $('market-stats');
-  status.textContent = 'Chargement des ventes…';
+  const id = Object.hasOwn(PAGES, hash) ? hash : 'estimate';
+  // Position de la vue quittée, relevée avant que la page ne change de hauteur.
+  if (entryKey) scrollByEntry.set(entryKey, window.scrollY);
+  routing = true;
+  entryKey = history.state?.key ?? `${Date.now()}-${Math.random()}`;
+  const restore = scrollByEntry.get(entryKey);
+  history.replaceState({ key: entryKey }, '', location.href);
+  // Changement de vue : fondu entre les vues quand le navigateur le permet, sans mouvement
+  // si le visiteur a demandé de réduire les animations.
+  const update = () => {
+    document.querySelectorAll('.page').forEach(element => {
+      element.hidden = element.id !== id;
+    });
+    document.title = PAGES[id].title;
+    document.querySelectorAll('.site-nav a[href^="#"]').forEach(link => {
+      if (link.hash === '#' + id) link.setAttribute('aria-current', 'page');
+      else link.removeAttribute('aria-current');
+    });
+    window.scrollTo(0, restore ?? 0);
+    requestAnimationFrame(() => {
+      routing = false;
+    });
+    // Sur téléphone, la barre de navigation défile : la vue active reste visible.
+    document
+      .querySelector('.site-nav [aria-current="page"]')
+      ?.scrollIntoView({ block: 'nearest', inline: 'center' });
+    // Navigation au clavier ou au lecteur d'écran : le focus suit le titre de la page,
+    // et une annonce brève indique la vue ouverte.
+    if (event?.type === 'hashchange') {
+      const heading = document.querySelector('.page:not([hidden]) h1');
+      heading?.setAttribute('tabindex', '-1');
+      heading?.focus({ preventScroll: true });
+      $('route-status').textContent =
+        'Vue ouverte : ' +
+        (document.querySelector('.site-nav [aria-current="page"]')?.textContent.trim() ?? '');
+    }
+  };
+  if (event?.type === 'hashchange' && document.startViewTransition && !reduceMotion.matches)
+    document.startViewTransition(update);
+  else update();
+  const page = PAGES[id];
+  if (!page.prepare) return;
+  $('market-stats').textContent = 'Chargement des ventes…';
   try {
-    await Promise.all([loadMarket(), loadLeaflet()]);
-    if (view !== marketView) return;
-    initMap();
-    map?.invalidateSize();
-    renderMarket();
+    await page.prepare();
+    if (current === navigation) {
+      page.show();
+      // La page ne prend sa hauteur finale qu'ici : la position mémorisée est rétablie maintenant.
+      if (restore !== undefined) window.scrollTo(0, restore);
+    }
   } catch {
-    if (view === marketView) status.textContent = 'Ventes indisponibles. Rouvrez l’explorateur pour réessayer.';
+    if (current === navigation)
+      $('market-stats').textContent = 'Ventes indisponibles. Rouvrez l’explorateur pour réessayer.';
   }
+}
+
+$('start-estimate').addEventListener('click', () => {
+  const target = $('address').disabled ? $('estimate-form') : $('address');
+  target.focus?.();
+  target.scrollIntoView({ block: $('address').disabled ? 'start' : 'center' });
+});
+
+// Préchargement des vues fondées sur les données, quand le visiteur approche de leur lien (survol ou focus).
+// store.js et map.js mettent les données en cache : l'ouverture n'attend plus le réseau.
+// Un échec est ignoré ici ; la vue le signale et réessaie à l'ouverture.
+for (const [id, page] of Object.entries(PAGES)) {
+  if (!page.prepare) continue;
+  const preload = () => page.prepare().catch(() => {});
+  document.querySelectorAll(`.site-nav a[href="#${id}"]`).forEach(link => {
+    link.addEventListener('pointerenter', preload);
+    link.addEventListener('focus', preload);
+  });
+}
+
+// Constellation des communes couvertes (hero) : dessinée à partir de metadata.json.
+function renderConstellation(towns) {
+  const points = F.constellation(towns);
+  if (!points.length) return;
+  const circle = p =>
+    `<circle class="${p.hub ? 'const-hub' : 'const-dot'}" cx="${p.x.toFixed(1)}" cy="${p.y.toFixed(1)}" r="${p.r.toFixed(1)}"/>`;
+  const label = p =>
+    p.hub
+      ? `<text class="const-label const-label-hub" x="${p.x.toFixed(1)}" y="${(p.y + 4).toFixed(1)}" text-anchor="middle">${F.esc(p.name)}</text>`
+      : `<text class="const-label" x="${p.x.toFixed(1)}" y="${(p.y + p.r + 14).toFixed(1)}" text-anchor="middle">${F.esc(p.name)}</text>`;
+  $('hero-art').innerHTML =
+    `<svg viewBox="0 0 300 420" role="img" aria-labelledby="const-title"><title id="const-title">Les ${points.length} communes couvertes, placées selon leur position ; la taille suit le nombre de ventes.</title>` +
+    [...points]
+      .sort((a, b) => b.r - a.r)
+      .map(circle)
+      .join('') +
+    points
+      .filter(p => p.label)
+      .map(label)
+      .join('') +
+    `<text class="const-caption" x="150" y="412" text-anchor="middle">${points.length} communes · taille = nombre de ventes</text></svg>`;
 }
 
 window.addEventListener('hashchange', route);
 route();
 
-function resetEngine() {
-  worker?.terminate();
-  worker = undefined;
-  enginePromise = undefined;
-}
-
-function startEngine() {
-  enginePromise ??= new Promise((resolve, reject) => {
-    worker = new Worker('inference-worker.js');
-    worker.onmessage = ({ data }) => {
-      if (data.type === 'ready') resolve();
-      if (data.type === 'prediction' && data.id === requestId) {
-        $('estimate-button').disabled = false;
-        $('estimate-button').textContent = 'Actualiser mon estimation';
-        performance.mark('valometra-estimate-ready');
-        performance.measure('valometra-estimation', 'valometra-estimate-start', 'valometra-estimate-ready');
-        showResult(data.value, lastInputs, data.intervals);
-      }
-      if (data.type === 'error') {
-        if (data.id === undefined) reject(new Error(data.message));
-        else engineFailure(data.message);
-      }
-    };
-    worker.onerror = () => {
-      reject(new Error('Le moteur n’a pas pu démarrer.'));
-      engineFailure('Le moteur n’a pas pu démarrer.');
-    };
-    worker.postMessage({ type: 'init' });
+readJson('metadata.json')
+  .then(data => {
+    state.metadata = data;
+    initEstimate(data.towns);
+    initMarket(data.towns);
+    renderConstellation(data.towns);
+    if (marketReady()) showMarket();
+    else if (!$('statistiques').hidden) renderMarket();
+    $('estimate-button').disabled = false;
+    $('model-status').textContent = 'Le moteur se charge lors de la première estimation.';
+    performance.mark('valometra-form-ready');
+    performance.measure('valometra-formulaire', { start: 0, end: 'valometra-form-ready' });
+  })
+  .catch(() => {
+    $('model-status').textContent = 'Les communes n’ont pas pu être chargées. Rechargez la page.';
   });
-  return enginePromise;
-}
 
-function engineFailure(message) {
-  resetEngine();
-  $('estimate-button').disabled = false;
-  $('estimate-button').textContent = 'Réessayer l’estimation';
-  $('model-status').textContent = 'Estimation interrompue. Vérifiez votre connexion puis réessayez. ' + message;
-}
-$('estimate-form').addEventListener('submit',async e=>{e.preventDefault();if(!metadata||$('estimate-button').disabled)return;const address=window.ValometraAddress.getSelected();if(!address){$('model-status').textContent='Sélectionnez une adresse complète parmi les suggestions.';return}if(window.ValometraEnrichment?.isBusy()){$('model-status').textContent='La recherche des données de l’adresse est en cours. Patientez quelques instants.';return}const town=metadata.towns.find(t=>t.code===address.code);if(!town)return;if($('dpe').value&&(!$('dpe-date').value||$('dpe-date').value>'2026-06-30')){$('model-status').textContent='Indiquez la date du DPE, au plus tard le 30 juin 2026, ou laissez le DPE non renseigné.';return}const lat=address.lat,lon=address.lon;const f={...window.ValometraEnrichment?.getFeatures(),code_commune:town.code,code_postal:address.postal,est_vefa:'false',surface_habitable:$('surface').value,surface_carrez:$('carrez').value,nb_pieces:$('rooms').value,nb_dependances:$('dependencies').value,dpe_etiquette_energie:$('dpe').value,dpe_type:$('dpe').value?'existant':'',bdnb_annee_construction:$('year').value,longitude:lon,latitude:lat,jours_depuis_2025:545,dpe_disponible:$('dpe').value?1:0,carrez_disponible:$('carrez').value?1:0,coordonnees_disponibles:lat?1:0};for(const field of document.querySelectorAll('[data-feature]')){const k=field.dataset.feature;if(k.startsWith('dpe_')&&!f.dpe_etiquette_energie)continue;f[k]=field.value}if(!f.dpe_etiquette_energie){for(const k of Object.keys(f))if(k.startsWith('dpe_')&&k!=='dpe_disponible')delete f[k]}lastInputs={town,address:address.label,surface:+f.surface_habitable,surfaceDefinition:$('surface-definition').value,features:f,enrichment:window.ValometraEnrichment?.getSummary()};$('estimate-button').disabled=true;$('estimate-button').textContent='Calcul en cours…';$('model-status').textContent='Calcul de votre estimation…';performance.mark('valometra-estimate-start');try{await Promise.all([startEngine(),loadMarket()]);worker.postMessage({type:'predict',features:f,id:++requestId})}catch(error){engineFailure(error.message)}});
-$('dpe').addEventListener('change',()=>{$('dpe-date').required=Boolean($('dpe').value)});
-$('estimate-form').addEventListener('input',()=>{if(hasResult)$('model-status').textContent='Les caractéristiques ont changé. Actualisez l’estimation pour recalculer le résultat.'});
-function showResult(value,input,intervals){hasResult=true;const bounds=intervals?.['80'];if(!bounds||!bounds.every(Number.isFinite)){$('model-status').textContent='Les bornes n’ont pas pu être calculées. Relancez l’estimation.';return}const {town,surface,features}=input;const comps=market.filter(r=>r.code===town.code&&r.surface>=surface*.75&&r.surface<=surface*1.25);const m=median(comps.map(r=>r.price/r.surface));$('result').innerHTML=`<div class="result-top"><div class="section-head"><span class="eyebrow">VOTRE ESTIMATION INDICATIVE</span></div><h2>${esc(town.name)} · ${num(surface)} m²</h2><p class="hint">${esc(input.address)}</p><div class="price">${money(Math.round(value/1000)*1000)}</div><span class="price-unit">soit environ ${money(Math.round(value/surface))} / m² · référence juin 2026</span></div><div class="range-box"><h3>Fourchette de prix · objectif de couverture 80 %</h3><div class="range-bar"></div><div class="range-values"><span>${money(Math.round(bounds[0]/1000)*1000)}</span><span>${money(Math.round(bounds[1]/1000)*1000)}</span></div><p class="hint">Bornes personnalisées à partir des caractéristiques du bien. Sur les ventes étudiées de juin 2026, 84,9 % des prix étaient dans leur fourchette. Retrouvez la méthode dans « Comprendre ces repères ».</p></div><dl><dt>Repère local, sans ajustement de qualité</dt><dd>${comps.length} ventes de la commune, surfaces à ±25 %${m?` · médiane ${money(m)} / m²`:''}</dd><dt>Localisation</dt><dd>${features.latitude?`Adresse localisée · bâtiment ${input.enrichment?.building?'retrouvé':'renseigné manuellement ou absent'} · DPE ${input.enrichment?.dpe?'confirmé depuis l’ADEME':'saisi manuellement ou absent'}.`:'Coordonnées non renseignées'}</dd></dl><p class="hint">Une expertise sur place reste utile pour l’état, l’étage, la vue et les travaux. Aucun ajustement de marché après juin 2026.</p><a class="secondary" href="#method">Comprendre ces repères</a>`;window.dispatchEvent(new CustomEvent('valometra:estimated',{detail:{address:input.address,surface:surface,rooms:Number(features.nb_pieces),surfaceDefinition:input.surfaceDefinition,point:value,lower:bounds[0],upper:bounds[1],coverage:'80'}}));$('model-status').textContent='Estimation actualisée.'}
-function initMap(){if(map)return;if(!window.L){$('market-map').innerHTML='<p class="notice">La carte est indisponible. Les statistiques et le tableau restent accessibles.</p>';return}map=L.map('market-map',{scrollWheelZoom:false}).setView([45.18,5.73],11);L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'}).addTo(map);layer=L.layerGroup().addTo(map);map.on('moveend',()=>{if($('visible-only').checked)renderMarket()})}
-function getBase(){const town=$('market-town').value,dpe=$('market-dpe').value;return market.filter(r=>(!town||r.code===town)&&(!$('min-area').value||r.surface>=+$('min-area').value)&&(!$('max-area').value||r.surface<=+$('max-area').value)&&(!$('min-price').value||r.price>=+$('min-price').value)&&(!$('max-price').value||r.price<=+$('max-price').value)&&(!$('from-date').value||r.date>=$('from-date').value)&&(!$('to-date').value||r.date<=$('to-date').value)&&(!dpe||(dpe==='missing'?!r.dpe:r.dpe===dpe)))}
-const measure=(r,k)=>k==='price'?r.price:k==='surface'?r.surface:r.price/r.surface;
-function renderMarket(){if(!metadata)return;const base=getBase();filtered=$('visible-only').checked&&map?base.filter(r=>map.getBounds().contains([r.lat,r.lon])):base;const prices=filtered.map(r=>r.price),m2=filtered.map(r=>r.price/r.surface);$('market-stats').innerHTML=`<div class="stat"><b>${num(filtered.length)}</b><span>ventes sélectionnées</span></div><div class="stat"><b>${filtered.length?money(median(m2)):'—'}</b><span>prix médian / m²</span></div><div class="stat"><b>${filtered.length?money(median(prices)):'—'}</b><span>prix médian</span></div>`;if(layer){layer.clearLayers();const key=$('map-color').value,vals=base.map(r=>measure(r,key)).sort((a,b)=>a-b),q1=vals[Math.floor(vals.length/3)]||0,q2=vals[Math.floor(vals.length*2/3)]||0,palette=['#447cba','#23917e','#bf773c'];const buckets=new Map();for(const r of base){const k=r.lat.toFixed(5)+','+r.lon.toFixed(5);if(!buckets.has(k))buckets.set(k,[]);buckets.get(k).push(r)}for(const rows of buckets.values()){const v=median(rows.map(r=>measure(r,key))),r=rows[0];const mark=L.circleMarker([r.lat,r.lon],{radius:Math.min(15,5+Math.log2(rows.length)*2),fillColor:palette[v<=q1?0:v<=q2?1:2],color:'#fff',weight:1,fillOpacity:.8}).addTo(layer);mark.bindPopup(`<b>${rows.length} vente${rows.length>1?'s':''} · ${esc(r.town)}</b>`+rows.map(r=>`<div class="popup-sale">${esc(r.date)} · ${num(r.surface)} m² · ${num(r.rooms)} pièces<br><b>${money(r.price)}</b> · ${money(r.price/r.surface)}/m² · DPE ${esc(r.dpe||'absent')}</div>`).join(''),{maxWidth:320})}const unit=key==='surface'?'m²':key==='price'?'€':'€/m²';$('map-legend').innerHTML=`<span>${base.length} ventes sur la carte</span><span><i style="background:${palette[0]}"></i>≤ ${num(q1)} ${unit}</span><span><i style="background:${palette[1]}"></i>${num(q1)}–${num(q2)} ${unit}</span><span><i style="background:${palette[2]}"></i>> ${num(q2)} ${unit}</span>`}drawHistogram();page=0;renderTable()}
-function drawHistogram(){const key=$('hist-measure').value,values=filtered.map(r=>measure(r,key));if(!values.length){$('market-hist').textContent='Aucune vente pour ces filtres.';return}const max=Math.max(...values),step=Math.ceil(max/10)||1,counts=Array(10).fill(0);values.forEach(v=>counts[Math.min(9,Math.floor(v/step))]++);const largest=Math.max(...counts);$('market-hist').setAttribute('aria-label',`Histogramme de ${values.length} ventes, ${key==='m2'?'prix au mètre carré':key==='price'?'prix total':'surface'}.`);$('market-hist').innerHTML=counts.map((n,i)=>`<div class="hist-bin" title="${num(i*step)} à ${num((i+1)*step)} : ${n} ventes"><span>${n||''}</span><div class="bar" style="height:${n/largest*140}px"></div><span>${i*step>=1000?num(i*step/1000)+'k':num(i*step)}</span></div>`).join('')}
-function renderTable(){const rows=[...filtered].sort((a,b)=>b.date.localeCompare(a.date)),pages=Math.max(1,Math.ceil(rows.length/15));page=Math.min(page,pages-1);$('sales-table').innerHTML=rows.slice(page*15,page*15+15).map(r=>`<tr><td>${esc(r.date)}</td><td>${esc(r.town)}</td><td>${num(r.surface)} m²</td><td>${money(r.price)}</td><td>${money(r.price/r.surface)}</td><td>${esc(r.dpe||'—')}</td></tr>`).join('')||'<tr><td colspan="6">Aucune vente ne correspond aux filtres.</td></tr>';$('page-sales').textContent=`Page ${page+1} / ${pages}`;$('table-count').textContent=`${filtered.length} ventes`;$('prev-sales').disabled=page===0;$('next-sales').disabled=page===pages-1}
-for(const id of ['market-town','min-area','max-area','min-price','max-price','from-date','to-date','market-dpe','map-color','visible-only'])$(id).addEventListener('change',renderMarket);
-$('hist-measure').addEventListener('change',drawHistogram);$('prev-sales').onclick=()=>{page--;renderTable()};$('next-sales').onclick=()=>{page++;renderTable()};$('reset-market').onclick=()=>{for(const id of ['market-town','min-area','max-area','min-price','max-price','market-dpe'])$(id).value='';$('from-date').value='2025-07-01';$('to-date').value='2026-06-30';$('visible-only').checked=false;map?.setView([45.18,5.73],11);renderMarket()};$('export-market').onclick=()=>{const rows=[['date','commune','surface_m2','prix_eur','prix_m2','dpe'],...filtered.map(r=>[r.date,r.town,r.surface,r.price,Math.round(r.price/r.surface),r.dpe])];const csv='\ufeff'+rows.map(r=>r.map(v=>'"'+String(v).replace(/"/g,'""')+'"').join(';')).join('\n');const url=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8'})),a=document.createElement('a');a.href=url;a.download='valometra-ventes-selection.csv';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000)};
-readJson('metadata.json').then(data => {
-  metadata = data;
-  window.ValometraAddress.init(data.towns);
-  const options = data.towns.map(town => `<option value="${town.code}">${esc(town.name)}</option>`).join('');
-  $('market-town').insertAdjacentHTML('beforeend', options);
-  $('estimate-button').disabled = false;
-  $('model-status').textContent = 'Le moteur se charge lors de la première estimation.';
-  performance.mark('valometra-form-ready');
-  performance.measure('valometra-formulaire', { start: 0, end: 'valometra-form-ready' });
-}).catch(() => {
-  $('model-status').textContent = 'Les communes n’ont pas pu être chargées. Rechargez la page.';
-});
+// Utilisation hors connexion : le service worker est facultatif, son échec n'est pas bloquant.
+if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(() => {});
