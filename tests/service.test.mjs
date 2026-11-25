@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { readFileSync } from 'node:fs';
+import { readFileSync, readdirSync } from 'node:fs';
 import { DatabaseSync } from 'node:sqlite';
 import { test } from 'node:test';
 import worker from '../dist/server/index.js';
@@ -237,7 +237,7 @@ test('stable assets are cached for a day, pages and scripts are revalidated', as
   const cache = async path => (await request(path)).headers.get('Cache-Control');
   assert.equal(await cache('/fonts/inter-latin.woff2'), 'public, max-age=86400, must-revalidate');
   assert.equal(await cache('/icons.svg'), 'public, max-age=86400, must-revalidate');
-  assert.equal(await cache('/app.js'), 'public, max-age=0, must-revalidate');
+  assert.equal(await cache('/js/app.js'), 'public, max-age=0, must-revalidate');
   assert.equal(await cache('/'), 'public, max-age=0, must-revalidate');
   const mine = await request('/my-requests.html', { id: 'alice' });
   assert.equal(mine.headers.get('Cache-Control'), 'no-store');
@@ -245,7 +245,7 @@ test('stable assets are cached for a day, pages and scripts are revalidated', as
 
 test('static pages carry a strict content security policy', async () => {
   const { request } = fixture();
-  for (const path of ['/', '/index.html', '/app.js', '/sw.js']) {
+  for (const path of ['/', '/index.html', '/js/app.js', '/sw.js']) {
     const response = await request(path);
     assert.equal(response.status, 200, path);
     const csp = response.headers.get('Content-Security-Policy');
@@ -259,6 +259,31 @@ test('static pages carry a strict content security policy', async () => {
     assert.equal(response.headers.get('X-Content-Type-Options'), 'nosniff');
     assert.match(response.headers.get('Permissions-Policy'), /geolocation=\(\)/);
   }
+});
+
+test('every script, module, dataset and model the pages load is published', async () => {
+  const { request } = fixture();
+  const urls = new Set([
+    '/sw.js',
+    '/data/market.json',
+    '/data/metadata.json',
+    '/js/inference-worker.js',
+    ...['model.py', 'model-lower.py', 'model-upper.py', 'model-lower50.py', 'model-upper50.py'].map(
+      f => '/models/' + f,
+    ),
+    ...['preprocessing.json', 'intervals.json', 'intervals50.json'].map(f => '/models/' + f),
+  ]);
+  for (const page of ['index', 'credits', 'admin', 'my-requests'])
+    for (const [, src] of readFileSync(new URL(`../public/${page}.html`, import.meta.url), 'utf8')
+      .matchAll(/<script[^>]*\ssrc="([^"]+)"/g))
+      urls.add('/' + src);
+  const scripts = new URL('../public/js/', import.meta.url);
+  for (const file of readdirSync(scripts).filter(f => f.endsWith('.js')))
+    for (const match of readFileSync(new URL(file, scripts), 'utf8').matchAll(
+      /(?:from|import) '\.\/([\w-]+\.js)'/g,
+    ))
+      urls.add('/js/' + match[1]);
+  for (const url of urls) assert.equal((await request(url)).status, 200, url);
 });
 
 test('the manager search treats % and _ as plain characters', async () => {
@@ -276,16 +301,9 @@ test('every external host named in the scripts is allowed by the content securit
   const { request } = fixture();
   const csp = (await request('/')).headers.get('Content-Security-Policy');
   const allowed = [...csp.matchAll(/https:\/\/[a-z0-9.-]+/g)].map(m => m[0]);
-  for (const file of [
-    'app.js',
-    'estimate.js',
-    'market.js',
-    'map.js',
-    'address.js',
-    'enrichment.js',
-    'inference-worker.js',
-  ]) {
-    const source = readFileSync(new URL(`../public/${file}`, import.meta.url), 'utf8');
+  const scripts = new URL('../public/js/', import.meta.url);
+  for (const file of readdirSync(scripts).filter(f => f.endsWith('.js'))) {
+    const source = readFileSync(new URL(file, scripts), 'utf8');
     // Les liens d'attribution (href="…") ne sont pas des requêtes du navigateur.
     const hosts = [...source.matchAll(/(?<!href=")'(https:\/\/[a-z0-9.-]+)/g)].map(m => m[1]);
     for (const host of hosts) assert.ok(allowed.includes(host), `${file} : ${host}`);

@@ -1,13 +1,13 @@
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { test } from 'node:test';
-import { config } from '../public/config.js';
+import { config } from '../public/js/config.js';
 
 const read = path => readFileSync(new URL(path, import.meta.url), 'utf8');
 const html = read('../public/index.html');
 
 test('the number of covered towns matches the metadata', () => {
-  const { towns } = JSON.parse(read('../public/metadata.json'));
+  const { towns } = JSON.parse(read('../public/data/metadata.json'));
   assert.equal(towns.length, config.townCount);
   assert.ok(html.includes(`${config.townCount} communes`));
 });

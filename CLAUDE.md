@@ -28,8 +28,8 @@ Application web open source d'estimation immobilière (Grenoble et métropole). 
 
 ## Spécifique au projet
 
-- Les modèles (`public/model*.py`, `intervals*.json`, `preprocessing.json`) sont des artefacts générés : ne pas les éditer à la main. Tout changement de modèle ou de bornes doit mettre à jour `tests/model_regression.py` et être justifié dans la PR.
-- Le code Python embarqué dans `public/inference-worker.js` est extrait par `tests/model_regression.py` : garder les deux synchronisés.
+- Les modèles (`public/models/` : `model*.py`, `intervals*.json`, `preprocessing.json`) sont des artefacts générés : ne pas les éditer à la main. Tout changement de modèle ou de bornes doit mettre à jour `tests/model_regression.py` et être justifié dans la PR.
+- Le code Python embarqué dans `public/js/inference-worker.js` est extrait par `tests/model_regression.py` : garder les deux synchronisés.
 - Vie privée : aucun stockage d'adresse ou de coordonnées au-delà de l'existant, aucune clé API ni secret dans le code (`ADMIN_EMAIL` reste un secret de plateforme), aucun suivi publicitaire.
 - Sécurité du Worker : conserver la vérification de l'origine sur les écritures, les requêtes SQL paramétrées et `Cache-Control: no-store` sur les pages privées.
 - Les en-têtes `oai-authenticated-user-*` ne sont fiables que derrière la passerelle Sites : ne pas s'appuyer dessus pour un déploiement autonome.

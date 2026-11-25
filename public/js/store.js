@@ -18,7 +18,7 @@ export function decodeMarket({ columns, rows }) {
 let marketPromise;
 // Les ventes ne sont chargées qu'au premier usage (marché ou comparables d'une estimation).
 export function loadMarket() {
-  marketPromise ??= readJson('market.json')
+  marketPromise ??= readJson('data/market.json')
     .then(data => {
       state.market = decodeMarket(data);
     })

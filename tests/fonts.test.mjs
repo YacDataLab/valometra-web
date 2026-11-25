@@ -23,7 +23,7 @@ test('the two font families are declared with existing files', () => {
 });
 
 test('the interface no longer uses the monospace family', () => {
-  for (const file of ['style.css', 'app.js', 'estimate.js', 'market.js', 'history.js'])
+  for (const file of ['style.css', 'js/app.js', 'js/estimate.js', 'js/market.js', 'js/history.js'])
     assert.ok(!read(file).includes('font-family-mono'), file);
 });
 

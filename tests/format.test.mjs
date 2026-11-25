@@ -377,7 +377,7 @@ test('rampColor interpolates along the stops and clamps outside the domain', () 
 });
 
 test('market data is stored in columns and decodes to one object per sale', () => {
-  const data = JSON.parse(readFileSync(new URL('../public/market.json', import.meta.url), 'utf8'));
+  const data = JSON.parse(readFileSync(new URL('../public/data/market.json', import.meta.url), 'utf8'));
   assert.ok(data.rows.length > 0);
   assert.ok(data.rows.every(row => row.length === data.columns.length));
   const [sale] = decodeMarket({ columns: ['town', 'price'], rows: [['Grenoble', 55000]] });

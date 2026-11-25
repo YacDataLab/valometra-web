@@ -59,7 +59,7 @@ test('every pictogram used by the pages or the scripts exists in the SVG sprite'
   const symbols = new Set([...sprite.matchAll(/<symbol id="(i-[\w-]+)"/g)].map(m => m[1]));
   assert.ok(symbols.size >= 10);
   const scripts = ['result.js', 'theme.js'].map(f =>
-    readFileSync(new URL(`../public/${f}`, import.meta.url), 'utf8'),
+    readFileSync(new URL(`../public/js/${f}`, import.meta.url), 'utf8'),
   );
   const sources = [...pages.map(read), ...scripts];
   const used = [
@@ -128,8 +128,8 @@ test('mobile header keeps the names of the icon buttons (hidden visually, not wi
 });
 
 test('the market commune list is a filterable combobox that keeps the select as source of truth', () => {
-  const ui = readFileSync(new URL('../public/ui.js', import.meta.url), 'utf8');
-  const market = readFileSync(new URL('../public/market.js', import.meta.url), 'utf8');
+  const ui = readFileSync(new URL('../public/js/ui.js', import.meta.url), 'utf8');
+  const market = readFileSync(new URL('../public/js/market.js', import.meta.url), 'utf8');
   assert.match(ui, /export function combobox\(select, \{ filterable = true \}/);
   assert.match(ui, /role', 'combobox'/);
   assert.match(ui, /role', 'listbox'/);
@@ -138,10 +138,10 @@ test('the market commune list is a filterable combobox that keeps the select as 
 });
 
 test('the other lists use the same custom list, without filter, and keep their select', () => {
-  const ui = readFileSync(new URL('../public/ui.js', import.meta.url), 'utf8');
-  const form = readFileSync(new URL('../public/form.js', import.meta.url), 'utf8');
-  const simulator = readFileSync(new URL('../public/simulator.js', import.meta.url), 'utf8');
-  const market = readFileSync(new URL('../public/market.js', import.meta.url), 'utf8');
+  const ui = readFileSync(new URL('../public/js/ui.js', import.meta.url), 'utf8');
+  const form = readFileSync(new URL('../public/js/form.js', import.meta.url), 'utf8');
+  const simulator = readFileSync(new URL('../public/js/simulator.js', import.meta.url), 'utf8');
+  const market = readFileSync(new URL('../public/js/market.js', import.meta.url), 'utf8');
   const css = readFileSync(new URL('../public/style.css', import.meta.url), 'utf8');
   assert.match(ui, /filterable = true/);
   assert.match(ui, /aria-disabled/);
@@ -152,15 +152,15 @@ test('the other lists use the same custom list, without filter, and keep their s
 });
 
 test('errors and focus of a hidden select go to its visible list', () => {
-  const formFlow = readFileSync(new URL('../public/form-flow.js', import.meta.url), 'utf8');
+  const formFlow = readFileSync(new URL('../public/js/form-flow.js', import.meta.url), 'utf8');
   assert.match(formFlow, /-input'\)/);
   assert.match(formFlow, /visible\(field\)\.focus\(\)/);
 });
 
 test('scripts that write a select value refresh its custom list', () => {
-  const enrichment = readFileSync(new URL('../public/enrichment.js', import.meta.url), 'utf8');
-  const formFlow = readFileSync(new URL('../public/form-flow.js', import.meta.url), 'utf8');
-  const ui = readFileSync(new URL('../public/ui.js', import.meta.url), 'utf8');
+  const enrichment = readFileSync(new URL('../public/js/enrichment.js', import.meta.url), 'utf8');
+  const formFlow = readFileSync(new URL('../public/js/form-flow.js', import.meta.url), 'utf8');
+  const ui = readFileSync(new URL('../public/js/ui.js', import.meta.url), 'utf8');
   assert.match(ui, /export const syncChoice = /);
   assert.match(enrichment, /import \{ syncChoice \} from '\.\/ui\.js'/);
   assert.match(enrichment, /el\.value = String\(value\);\s*sync\(el\);/);
@@ -169,14 +169,14 @@ test('scripts that write a select value refresh its custom list', () => {
 });
 
 test('the status badge of the manager list has its style (class pill is defined)', () => {
-  const admin = readFileSync(new URL('../public/admin.js', import.meta.url), 'utf8');
+  const admin = readFileSync(new URL('../public/js/admin.js', import.meta.url), 'utf8');
   const css = readFileSync(new URL('../public/style.css', import.meta.url), 'utf8');
   assert.match(admin, /class="pill"/);
   assert.match(css, /\.pill\s*{/);
 });
 
 test('the market link preloads the explorer data on hover and focus', () => {
-  const app = readFileSync(new URL('../public/app.js', import.meta.url), 'utf8');
+  const app = readFileSync(new URL('../public/js/app.js', import.meta.url), 'utf8');
   assert.match(app, /querySelectorAll\(`\.site-nav a\[href="#\$\{id\}"\]`\)/);
   assert.match(app, /addEventListener\('pointerenter', preload\)/);
   assert.match(app, /addEventListener\('focus', preload\)/);
@@ -185,7 +185,7 @@ test('the market link preloads the explorer data on hover and focus', () => {
 
 // Registre des vues (app.js) : chaque section de page a une entrée, et chaque entrée a sa section et son lien.
 test('every page section is registered in app.js and every registered view has a section and a nav link', () => {
-  const app = readFileSync(new URL('../public/app.js', import.meta.url), 'utf8');
+  const app = readFileSync(new URL('../public/js/app.js', import.meta.url), 'utf8');
   const index = read('index');
   const registry = app.match(/const PAGES = \{([\s\S]*?)\n\};/)[1];
   const registered = [...registry.matchAll(/^ {2}(\w+): \{/gm)].map(m => m[1]);
@@ -199,17 +199,17 @@ test('every page section is registered in app.js and every registered view has a
 });
 
 test('the registry only lists views that load data with prepare and show together', () => {
-  const app = readFileSync(new URL('../public/app.js', import.meta.url), 'utf8');
+  const app = readFileSync(new URL('../public/js/app.js', import.meta.url), 'utf8');
   const entries = [...app.matchAll(/\n {2}(\w+): \{\n {4}title[\s\S]*?\n {2}\}/g)].map(m => m[0]);
   for (const entry of entries)
     if (entry.includes('prepare')) assert.match(entry, /show: \w+,?\n/, entry);
 });
 
 test('view changes are announced and back navigation keeps the scroll position', () => {
-  const app = readFileSync(new URL('../public/app.js', import.meta.url), 'utf8');
+  const app = readFileSync(new URL('../public/js/app.js', import.meta.url), 'utf8');
   const index = readFileSync(new URL('../public/index.html', import.meta.url), 'utf8');
-  const market = readFileSync(new URL('../public/market.js', import.meta.url), 'utf8');
-  const share = readFileSync(new URL('../public/share.js', import.meta.url), 'utf8');
+  const market = readFileSync(new URL('../public/js/market.js', import.meta.url), 'utf8');
+  const share = readFileSync(new URL('../public/js/share.js', import.meta.url), 'utf8');
   assert.match(index, /<p id="route-status" class="sr-only" role="status" aria-live="polite">/);
   assert.match(app, /\$\('route-status'\)\.textContent =/);
   assert.match(app, /history\.scrollRestoration = 'manual'/);
@@ -220,14 +220,14 @@ test('view changes are announced and back navigation keeps the scroll position',
 });
 
 test('the market map is large and zooms with the mouse wheel', () => {
-  const map = readFileSync(new URL('../public/map.js', import.meta.url), 'utf8');
+  const map = readFileSync(new URL('../public/js/map.js', import.meta.url), 'utf8');
   const css = readFileSync(new URL('../public/style.css', import.meta.url), 'utf8');
   assert.match(map, /L\.map\('market-map', \{ scrollWheelZoom: true \}\)/);
   assert.match(css, /#market-map \{[^}]*height: clamp\(460px, 88vh, 1000px\)/);
 });
 
 test('view changes use a short fade that respects reduced motion', () => {
-  const app = readFileSync(new URL('../public/app.js', import.meta.url), 'utf8');
+  const app = readFileSync(new URL('../public/js/app.js', import.meta.url), 'utf8');
   const css = readFileSync(new URL('../public/style.css', import.meta.url), 'utf8');
   assert.match(app, /document\.startViewTransition\(update\)/);
   assert.match(app, /!reduceMotion\.matches/);
@@ -237,7 +237,7 @@ test('view changes use a short fade that respects reduced motion', () => {
 
 // Chaque module déclare ses dépendances par import : plus de globale partagée, un seul point d'entrée.
 test('the page scripts share code through imports, not globals', () => {
-  const dir = new URL('../public/', import.meta.url);
+  const dir = new URL('../public/js/', import.meta.url);
   for (const file of readdirSync(dir).filter(f => f.endsWith('.js'))) {
     const code = readFileSync(new URL(file, dir), 'utf8');
     assert.doesNotMatch(code, /Valometra(Format|Config)/, file);
@@ -245,8 +245,8 @@ test('the page scripts share code through imports, not globals', () => {
   const index = read('index');
   assert.deepEqual(
     [...index.matchAll(/<script[^>]*type="module"[^>]*src="([^"]+)"/g)].map(m => m[1]),
-    ['app.js'],
+    ['js/app.js'],
   );
   for (const page of ['admin', 'my-requests'])
-    assert.match(read(page), new RegExp(`<script type="module" src="${page}\\.js">`));
+    assert.match(read(page), new RegExp(`<script type="module" src="js/${page}\\.js">`));
 });

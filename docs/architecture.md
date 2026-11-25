@@ -1,6 +1,6 @@
 # Architecture de Valometra-web
 
-État après la refonte du Worker (lot 1), le socle du front (lot 2) et le découpage de l'estimation (lot 3). L'organisation des dossiers de `public/` n'a pas encore été restructurée (voir [Évolutions prévues](#évolutions-prévues)).
+État après la refonte du Worker, le socle du front, le découpage de l'estimation et la réorganisation de `public/` (voir [Évolutions prévues](#évolutions-prévues)).
 
 ## Vue d'ensemble
 
@@ -24,13 +24,26 @@ Principes :
 
 | Chemin | Rôle |
 | --- | --- |
-| `public/` | Site statique : pages HTML, modules JS, feuille de style, données et modèles |
+| `public/` | Site statique (détail ci-dessous) |
 | `worker/` | Code du Worker (modules ES, voir ci-dessous) |
 | `drizzle/` | Migrations D1 (`0000_leads.sql`, `0001_feedback.sql`) |
 | `scripts/build.py` | Assemble le Worker dans `dist/` (ignoré par git) |
 | `scripts/chrome.py` | Génère l'en-tête et le pied de page communs aux 4 pages HTML (`--check` les vérifie) |
 | `design/` | Source des jetons de charte → `public/brand/tokens.css` (voir `docs/08_design`) |
 | `tests/` | Tests Node (`*.test.mjs`) et régression du modèle (`model_regression.py`) |
+
+### Contenu de `public/`
+
+| Chemin | Rôle |
+| --- | --- |
+| `*.html`, `style.css`, `manifest.json`, `icons.svg` | Pages, feuille de style unique, manifeste PWA, sprite de pictogrammes |
+| `sw.js` | Service worker, **à la racine** : sa portée est celle de son dossier |
+| `js/` | Tout le code JavaScript (modules de l'accueil, pages privées, scripts classiques, moteur) |
+| `data/` | Données publiques chargées à la demande : `metadata.json` (communes), `market.json` (ventes) |
+| `models/` | Artefacts générés du modèle : `model*.py`, `intervals*.json`, `preprocessing.json` |
+| `brand/`, `fonts/`, `vendor/` | Charte (jetons CSS, logos), polices hébergées, Leaflet |
+
+Les chemins sont relatifs à la page : `data/…` et `js/…` depuis l'HTML, `../models/…` depuis `js/inference-worker.js`. Un test vérifie que tout script, module, jeu de données et modèle référencé est bien publié.
 
 ## Worker (`worker/`)
 
@@ -102,18 +115,18 @@ Le build écrit aussi `dist/server/wrangler.json` (liaison D1 `DB`, migrations) 
 
 | Page | Scripts | Contenu |
 | --- | --- | --- |
-| `index.html` | `app.js` (module, point d'entrée unique), `shell.js`, `theme.js` | Application : 4 vues (Estimer, Marché, Statistiques, Méthode) |
-| `credits.html` | `shell.js`, `theme.js` | Crédits des ressources tierces |
-| `admin.html`, `my-requests.html` | `shell.js`, `admin.js` / `my-requests.js` (modules) | Espaces privés |
+| `index.html` | `js/app.js` (module, point d'entrée unique), `js/shell.js`, `js/theme.js` | Application : 4 vues (Estimer, Marché, Statistiques, Méthode) |
+| `credits.html` | `js/shell.js`, `js/theme.js` | Crédits des ressources tierces |
+| `admin.html`, `my-requests.html` | `js/shell.js`, `js/admin.js` / `js/my-requests.js` (modules) | Espaces privés |
 
 Le même en-tête et pied de page sont répétés dans chaque page ; ils sont générés par `scripts/chrome.py`.
 
-### Accueil : modules ES
+### Accueil : modules ES (dans `public/js/`)
 
 | Module | Rôle |
 | --- | --- |
 | `app.js` | Point d'entrée : registre `PAGES`, routage par ancre (`#estimate`, `#market`…), mémoire du défilement, préchargement au survol, constellation du hero, chargement de `metadata.json` |
-| `store.js` | `$`, `state` (`metadata`, `market`), `readJson`, `loadMarket()` (`market.json` chargé au premier usage) |
+| `store.js` | `$`, `state` (`metadata`, `market`), `readJson`, `loadMarket()` (`data/market.json` chargé au premier usage) |
 | `estimate.js` | Orchestrateur de l'estimation : soumission, états du bouton, affichage, historique |
 | `form.js` | Lecture et validation du formulaire (`collectInputs`), préremplissage (`fillForm`), contrôles de choix |
 | `engine.js` | Moteur : Worker Pyodide derrière `predict(features)` (promesse) ; ignore tout du DOM |
@@ -143,7 +156,7 @@ Scripts classiques, chargés hors du graphe de modules : `shell.js` (lien d'évi
 
 ### Parcours d'une estimation
 
-1. `app.js` charge `metadata.json` (communes) et active le formulaire.
+1. `app.js` charge `data/metadata.json` (communes) et active le formulaire.
 2. L'utilisateur choisit une adresse (`address.js`) ; `enrichment.js` interroge BDNB et ADEME et préremplit le bâtiment. Le DPE doit être confirmé par l'utilisateur.
 3. À la soumission, `estimate.js` fait lire le formulaire par `form.js` (`collectInputs`), démarre le moteur (`engine.js` → `inference-worker.js`, Pyodide depuis jsDelivr) et charge `market.json`.
 4. Le Worker du navigateur, appelé par `predict()`, charge `model.py` et les 4 modèles de bornes, applique `preprocessing.json` et les corrections `intervals*.json`, puis renvoie l'estimation et les fourchettes 80 % et 50 %.
@@ -157,6 +170,6 @@ Scripts classiques, chargés hors du graphe de modules : `shell.js` (lien d'évi
 
 `npm test` = `scripts/chrome.py` + `scripts/build.py`, puis `node --test` sur `tests/*.test.mjs` et `tests/model_regression.py`. Les tests du service importent le bundle `dist/server/index.js` : ils vérifient donc aussi l'assemblage. La CI (`.github/workflows/checks.yml`) lance la même commande.
 
-## Évolutions prévues
+## Pistes d'évolution
 
-Lot non réalisé à ce jour : réorganisation de `public/` (`js/`, `data/`, `models/`). `enrichment.js` et `market.js` restent de longs modules à état global : candidats au même découpage.
+Aucun lot en cours. `enrichment.js` et `market.js` restent de longs modules à état global : candidats au même découpage.
