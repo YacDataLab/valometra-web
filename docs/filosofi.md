@@ -102,3 +102,34 @@ les réponses en cours.
 - Le parcours complet dans le navigateur, de la sélection d’une adresse
   à l’estimation, reste à vérifier. Le taux est celui de l’échantillon
   historique de bâtiments et ne mesure pas la couverture du formulaire.
+
+### Les quatre désaccords de zonage
+
+En superposant les mêmes empreintes aux contours IGN 2026, on retrouve
+dans les quatre cas le code attribué par la BDNB. Le changement de tracé
+explique la différence de code observée entre les deux éditions.
+
+| IRIS IGN 2022 | IRIS IGN 2026 et BDNB |
+| --- | --- |
+| `381850401` | `381850214` |
+| `381850206` | `381850205` |
+| `381850209` | `381850210` |
+| `381850102` | `381850105` |
+
+### Comparaison à faire sur les prix de vente
+
+La PR retient la concordance BDNB–IGN 2022. En cas de désaccord, le
+modèle utilise son traitement habituel des valeurs manquantes. Une
+variante utiliserait les chiffres de l’IRIS IGN 2022 dès que l’empreinte
+tient dans une seule zone, même si la BDNB donne un autre code. Sur
+l’échantillon géographique, cette variante retiendrait 139 bâtiments sur
+150 au lieu de 135. Ce taux mesure le rattachement géographique.
+
+Pour évaluer l’effet sur le prix, prendre les mêmes ventes hors
+entraînement dont le prix réel est connu. Calculer deux estimations par
+vente avec le même modèle et les mêmes autres entrées. Seule la règle
+Filosofi change. Comparer l’erreur absolue en euros pour chaque vente,
+l’erreur absolue médiane et moyenne, et le nombre de ventes pour lesquelles
+chaque règle est la plus proche du prix réel. Présenter séparément les
+cas de désaccord et la taille de ce sous-échantillon. Cette comparaison
+des prix reste à faire.
