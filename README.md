@@ -14,7 +14,7 @@ BDNB : jusqu’à 10 fiches. ADEME : jusqu’à 100 diagnostics, troncature sign
 
 ## Bornes personnalisées
 Deux paires de régressions quantiles sur log(prix), q10/q90 et q25/q75, chacune entraînée sur les 4069 ventes antérieures à mai 2026. Calibration CQR distincte sur 317 ventes de mai : score max(borne_basse - log_réel, log_réel - borne_haute), rang ceil((n+1)*couverture), correction positive ou nulle. Croisements de bornes réordonnés. Évaluation historique sur 239 ventes de juin : 84,94 % couverts pour l’objectif80 ; 48,54 % pour l’objectif50.
-Aucun coefficient de l’ancienne fourchette multiplicative n’est utilisé. Le choix50 est explicitement présenté comme plus étroit avec moins de couverture ; le défaut reste80. Les modèles ne garantissent pas une couverture conditionnelle à chaque bien. Le jeu historique a déjà été exploré lors du diagnostic antérieur du modèle. Ces couvertures ont été mesurées sur les données enrichies d’origine et ne constituent pas une validation des champs incomplets du formulaire ou des changements de millésime des API.
+Aucun coefficient de l’ancienne fourchette multiplicative n’est utilisé. L’onglet Estimer affiche la fourchette dont l’objectif de couverture est de 80 %. Les modèles ne garantissent pas une couverture conditionnelle à chaque bien. Le jeu historique a déjà été exploré lors du diagnostic antérieur du modèle. Ces couvertures ont été mesurées sur les données enrichies d’origine et ne constituent pas une validation des champs incomplets du formulaire ou des changements de millésime des API.
 Prix de référence au 30 juin2026. Aucun ajustement du marché au-delà. Point de vigilance : les API retournent leur millésime courant pour le bâtiment, sans historique as-of garanti.
 
 ## Vérification
