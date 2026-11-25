@@ -26,3 +26,9 @@ test('the interface no longer uses the monospace family', () => {
   for (const file of ['style.css', 'app.js', 'estimate.js', 'market.js', 'history.js'])
     assert.ok(!read(file).includes('font-family-mono'), file);
 });
+
+test('font weights stay on the four-step scale (400, 500, 600, 700)', () => {
+  const css = read('style.css').replace(/@font-face\s*{[^}]*}/g, '');
+  const weights = new Set([...css.matchAll(/font-weight:\s*(\d+)/g)].map(m => m[1]));
+  assert.deepEqual([...weights].sort(), ['400', '500', '600', '700']);
+});

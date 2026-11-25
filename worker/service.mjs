@@ -350,13 +350,23 @@ export async function handle(request, env, assets) {
   if (!asset || !['GET', 'HEAD'].includes(request.method))
     return new Response('Page introuvable', { status: 404 });
   const privatePage = ['/admin.html', '/my-requests.html'].includes(path);
+  // Polices, Leaflet, charte et pictogrammes changent rarement : une journée de cache, puis revalidation.
+  const stable = /^\/(fonts|vendor|brand)\//.test(path) || path === '/icons.svg';
   if (!privatePage && request.headers.get('If-None-Match') === asset.etag)
     return new Response(null, { status: 304 });
-  const data = asset.binary ? Uint8Array.from(atob(asset.data), c => c.charCodeAt(0)) : asset.data;
+  // Les fichiers binaires (polices, images) sont décodés une fois, puis gardés en mémoire.
+  asset.bytes ??= asset.binary
+    ? Uint8Array.from(atob(asset.data), c => c.charCodeAt(0))
+    : asset.data;
+  const data = asset.bytes;
   return new Response(request.method === 'HEAD' ? null : data, {
     headers: {
       'Content-Type': asset.type,
-      'Cache-Control': privatePage ? 'no-store' : 'public, max-age=0, must-revalidate',
+      'Cache-Control': privatePage
+        ? 'no-store'
+        : stable
+          ? 'public, max-age=86400, must-revalidate'
+          : 'public, max-age=0, must-revalidate',
       ETag: asset.etag,
       ...securityHeaders,
     },

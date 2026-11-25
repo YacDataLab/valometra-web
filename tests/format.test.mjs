@@ -2,6 +2,8 @@ import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import '../public/config.js';
 import '../public/format.js';
+import { readFileSync } from 'node:fs';
+import { decodeMarket } from '../public/store.js';
 
 const {
   scenarioFeatures,
@@ -17,6 +19,7 @@ const {
   parseMarket,
   variation,
   frDate,
+  frDateTime,
   precision,
   gauge,
   distance,
@@ -37,6 +40,8 @@ const {
 test('dates are shown day first', () => {
   assert.equal(frDate('2026-06-30'), '30/06/2026');
   assert.equal(frDate('2025-07-01T10:00:00Z'), '01/07/2025');
+  // Date et heure : format français (jour/mois/année), l'heure dépend du fuseau de la machine.
+  assert.match(frDateTime('2026-06-30T10:00:00Z'), /^30\/06\/2026 \d{2}:00:00$/);
   assert.equal(frDate(''), '');
   assert.equal(frDate(undefined), '');
   assert.equal(frDate('n/a'), 'n/a');
@@ -370,4 +375,15 @@ test('rampColor interpolates along the stops and clamps outside the domain', () 
   assert.equal(rampColor(2.5, domain, stops), '#800000');
   assert.equal(rampColor(99, domain, stops), '#ffffff');
   assert.equal(rampColor(3, { lo: 4, hi: 4 }, stops), '#ff0000');
+});
+
+test('market data is stored in columns and decodes to one object per sale', () => {
+  const data = JSON.parse(readFileSync(new URL('../public/market.json', import.meta.url), 'utf8'));
+  assert.ok(data.rows.length > 0);
+  assert.ok(data.rows.every(row => row.length === data.columns.length));
+  const [sale] = decodeMarket({ columns: ['town', 'price'], rows: [['Grenoble', 55000]] });
+  assert.deepEqual(sale, { town: 'Grenoble', price: 55000 });
+  const decoded = decodeMarket(data);
+  assert.equal(decoded.length, data.rows.length);
+  assert.ok(data.columns.every(column => column in decoded[0]));
 });

@@ -1,7 +1,6 @@
 'use strict';
 (() => {
-  const $ = id => document.getElementById(id),
-    { esc, money: euros } = window.ValometraFormat,
+  const { esc, money: euros, frDateTime, byId: $ } = window.ValometraFormat,
     money = n => (Number.isFinite(n) ? euros(n) : 'Non calculée');
   const states = {
       nouveau: 'Nouveau',
@@ -45,7 +44,7 @@
         data.rows
           .map(row => {
             const p = row.property;
-            return `<article class="lead-card"><div class="section-head"><div><h2>${esc(row.name)}</h2><span class="hint">${esc(new Date(row.createdAt).toLocaleString('fr-FR'))} · ${esc(roles[row.role])} · ${esc(times[row.timeline])}</span></div><span class="pill">${esc(states[row.status])}</span></div><div class="lead-contact"><span>${esc(row.email || 'E-mail non renseigné')}</span><span>${esc(row.phone || 'Téléphone non renseigné')}</span></div><p><b>${esc(p.address || 'Adresse non précisée')}</b></p><p class="hint">${p.surface ? esc(p.surface) + ' m² · ' : ''}${p.rooms ? esc(p.rooms) + ' pièces · ' : ''}Estimation indicative jointe : ${money(p.point)}</p><p class="lead-message">${esc(row.message || 'Aucun message complémentaire.')}</p><details><summary>Suivi et consentement</summary><p class="hint">Demande de contact confirmée le ${esc(new Date(row.consentAt).toLocaleString('fr-FR'))} · version ${esc(row.consentVersion)}</p><label>Statut<select id="status-${row.id}">${Object.entries(
+            return `<article class="lead-card"><div class="section-head"><div><h2>${esc(row.name)}</h2><span class="hint">${esc(frDateTime(row.createdAt))} · ${esc(roles[row.role])} · ${esc(times[row.timeline])}</span></div><span class="pill">${esc(states[row.status])}</span></div><div class="lead-contact"><span>${esc(row.email || 'E-mail non renseigné')}</span><span>${esc(row.phone || 'Téléphone non renseigné')}</span></div><p><b>${esc(p.address || 'Adresse non précisée')}</b></p><p class="hint">${p.surface ? esc(p.surface) + ' m² · ' : ''}${p.rooms ? esc(p.rooms) + ' pièces · ' : ''}Estimation indicative jointe : ${money(p.point)}</p><p class="lead-message">${esc(row.message || 'Aucun message complémentaire.')}</p><details><summary>Suivi et consentement</summary><p class="hint">Demande de contact confirmée le ${esc(frDateTime(row.consentAt))} · version ${esc(row.consentVersion)}</p><label>Statut<select id="status-${row.id}">${Object.entries(
               states,
             )
               .map(

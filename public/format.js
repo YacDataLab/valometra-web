@@ -6,6 +6,10 @@
     const match = /^(\d{4})-(\d{2})-(\d{2})/.exec(value ?? '');
     return match ? `${match[3]}/${match[2]}/${match[1]}` : String(value ?? '');
   };
+  // Date et heure locales (« 25/11/2026 14:03 ») pour les dates horodatées du service.
+  const frDateTime = value => new Date(value).toLocaleString('fr-FR');
+  // Raccourci DOM partagé par les pages classiques (admin, mes demandes).
+  const byId = id => document.getElementById(id);
 
   // Précision de la fourchette : largeur de la fourchette étendue (objectif 80 %)
   // rapportée à l'estimation. Indicateur descriptif, pas une probabilité de justesse.
@@ -325,7 +329,6 @@
   // Valeur affichée sur la carte et l'histogramme : prix au m², prix total ou surface.
   const measure = (row, key) =>
     key === 'price' ? row.price : key === 'surface' ? row.surface : row.price / row.surface;
-  const measureUnit = key => (key === 'surface' ? 'm²' : key === 'price' ? '€' : '€/m²');
 
   // Borne de classe d'un histogramme : une décimale en milliers, pour que deux bornes voisines
   // restent distinctes.
@@ -365,7 +368,6 @@
     money,
     roundMoney,
     measure,
-    measureUnit,
     num,
     dec,
     binEdge,
@@ -385,6 +387,8 @@
     scenarioFeatures,
     variation,
     frDate,
+    frDateTime,
+    byId,
     precision,
     gauge,
     distance,

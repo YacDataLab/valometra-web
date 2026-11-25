@@ -200,6 +200,17 @@ test('only the manager reads the feedback summary', async () => {
   assert.equal('id' in summary.rows[0], false);
 });
 
+test('stable assets are cached for a day, pages and scripts are revalidated', async () => {
+  const { request } = fixture();
+  const cache = async path => (await request(path)).headers.get('Cache-Control');
+  assert.equal(await cache('/fonts/inter-latin.woff2'), 'public, max-age=86400, must-revalidate');
+  assert.equal(await cache('/icons.svg'), 'public, max-age=86400, must-revalidate');
+  assert.equal(await cache('/app.js'), 'public, max-age=0, must-revalidate');
+  assert.equal(await cache('/'), 'public, max-age=0, must-revalidate');
+  const mine = await request('/my-requests.html', { id: 'alice' });
+  assert.equal(mine.headers.get('Cache-Control'), 'no-store');
+});
+
 test('static pages carry a strict content security policy', async () => {
   const { request } = fixture();
   for (const path of ['/', '/index.html', '/app.js', '/sw.js']) {

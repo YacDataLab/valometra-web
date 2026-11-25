@@ -1,44 +1,99 @@
 // Point d'entrée de la page d'accueil : navigation entre les vues, chargement des communes.
 import { $, state, readJson, loadMarket } from './store.js';
 import { loadLeaflet } from './map.js';
-import { initMarket, showMarket, marketReady } from './market.js';
+import { initMarket, showMarket, marketReady, renderMarket } from './market.js';
 import { initEstimate } from './estimate.js';
 
 const F = window.ValometraFormat;
 
-const VIEWS = ['estimate', 'market', 'method'];
-const PAGE_TITLES = {
-  estimate: 'Valometra — L’immobilier, en perspective',
-  market: 'Le marché local — Valometra',
-  method: 'Méthode et limites — Valometra',
+// Registre des vues : une entrée par <section class="page"> de index.html, dans le même ordre que la navigation.
+// Ajouter une page : la section, son lien dans <nav class="site-nav">, puis une entrée ici.
+// `prepare` charge les données avant l'affichage et `show` les affiche ; le lien de la vue est alors préchargé au survol.
+const PAGES = {
+  estimate: { title: 'Valometra — L’immobilier, en perspective' },
+  market: {
+    title: 'Le marché local — Valometra',
+    prepare: () => Promise.all([loadMarket(), loadLeaflet()]),
+    show: showMarket,
+  },
+  statistiques: {
+    title: 'Statistiques du marché — Valometra',
+    prepare: () => loadMarket(),
+    show: renderMarket,
+  },
+  method: { title: 'Méthode et limites — Valometra' },
 };
 
 let navigation = 0;
+const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)');
+
+// Retour arrière : chaque entrée d'historique garde sa position de défilement (en mémoire),
+// et la vue revient à l'endroit où le visiteur l'avait laissée. Un lien neuf repart du haut.
+history.scrollRestoration = 'manual';
+const scrollByEntry = new Map();
+let entryKey = null;
+let routing = false;
+window.addEventListener(
+  'scroll',
+  () => {
+    if (!routing && entryKey) scrollByEntry.set(entryKey, window.scrollY);
+  },
+  { passive: true },
+);
 
 async function route(event) {
   const current = ++navigation;
   const hash = location.hash.slice(1);
-  const id = VIEWS.includes(hash) ? hash : 'estimate';
-  document.querySelectorAll('.page').forEach(element => {
-    element.hidden = element.id !== id;
-  });
-  document.title = PAGE_TITLES[id];
-  document.querySelectorAll('.site-nav a[href^="#"]').forEach(link => {
-    if (link.hash === '#' + id) link.setAttribute('aria-current', 'page');
-    else link.removeAttribute('aria-current');
-  });
-  window.scrollTo(0, 0);
-  // Navigation au clavier ou au lecteur d'écran : le focus suit le titre de la page.
-  if (event?.type === 'hashchange') {
-    const heading = document.querySelector('.page:not([hidden]) h1');
-    heading?.setAttribute('tabindex', '-1');
-    heading?.focus({ preventScroll: true });
-  }
-  if (id !== 'market') return;
+  const id = Object.hasOwn(PAGES, hash) ? hash : 'estimate';
+  // Position de la vue quittée, relevée avant que la page ne change de hauteur.
+  if (entryKey) scrollByEntry.set(entryKey, window.scrollY);
+  routing = true;
+  entryKey = history.state?.key ?? `${Date.now()}-${Math.random()}`;
+  const restore = scrollByEntry.get(entryKey);
+  history.replaceState({ key: entryKey }, '', location.href);
+  // Changement de vue : fondu entre les vues quand le navigateur le permet, sans mouvement
+  // si le visiteur a demandé de réduire les animations.
+  const update = () => {
+    document.querySelectorAll('.page').forEach(element => {
+      element.hidden = element.id !== id;
+    });
+    document.title = PAGES[id].title;
+    document.querySelectorAll('.site-nav a[href^="#"]').forEach(link => {
+      if (link.hash === '#' + id) link.setAttribute('aria-current', 'page');
+      else link.removeAttribute('aria-current');
+    });
+    window.scrollTo(0, restore ?? 0);
+    requestAnimationFrame(() => {
+      routing = false;
+    });
+    // Sur téléphone, la barre de navigation défile : la vue active reste visible.
+    document
+      .querySelector('.site-nav [aria-current="page"]')
+      ?.scrollIntoView({ block: 'nearest', inline: 'center' });
+    // Navigation au clavier ou au lecteur d'écran : le focus suit le titre de la page,
+    // et une annonce brève indique la vue ouverte.
+    if (event?.type === 'hashchange') {
+      const heading = document.querySelector('.page:not([hidden]) h1');
+      heading?.setAttribute('tabindex', '-1');
+      heading?.focus({ preventScroll: true });
+      $('route-status').textContent =
+        'Vue ouverte : ' +
+        (document.querySelector('.site-nav [aria-current="page"]')?.textContent.trim() ?? '');
+    }
+  };
+  if (event?.type === 'hashchange' && document.startViewTransition && !reduceMotion.matches)
+    document.startViewTransition(update);
+  else update();
+  const page = PAGES[id];
+  if (!page.prepare) return;
   $('market-stats').textContent = 'Chargement des ventes…';
   try {
-    await Promise.all([loadMarket(), loadLeaflet()]);
-    if (current === navigation) showMarket();
+    await page.prepare();
+    if (current === navigation) {
+      page.show();
+      // La page ne prend sa hauteur finale qu'ici : la position mémorisée est rétablie maintenant.
+      if (restore !== undefined) window.scrollTo(0, restore);
+    }
   } catch {
     if (current === navigation)
       $('market-stats').textContent = 'Ventes indisponibles. Rouvrez l’explorateur pour réessayer.';
@@ -50,6 +105,18 @@ $('start-estimate').addEventListener('click', () => {
   target.focus?.();
   target.scrollIntoView({ block: $('address').disabled ? 'start' : 'center' });
 });
+
+// Préchargement des vues fondées sur les données, quand le visiteur approche de leur lien (survol ou focus).
+// store.js et map.js mettent les données en cache : l'ouverture n'attend plus le réseau.
+// Un échec est ignoré ici ; la vue le signale et réessaie à l'ouverture.
+for (const [id, page] of Object.entries(PAGES)) {
+  if (!page.prepare) continue;
+  const preload = () => page.prepare().catch(() => {});
+  document.querySelectorAll(`.site-nav a[href="#${id}"]`).forEach(link => {
+    link.addEventListener('pointerenter', preload);
+    link.addEventListener('focus', preload);
+  });
+}
 
 // Constellation des communes couvertes (hero) : dessinée à partir de metadata.json.
 function renderConstellation(towns) {
@@ -84,6 +151,7 @@ readJson('metadata.json')
     initMarket(data.towns);
     renderConstellation(data.towns);
     if (marketReady()) showMarket();
+    else if (!$('statistiques').hidden) renderMarket();
     $('estimate-button').disabled = false;
     $('model-status').textContent = 'Le moteur se charge lors de la première estimation.';
     performance.mark('valometra-form-ready');

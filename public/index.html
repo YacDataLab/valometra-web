@@ -3,13 +3,13 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="description" content="Estimateur immobilier open source pour Grenoble et sa métropole : estimez votre appartement, explorez les ventes réelles et comprenez la méthode.">
+<meta name="description" content="Estimation open source du prix des appartements à Grenoble et dans sa métropole, fondée sur les ventes réelles, les diagnostics énergétiques et les données du bâtiment.">
 <title>Valometra — L’immobilier, en perspective</title>
 <meta property="og:type" content="website">
 <meta property="og:locale" content="fr_FR">
 <meta property="og:site_name" content="Valometra">
 <meta property="og:title" content="Valometra — L’immobilier, en perspective">
-<meta property="og:description" content="Estimez votre appartement à Grenoble et dans sa métropole, comparez-le aux ventes réelles et comprenez la fourchette. Open source, calcul dans votre navigateur.">
+<meta property="og:description" content="Estimation du prix d’un appartement à Grenoble et dans sa métropole, comparée aux ventes réelles, avec sa fourchette. Open source, calcul dans votre navigateur.">
 <meta name="twitter:card" content="summary">
 <meta name="theme-color" content="#12304F">
 <link rel="icon" href="brand/favicon.svg">
@@ -21,11 +21,11 @@
 <link rel="stylesheet" href="style.css">
 <script defer src="config.js"></script>
 <script defer src="format.js"></script>
-<script defer src="enrichment.js"></script>
-<script defer src="address.js"></script>
-<script defer src="history.js"></script>
+<script type="module" src="enrichment.js"></script>
+<script type="module" src="address.js"></script>
+<script type="module" src="history.js"></script>
 <script type="module" src="app.js"></script>
-<script defer src="form-flow.js"></script>
+<script type="module" src="form-flow.js"></script>
 <script defer src="shell.js"></script>
 <script src="theme.js"></script>
 </head>
@@ -37,6 +37,7 @@
 <nav class="site-nav" aria-label="Navigation principale">
 <a href="#estimate">Estimer</a>
 <a href="#market">Marché</a>
+<a href="#statistiques">Statistiques</a>
 <a href="#method">Méthode</a>
 </nav>
 <div class="header-tools">
@@ -45,24 +46,21 @@
 </div>
 </div>
 </header>
+<p id="route-status" class="sr-only" role="status" aria-live="polite"></p>
 <main class="site-content" id="contenu" tabindex="-1">
 <section id="estimate" class="page">
 <div class="hero">
-<div class="hero-copy">
+<div>
 <span class="eyebrow">ESTIMATEUR OPEN SOURCE · GRENOBLE MÉTROPOLE</span>
-<h1>Votre appartement,<br>
-<em>à sa juste mesure.</em>
+<h1>Estimer un appartement<br>
+<em>à partir des ventes réelles.</em>
 </h1>
-<p class="lede">Estimez votre appartement, situez son prix dans le marché local et comprenez la fourchette qui l’accompagne. Le modèle, les données et le code sont ouverts : tout peut se vérifier.</p>
+<p class="lede">Valometra estime le prix d’un appartement à Grenoble et dans sa métropole, situe ce prix dans le marché local et en présente la fourchette. Modèle, données et code sont publics et vérifiables.</p>
 <div class="hero-actions">
 <button class="hero-jump secondary" type="button" id="start-estimate">
 <svg class="icon" aria-hidden="true" focusable="false">
 <use href="icons.svg#i-arrow-right"/>
 </svg>Commencer l’estimation</button>
-<a class="hero-source secondary" href="https://github.com/YacDataLab/valometra-web" target="_blank" rel="noopener">
-<svg class="icon" aria-hidden="true" focusable="false">
-<use href="icons.svg#i-brand-github"/>
-</svg>Voir le code sur GitHub</a>
 </div>
 <ul class="hero-facts" aria-label="Principes du projet">
 <li>Licence AGPL-3.0</li>
@@ -81,7 +79,7 @@
 <h2>Les caractéristiques du bien</h2>
 </div>
 </div>
-<p class="hint">Une adresse, une surface et un nombre de pièces suffisent (champs marqués d’un *). Le reste est facultatif et affine l’estimation.</p>
+<p class="hint">Trois informations suffisent : l’adresse, la surface et le nombre de pièces. Les autres champs sont facultatifs et affinent l’estimation.</p>
 <p class="example-line">
 <button type="button" class="link" id="fill-example">Essayer avec un exemple</button>
 </p>
@@ -125,11 +123,11 @@
 <option value="unknown">Je ne sais pas</option>
 </select>
 </label>
-<p class="hint">Le modèle a appris sur la surface bâtie des ventes DVF, qui peut différer de la surface habitable ou Carrez : indiquez celle que vous connaissez.</p>
+<p class="hint">Le modèle est entraîné sur la surface bâtie DVF, qui peut différer de la surface habitable ou de la surface Carrez. Indiquez celle que vous connaissez.</p>
 </section>
-<section class="form-step automatic-section">
+<section class="form-step">
 <h3>Votre adresse complète le dossier</h3>
-<p class="hint">À partir de l’adresse, nous recherchons le bâtiment et ses diagnostics. Aucune coordonnée GPS ni code de quartier à saisir.</p>
+<p class="hint">L’adresse permet de retrouver le bâtiment et ses diagnostics. Aucune coordonnée GPS ni code de quartier n’est à saisir.</p>
 <div class="two">
 <label>Commune<input id="address-city" readonly placeholder="Automatique">
 </label>
@@ -155,14 +153,14 @@
 </div>
 <button id="enrichment-retry" type="button" class="secondary">Relancer la recherche</button>
 </section>
-<details class="automatic-explanation">
+<details>
 <summary>Quelles informations proviennent de l’adresse ?</summary>
-<p class="hint">La position et le code postal viennent de l’adresse. Les caractéristiques du bâtiment sont recherchées dans la BDNB ; le diagnostic d’un appartement n’est utilisé qu’après votre confirmation. Les variables du modèle non renseignées restent manquantes.</p>
+<p class="hint">La commune, le code postal et la position proviennent de l’adresse. Les caractéristiques du bâtiment sont recherchées dans la BDNB. Un diagnostic de performance énergétique n’est utilisé qu’après votre confirmation. Les variables non renseignées restent manquantes.</p>
 </details>
 </section>
-<section class="form-step dpe-section">
+<section class="form-step">
 <h3>Votre diagnostic énergétique</h3>
-<p class="hint">Facultatif. Choisissez votre diagnostic dans la liste ci-dessus ou recopiez votre document s’il n’y figure pas.</p>
+<p class="hint">Facultatif. Sélectionnez le diagnostic retrouvé à l’adresse, ou saisissez le vôtre s’il n’y figure pas.</p>
 <label>Comment souhaitez-vous renseigner le DPE ?<select id="dpe-mode">
 <option value="none">Continuer sans DPE</option>
 <option value="found">Sélectionner un DPE retrouvé à l’adresse</option>
@@ -187,7 +185,7 @@
 <label>Date de réalisation du DPE<input id="dpe-date" type="date" max="2026-06-30">
 </label>
 </div>
-<p class="hint">Recopiez le DPE de ce logement ; sa date doit être antérieure ou égale au 30 juin 2026, référence du modèle. L’étiquette et la date suffisent, les détails sont facultatifs.</p>
+<p class="hint">Saisissez l’étiquette et la date de réalisation du DPE de ce logement : la date doit être antérieure ou égale au 30 juin 2026, date de référence du modèle. Les détails ci-dessous sont facultatifs.</p>
 <details>
 <summary>Détails du document DPE — facultatifs</summary>
 <div class="two">
@@ -263,7 +261,7 @@
 </section>
 <details id="advanced-features" class="advanced-section">
 <summary>Compléter les caractéristiques — facultatif</summary>
-<p class="hint">Ces informations affinent l’estimation. Laissez vides les champs inconnus : aucune valeur n’est à inventer.</p>
+<p class="hint">Ces informations affinent l’estimation. Laissez vide tout champ inconnu.</p>
 <h3>Surfaces et dépendances</h3>
 <div class="two">
 <label>Surface Carrez (m²), si connue<input id="carrez" type="number" min="5" max="500" step="0.1" placeholder="Si connu">
@@ -272,10 +270,10 @@
 </label>
 </div>
 <h3>Immeuble et copropriété</h3>
-<p class="hint">Les informations retrouvées sont préremplies. Vous pouvez les vérifier ou les corriger à partir de vos documents.</p>
+<p class="hint">Les informations retrouvées à l’adresse sont préremplies. Vérifiez-les ou corrigez-les à partir de vos documents.</p>
 <label>Année de construction<input id="year" type="number" min="1600" max="2026" placeholder="Si connu">
 </label>
-<p id="building-homes-help" class="hint">Facultatif : laissez vide si vous l’ignorez, l’estimation reste possible.</p>
+<p id="building-homes-help" class="hint">Facultatif : l’estimation reste possible sans ce champ.</p>
 <div class="two">
 <label>Nombre de niveaux de l’immeuble<input data-feature="bdnb_nb_niveaux" id="extra-bdnb_nb_niveaux" type="number" min="1" max="60" step="1" placeholder="Si connu">
 </label>
@@ -353,13 +351,13 @@
 <option value="50">Centrale — objectif de couverture 50 %</option>
 </select>
 </label>
-<p class="hint">La fourchette centrale (50 %) est plus étroite mais laisse davantage de ventes hors bornes. La fourchette étendue (80 %) est le choix par défaut.</p>
+<p class="hint">La fourchette centrale (50 %) est plus étroite, mais contient moins souvent le prix réel. La fourchette étendue (80 %) est retenue par défaut.</p>
 </details>
 <p class="scope-note">Appartements existants uniquement · référence au 30 juin 2026.</p>
 <button type="submit" class="primary" id="estimate-button" disabled>Obtenir mon estimation</button>
 <p class="hint" id="model-status" role="status">Chargement des communes couvertes…</p>
 </form>
-<aside class="result panel" id="result" aria-live="polite">
+<aside class="panel" id="result" aria-live="polite">
 <div class="empty-result">
 <div class="section-head">
 <div>
@@ -393,7 +391,7 @@
 </div>
 <label class="check">
 <input id="history-enabled" type="checkbox">Garder mes estimations sur cet appareil</label>
-<p class="hint">Rien n’est envoyé : la liste reste dans votre navigateur (10 estimations au plus). Décocher la case efface la liste.</p>
+<p class="hint">La liste reste dans votre navigateur et compte 10 estimations au plus. Décocher la case l’efface.</p>
 <ul id="history-list" class="history-list">
 </ul>
 <div id="history-compare" role="status" aria-live="polite">
@@ -402,20 +400,21 @@
 </section>
 <div class="bottom-links">
 <div>
-<h3>Replacez votre bien dans son marché.</h3>
-<p>Ventes réelles, surfaces, prix au mètre carré : explorez les données du territoire.</p>
+<h3>Situer le bien dans son marché local</h3>
+<p>Ventes réelles du territoire : surfaces, prix et prix au mètre carré.</p>
 </div>
 <a href="#market" class="secondary">Ouvrir l’explorateur</a>
 </div>
 </section>
 <section id="market" class="page" hidden>
-<div class="page-title">
+<div class="page-title sr-only">
 <span class="eyebrow">LE MARCHÉ LOCAL</span>
-<h1>Le marché prend <em>forme.</em>
+<h1>Explorer le marché <em>local.</em>
 </h1>
-<p>Des ventes réelles pour lire le territoire : filtrez, zoomez, ouvrez une vente.</p>
+<p>Ventes d’appartements de juillet 2025 à juin 2026. Filtrez, parcourez la carte et ouvrez le détail d’une vente.</p>
 </div>
 <div class="market-layout">
+<div class="market-side">
 <aside class="panel filters">
 <h2>Vos filtres</h2>
 <label>Commune<select id="market-town">
@@ -465,18 +464,30 @@
 <use href="icons.svg#i-download"/>
 </svg>Exporter CSV</button>
 </div>
-<p class="hint">Appartements, juillet 2025 à juin 2026. Les coordonnées sont celles de la parcelle : un point n’identifie pas un logement précis.</p>
+<p class="hint">Les coordonnées sont celles de la parcelle : un point n’identifie pas un logement précis.</p>
 </aside>
-<div class="market-content">
-<div class="stats" id="market-stats" aria-live="polite">
+<p class="hint" id="map-note">Les ventes situées aux mêmes coordonnées sont regroupées ; cliquez sur un point pour les parcourir.</p>
 </div>
+<div class="map-column">
 <div class="map-wrap">
 <div id="market-map" aria-label="Carte des ventes immobilières">
 </div>
 <div id="map-legend">
 </div>
 </div>
-<p class="hint" id="map-note">Les ventes situées aux mêmes coordonnées sont regroupées ; cliquez sur un point pour les parcourir.</p>
+</div>
+</div>
+</section>
+<section id="statistiques" class="page" hidden>
+<div class="page-title">
+<span class="eyebrow">LE MARCHÉ LOCAL</span>
+<h1>Les chiffres <em>du marché.</em></h1>
+<p>Indicateurs calculés sur les ventes retenues par les filtres de la page Marché.</p>
+<p class="hint"><a href="#market">Modifier les filtres</a></p>
+</div>
+<div class="market-content">
+<div class="stats" id="market-stats" aria-live="polite">
+</div>
 <div class="panel">
 <div class="section-head">
 <h2>Distribution du marché sélectionné</h2>
@@ -554,20 +565,19 @@
 </div>
 </div>
 </div>
-</div>
 </section>
 <section id="method" class="page" hidden>
 <div class="page-title">
 <span class="eyebrow">TRANSPARENCE ET LIMITES</span>
-<h1>Comprendre ce que<br>le modèle <em>sait.</em>
+<h1>Méthode <em>et limites.</em>
 </h1>
-<p>Une estimation utile montre aussi ses limites.</p>
+<p>Données utilisées, performances mesurées et limites de l’estimation.</p>
 </div>
 <div class="method-grid">
 <article class="panel">
 <h2>Les informations utilisées</h2>
-<p>Le formulaire peut renseigner jusqu’à <b>40 des 77 variables du modèle</b> : 25 caractéristiques saisies, 4 informations de localisation issues de l’adresse, 5 valeurs de contexte ou indicateurs calculés, et jusqu’à 6 variables supplémentaires issues des données retrouvées à l’adresse. Les champs vides restent manquants : seules les informations essentielles sont obligatoires, le DPE et les caractéristiques avancées sont facultatifs.</p>
-<p>Le calcul du prix se fait directement sur votre appareil, dans votre navigateur. Le texte de recherche est transmis au service public IGN. L’identifiant de l’adresse est ensuite transmis à la BDNB et à l’ADEME pour rechercher le bâtiment et les diagnostics.</p>
+<p>Le formulaire peut renseigner jusqu’à <b>40 des 77 variables du modèle</b> : 25 caractéristiques saisies, 4 informations de localisation issues de l’adresse, 5 valeurs de contexte ou indicateurs calculés, et jusqu’à 6 variables issues des données retrouvées à l’adresse. Les champs vides restent manquants ; seuls l’adresse, la surface, le nombre de pièces et la définition de la surface sont requis.</p>
+<p>Le calcul s’effectue dans votre navigateur. Le texte saisi pour l’adresse est transmis à la Géoplateforme IGN ; l’identifiant d’adresse qui en résulte sert ensuite à interroger la BDNB et l’ADEME.</p>
 </article>
 <article class="panel">
 <h2>Des performances mesurées</h2>
@@ -579,24 +589,24 @@
 <span>Erreur moyenne en euros (MAE)<b>29 035 €</b>
 </span>
 </div>
-<p class="hint">Résultats historiques sur 556 ventes de mai–juin 2026. La MedAPE signifie que la moitié de ces ventes ont une erreur inférieure à 15,42 %. Ces mesures ne donnent pas une probabilité de justesse pour votre logement.</p>
+<p class="hint">Mesures sur 556 ventes de mai et juin 2026. La MedAPE signifie que, pour la moitié de ces ventes, l’erreur est inférieure à 15,42 %. Ces mesures ne constituent pas une probabilité d’exactitude pour un logement donné.</p>
 </article>
 <article class="panel">
 <h2>Une fourchette propre à chaque bien</h2>
-<p>Deux modèles estiment séparément une borne basse et une borne haute à partir de la surface, de la localisation, du DPE, du bâtiment et des autres caractéristiques disponibles. Les coefficients fixes de l’ancienne fourchette ne sont plus utilisés.</p>
+<p>Deux modèles estiment séparément une borne basse et une borne haute à partir de la surface, de la localisation, du DPE, du bâtiment et des autres caractéristiques disponibles.</p>
 <p>Les modèles apprennent sur 4 069 ventes antérieures à mai 2026. Leurs bornes sont ensuite ajustées à partir des erreurs de 317 ventes de mai 2026. La vérification est faite sur 239 autres ventes, en juin 2026.</p>
-<p>La fourchette étendue vise 80 % de couverture : elle contient le prix réel de 84,9 % de ces 239 ventes. La fourchette centrale vise 50 % : elle en contient 48,5 %. Choisir 50 % réduit l’amplitude, au prix de davantage de ventes hors fourchette.</p>
-<p>L’indicateur de précision rapporte la largeur de la fourchette étendue au prix estimé : resserrée (moins de 60 %), moyenne (de 60 à 100 %) ou large (au-delà). Il décrit la dispersion du modèle pour ce bien, pas une probabilité de justesse.</p>
-<p>Ces résultats historiques concernent les données enrichies du jeu d’évaluation. La couverture n’est pas garantie pour chaque logement ni pour tous les niveaux d’informations disponibles. Compléter correctement le bien aide à personnaliser les bornes, sans garantir de les resserrer.</p>
+<p>La fourchette étendue vise 80 % de couverture : elle contient le prix réel de 84,9 % de ces 239 ventes. La fourchette centrale vise 50 % : elle en contient 48,5 %.</p>
+<p>L’indicateur de précision rapporte la largeur de la fourchette étendue au prix estimé : resserrée (moins de 60 %), moyenne (de 60 à 100 %) ou large (au-delà). Il décrit la dispersion du modèle pour ce bien, et non une probabilité d’exactitude.</p>
+<p>Ces résultats portent sur les données enrichies du jeu d’évaluation. La couverture n’est garantie ni pour chaque logement ni pour tous les niveaux d’information. Compléter le bien personnalise les bornes, sans garantir de les resserrer.</p>
 </article>
 <article class="panel">
 <h2>Les informations manquantes</h2>
-<p>Le formulaire permet de renseigner les détails du DPE et de l’immeuble. Le code postal et les coordonnées proviennent de l’adresse choisie. Sans données précises sur le bâtiment et le quartier, un nombre manquant est remplacé par la valeur médiane observée sur les ventes d’entraînement : la « médiane d’apprentissage ». Par exemple, 2,50 m pour une hauteur sous plafond non renseignée. Pour une catégorie inconnue, comme le matériau de toiture, le modèle reçoit « manquant ».</p>
-<p>Étage, état intérieur, vue, travaux et conditions particulières de vente peuvent modifier fortement le prix. Les prix présentés se rapportent au 30 juin 2026 et n’intègrent pas l’évolution ultérieure du marché.</p>
+<p>Le formulaire permet de renseigner les détails du DPE et de l’immeuble. Le code postal et les coordonnées proviennent de l’adresse choisie. Lorsqu’une valeur numérique manque, le modèle utilise la « médiane d’apprentissage », c’est-à-dire la médiane observée sur les ventes d’entraînement (par exemple 2,50 m pour une hauteur sous plafond non renseignée). Pour une catégorie inconnue, comme le matériau de toiture, il reçoit « manquant ».</p>
+<p>L’étage, l’état intérieur, la vue, les travaux et les conditions particulières de vente peuvent modifier fortement le prix. Les prix présentés se rapportent au 30 juin 2026 et n’intègrent pas l’évolution ultérieure du marché.</p>
 </article>
 <article class="panel open-source">
 <h2>Un projet ouvert</h2>
-<p>Valometra-web est open source, sous licence AGPL-3.0. Le code de l’application, les modèles exportés et les tests sont publics : lisez-les, vérifiez-les, améliorez-les.</p>
+<p>Valometra-web est distribué sous licence AGPL-3.0. Le code de l’application, les modèles exportés et les tests sont publics et peuvent être vérifiés.</p>
 <p class="open-source-links">
 <a href="https://github.com/YacDataLab/valometra-web" target="_blank" rel="noopener">Code source</a>
 <a href="https://github.com/YacDataLab/valometra-web/issues" target="_blank" rel="noopener">Signaler un problème</a>
@@ -606,10 +616,10 @@
 </div>
 <div class="panel sources">
 <h2>Les données derrière la carte</h2>
-<p>DVF et enrichissements présents dans le jeu fourni : DPE, BDNB, INSEE, transports, équipements et risques. L’explorateur affiche les ventes du dataset, pas l’intégralité du marché. Les prix atypiques sont conservés pour permettre leur exploration.</p>
-<p>Les cinq appartements sans coordonnées ne sont pas cartographiés. Les fonds de carte sont le Plan IGN (Géoplateforme, Licence ouverte) ; leur chargement contacte ce service. Le moteur Python est téléchargé depuis jsDelivr. Les recherches d’adresse sont transmises au service de géocodage de la Géoplateforme IGN. L’identifiant BAN de l’adresse permet de rechercher les bâtiments BDNB et les diagnostics ADEME correspondants. Un bâtiment unique est prérempli ; plusieurs bâtiments nécessitent un choix. Un DPE doit toujours être confirmé par l’utilisateur, même s’il est seul à cette adresse. Les diagnostics postérieurs à juin 2026 sont exclus pour respecter la date de référence du modèle.</p>
+<p>Le jeu de données combine DVF et des enrichissements : DPE, BDNB, INSEE, transports, équipements et risques. L’explorateur affiche les ventes de ce jeu, non l’intégralité du marché. Les prix atypiques sont conservés.</p>
+<p>Les cinq appartements sans coordonnées ne sont pas cartographiés. Le fond de carte est le Plan IGN (Géoplateforme, Licence ouverte) ; son chargement, comme celui du moteur Python depuis jsDelivr, contacte ces services. Le rapprochement avec le bâtiment repose sur l’identifiant BAN de l’adresse : un bâtiment unique est prérempli, plusieurs imposent un choix. Un DPE doit toujours être confirmé par l’utilisateur. Les diagnostics postérieurs au 30 juin 2026 sont exclus.</p>
 <p>Rapprochement bâtiment : <a href="https://www.bdnb.io/services/services_api/" target="_blank" rel="noopener">BDNB / CSTB</a>. Diagnostics : <a href="https://data.ademe.fr/datasets/dpe03existant" target="_blank" rel="noopener">ADEME — DPE des logements existants</a>.</p>
-<p>Vos estimations ne sont conservées que si vous cochez « Garder mes estimations sur cet appareil » : la liste reste dans votre navigateur. Le retour « trop basse, juste, trop haute » est anonyme : il ne contient ni adresse ni coordonnées, seulement la commune, la surface, le nombre de pièces, le prix estimé et, si vous le donnez, le prix réel.</p>
+<p>Les estimations ne sont conservées que si vous activez « Garder mes estimations sur cet appareil ». Le retour « trop basse, juste, trop haute » est anonyme : il ne contient ni adresse ni coordonnées, seulement la commune, la surface, le nombre de pièces, le prix estimé et, si vous le donnez, le prix réel.</p>
 <a href="https://www.data.gouv.fr/datasets/demandes-de-valeurs-foncieres" target="_blank" rel="noopener">Consulter la source DVF officielle</a>
 </div>
 </section>
@@ -621,16 +631,13 @@
 <p>L’immobilier, en perspective.</p>
 </div>
 <nav class="footer-links" aria-label="Liens de bas de page">
-<a href="#method">Méthode</a>
-<a href="https://github.com/YacDataLab/valometra-web" target="_blank" rel="noopener">Code source</a>
 <a href="https://github.com/YacDataLab/valometra-web/blob/main/LICENSE" target="_blank" rel="noopener">Licence AGPL-3.0</a>
-<a href="https://github.com/YacDataLab/valometra-web#contribuer" target="_blank" rel="noopener">Contribuer</a>
 <a href="/mes-demandes">Mes demandes</a>
 <a id="admin-link" href="/gestion" hidden>Espace privé</a>
 <a href="/credits.html">Crédits</a>
 </nav>
 </div>
-<p class="version-line">Prix au 30 juin 2026 · ventes de juillet 2025 à juin 2026 · modèle évalué sur 556 ventes de mai et juin 2026 · <a href="#method">en savoir plus</a></p>
+<p class="version-line">Prix au 30 juin 2026 · ventes de juillet 2025 à juin 2026 · modèle évalué sur 556 ventes de mai et juin 2026 · <a href="#method">Méthode et limites</a></p>
 </footer>
 </body>
 </html>

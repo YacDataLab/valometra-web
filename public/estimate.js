@@ -1,6 +1,9 @@
 // Estimation : formulaire, moteur de calcul (Worker), résultat, simulateur, retour anonyme, partage.
 import { $, state, loadMarket } from './store.js';
-import { segmented } from './ui.js';
+import { combobox, segmented, syncChoice } from './ui.js';
+import { addressData } from './enrichment.js';
+import { addressSearch } from './address.js';
+import { localHistory } from './history.js';
 
 const F = window.ValometraFormat;
 const { esc, money, roundMoney, num, median } = F;
@@ -72,12 +75,12 @@ function engineFailure(message) {
 $('estimate-form').addEventListener('submit', async e => {
   e.preventDefault();
   if (!state.metadata || $('estimate-button').disabled) return;
-  const address = window.ValometraAddress.getSelected();
+  const address = addressSearch.getSelected();
   if (!address) {
     $('model-status').textContent = 'Sélectionnez une adresse complète parmi les suggestions.';
     return;
   }
-  if (window.ValometraEnrichment?.isBusy()) {
+  if (addressData.isBusy()) {
     $('model-status').textContent =
       'La recherche des données de l’adresse est en cours. Patientez quelques instants.';
     return;
@@ -99,7 +102,7 @@ $('estimate-form').addEventListener('submit', async e => {
   const lat = address.lat,
     lon = address.lon;
   const f = {
-    ...window.ValometraEnrichment?.getFeatures(),
+    ...addressData.getFeatures(),
     code_commune: town.code,
     code_postal: address.postal,
     est_vefa: 'false',
@@ -131,7 +134,7 @@ $('estimate-form').addEventListener('submit', async e => {
     surface: +f.surface_habitable,
     surfaceDefinition: $('surface-definition').value,
     features: f,
-    enrichment: window.ValometraEnrichment?.getSummary(),
+    enrichment: addressData.getSummary(),
   };
   $('estimate-button').disabled = true;
   $('estimate-button').textContent = 'Calcul en cours…';
@@ -254,6 +257,7 @@ function showResult(value, input, intervals) {
     actionsBlock() +
     feedbackHtml() +
     printNote();
+  combobox($('sim-dpe'), { filterable: false });
   $('print-result').addEventListener('click', () => window.print());
   $('feedback')?.addEventListener('click', sendFeedback);
   $('share-link').addEventListener('click', copyShareLink);
@@ -413,7 +417,7 @@ function shareValues() {
 function recordHistory(data) {
   const bounds = data.intervals?.['80'];
   if (!bounds?.every(Number.isFinite)) return;
-  window.ValometraHistory?.record({
+  localHistory.record({
     query: F.shareQuery(shareValues()),
     town: lastInputs.town.name,
     surface: lastInputs.surface,
@@ -444,7 +448,7 @@ async function copyShareLink() {
     button.querySelector('span').textContent = 'Lien copié';
   } catch {
     button.querySelector('span').textContent = 'Copie impossible : copiez l’adresse du navigateur';
-    history.replaceState(null, '', shareUrl());
+    history.replaceState(history.state, '', shareUrl());
   }
   setTimeout(() => {
     button.querySelector('span').textContent = 'Copier le lien de cette estimation';
@@ -460,14 +464,20 @@ function applySharedLink() {
 function fillForm(shared, firstSuggestion = false) {
   $('surface').value = shared.surface;
   $('rooms').value = shared.pieces;
-  if (shared.definition) $('surface-definition').value = shared.definition;
+  if (shared.definition) {
+    $('surface-definition').value = shared.definition;
+    syncChoice($('surface-definition'));
+  }
   if (shared.carrez) $('carrez').value = shared.carrez;
   if (shared.dependances !== undefined) $('dependencies').value = shared.dependances;
   if (shared.annee) $('year').value = shared.annee;
-  window.ValometraAddress.restore(shared.adresse, firstSuggestion);
+  addressSearch.restore(shared.adresse, firstSuggestion);
 }
 
 segmented($('interval-coverage'));
+// Listes du formulaire (sauf le choix segmenté) : même liste personnalisée que la commune.
+for (const select of document.querySelectorAll('#estimate-form select:not(#interval-coverage)'))
+  combobox(select, { filterable: false });
 
 window.addEventListener('valometra:estimated', () => {
   $('result').scrollIntoView({ block: 'start' });
@@ -475,6 +485,6 @@ window.addEventListener('valometra:estimated', () => {
 
 // Appelé une fois les communes connues : liste des communes pour l'adresse et lien partagé.
 export function initEstimate(towns) {
-  window.ValometraAddress.init(towns);
+  addressSearch.init(towns);
   applySharedLink();
 }

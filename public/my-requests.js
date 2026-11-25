@@ -1,7 +1,6 @@
 'use strict';
 (() => {
-  const $ = id => document.getElementById(id),
-    { esc } = window.ValometraFormat;
+  const { esc, frDateTime, byId: $ } = window.ValometraFormat;
   async function load() {
     try {
       const r = await fetch('/api/my-requests');
@@ -12,7 +11,7 @@
         data.rows
           .map(
             row =>
-              `<article class="panel"><h2>${esc(row.property.address || 'Projet immobilier')}</h2><p class="hint">Envoyée le ${esc(new Date(row.createdAt).toLocaleString('fr-FR'))}</p><p>${esc(row.email || row.phone)}</p><p class="lead-message">${esc(row.message)}</p><button class="secondary" data-delete="${row.id}">Supprimer ma demande</button></article>`,
+              `<article class="panel"><h2>${esc(row.property.address || 'Projet immobilier')}</h2><p class="hint">Envoyée le ${esc(frDateTime(row.createdAt))}</p><p>${esc(row.email || row.phone)}</p><p class="lead-message">${esc(row.message)}</p><button class="secondary" data-delete="${row.id}">Supprimer ma demande</button></article>`,
           )
           .join('') || '<p>Vous n’avez pas encore envoyé de demande.</p>';
     } catch (e) {

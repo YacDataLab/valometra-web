@@ -44,7 +44,7 @@ export function initMap(onMove) {
       '<p class="notice">La carte est indisponible. Les statistiques et le tableau restent accessibles.</p>';
     return;
   }
-  map = L.map('market-map', { scrollWheelZoom: false }).setView(CENTER, 11);
+  map = L.map('market-map', { scrollWheelZoom: true }).setView(CENTER, 11);
   L.tileLayer(TILES, {
     maxZoom: 19,
     attribution:

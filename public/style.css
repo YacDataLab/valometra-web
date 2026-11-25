@@ -41,11 +41,12 @@
   --glass: color-mix(in srgb, var(--vm-surface) 86%, transparent);
   --ring: color-mix(in srgb, var(--vm-focus) 28%, transparent);
   --page: 1240px;
-  /* Échelle typographique : 6 corps de texte, 4 de titres, aucun texte sous 13 px. */
+  /* Échelle typographique : 6 corps de texte, 4 de titres, aucun texte sous 13 px.
+     Graisses : 400, 500, 600 et 700 seulement. */
   --text-xs: 0.8125rem;
   --text-sm: 0.875rem;
-  --text-md: 1rem;
-  --text-lg: 1.125rem;
+  --text-md: 0.9375rem;
+  --text-lg: 1.0625rem;
   --title-3: 1.125rem;
   --title-2: clamp(1.375rem, 2vw, 1.625rem);
   --title-1: clamp(1.875rem, 3.6vw, 2.625rem);
@@ -98,7 +99,7 @@ h1 {
 }
 h2 {
   font-size: var(--title-2);
-  font-weight: 650;
+  font-weight: 600;
   letter-spacing: -0.015em;
 }
 h3 {
@@ -114,7 +115,7 @@ p {
 }
 b,
 strong {
-  font-weight: 650;
+  font-weight: 600;
 }
 a {
   color: var(--vm-lien);
@@ -268,7 +269,7 @@ html[data-vm-theme='sombre'] .brand img {
 .site-nav a[aria-current='page'] {
   background: var(--tone-100);
   color: var(--heading);
-  font-weight: 650;
+  font-weight: 600;
 }
 .header-tools {
   display: flex;
@@ -461,8 +462,8 @@ textarea {
   display: block;
   width: 100%;
   min-width: 0;
-  min-height: 46px;
-  padding: 10px 14px;
+  min-height: 42px;
+  padding: 8px 12px;
   border: 1px solid var(--line);
   border-radius: var(--vm-radius-md);
   background-color: var(--vm-surface);
@@ -544,6 +545,14 @@ textarea {
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 0 16px;
 }
+/* Deux champs côte à côte : les zones de saisie s'alignent même si les libellés ont 1 ou 2 lignes. */
+.two > label {
+  display: flex;
+  flex-direction: column;
+}
+.two > label > :is(input, select) {
+  margin-top: auto;
+}
 .check {
   flex-direction: row;
   align-items: flex-start;
@@ -591,16 +600,83 @@ textarea {
 .segmented button[aria-checked='true'] {
   background: var(--vm-surface);
   color: var(--heading);
-  font-weight: 650;
+  font-weight: 600;
   box-shadow: var(--vm-shadow-1);
 }
 .filters .segmented,
-.simulator .segmented {
+.simulator .segmented,
+.advanced-section .segmented {
   align-self: stretch;
+  max-width: 100%;
+}
+.advanced-section .segmented button {
+  flex: 1;
+  padding: 0 8px;
 }
 .filters .segmented button {
   flex: 1;
   padding: 0 8px;
+}
+/* Le contrôle de couleur occupe deux colonnes : ses trois libellés tiennent sur une ligne. */
+@media (min-width: 761px) {
+  .filters > label:has(#map-color) {
+    grid-column: span 2;
+  }
+}
+/* Champ filtrable (ui.js, combobox) : liste ouverte au-dessus du contenu. */
+.combobox {
+  position: relative;
+}
+.combobox-list {
+  position: absolute;
+  z-index: 20;
+  top: calc(100% + 4px);
+  right: 0;
+  left: 0;
+  max-height: 280px;
+  margin: 0;
+  padding: 6px;
+  overflow-y: auto;
+  border: 1px solid var(--line);
+  border-radius: var(--vm-radius-md);
+  background: var(--vm-surface);
+  box-shadow: var(--vm-shadow-2);
+  list-style: none;
+}
+.combobox-list > li {
+  display: flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 8px 12px;
+  border-radius: var(--vm-radius-sm);
+  color: var(--ink);
+  font-size: var(--text-sm);
+  cursor: pointer;
+}
+.combobox-list > li.is-active {
+  background: var(--tone-100);
+}
+.combobox-list > li.is-current {
+  color: var(--heading);
+  font-weight: 600;
+}
+.combobox-list > .combobox-empty,
+.combobox-list > li[aria-disabled='true'] {
+  color: var(--muted);
+  cursor: default;
+}
+/* Liste de choix : même champ que la saisie, avec la flèche du <select> natif. */
+.combobox-select input {
+  cursor: pointer;
+  caret-color: transparent;
+  padding-right: 42px;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%236c7477' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 14px center;
+}
+.combobox-select input[readonly] {
+  background-color: var(--vm-surface);
+  color: var(--ink);
 }
 details {
   margin: 0 0 12px;
@@ -633,6 +709,18 @@ summary::after {
 }
 details[open] > summary::after {
   transform: rotate(-135deg);
+}
+
+/* Pastille d'état (gestion des demandes) */
+.pill {
+  display: inline-block;
+  padding: 4px 12px;
+  border-radius: var(--vm-radius-full);
+  background: var(--tone-50);
+  color: var(--heading-soft);
+  font-size: var(--text-xs);
+  font-weight: 500;
+  white-space: nowrap;
 }
 
 /* Accueil : en-tête de page */
@@ -884,7 +972,7 @@ details[open] > summary::after {
 .price {
   margin: 12px 0 4px;
   font-size: var(--display);
-  font-weight: 750;
+  font-weight: 700;
   letter-spacing: -0.03em;
 }
 .price-unit {
@@ -903,7 +991,7 @@ details[open] > summary::after {
   gap: 12px;
   font-family: var(--vm-font-family-display);
   font-size: var(--text-lg);
-  font-weight: 650;
+  font-weight: 600;
 }
 .gauge {
   position: relative;
@@ -1050,6 +1138,7 @@ details[open] > summary::after {
   border-radius: var(--vm-radius-md);
 }
 .feedback {
+  margin-top: 16px;
   padding: 16px 18px;
 }
 .simulator[open] {
@@ -1069,7 +1158,7 @@ details[open] > summary::after {
 }
 .simulation-result dd {
   margin: 0;
-  font-weight: 650;
+  font-weight: 600;
 }
 .simulation-result small {
   display: block;
@@ -1079,6 +1168,7 @@ details[open] > summary::after {
 }
 .feedback h3 {
   margin-bottom: 10px;
+  text-wrap: balance;
 }
 .feedback-choices {
   display: flex;
@@ -1148,8 +1238,9 @@ details[open] > summary::after {
   margin-top: clamp(16px, 2.6vw, 32px);
   padding: clamp(20px, 3vw, 32px);
   border-radius: var(--vm-radius-lg);
-  background: var(--heading);
-  color: var(--vm-surface);
+  /* Bandeau de marque : mêmes couleurs de palette en clair et en sombre. */
+  background: var(--vm-color-ardoise-800);
+  color: var(--vm-color-pierre-50);
 }
 .bottom-links h3 {
   margin-bottom: 4px;
@@ -1162,6 +1253,7 @@ details[open] > summary::after {
 }
 .bottom-links .secondary {
   border-color: transparent;
+  background: var(--vm-color-pierre-50);
   color: var(--vm-color-ardoise-800);
 }
 
@@ -1170,6 +1262,74 @@ details[open] > summary::after {
   display: flex;
   flex-direction: column;
   gap: clamp(16px, 2.6vw, 24px);
+}
+/* Téléphone : filtres, statistiques, carte, puis graphiques et tableau, dans cet ordre. */
+@media (max-width: 959px) {
+  .market-layout .market-side,
+  .market-layout .market-content {
+    display: contents;
+  }
+  .market-content > * {
+    order: 3;
+  }
+  .market-content > .stats {
+    order: 1;
+  }
+  .map-column {
+    order: 2;
+  }
+}
+/* Ordinateur : filtres et résultats à gauche, carte fixe à droite et très grande. */
+@media (min-width: 960px) {
+  /* Le tableau de bord s'étend presque jusqu'aux bords de la fenêtre (marge de 24 px), sans espace en haut ni en bas. */
+  .market-layout {
+    display: grid;
+    grid-template-columns: minmax(280px, 0.6fr) minmax(0, 1.4fr);
+    align-items: start;
+    margin-inline: calc(-1 * clamp(0px, (100vw - var(--page)) / 2 + 16px, 360px));
+    padding-block: 16px;
+  }
+  .site-content:has(> #market:not([hidden])) {
+    padding-bottom: 0;
+  }
+  /* Vue Marché : pas de pied de page, la carte occupe l'écran. */
+  body:has(#market:not([hidden])) .site-footer {
+    display: none;
+  }
+  .market-side {
+    display: flex;
+    flex-direction: column;
+    gap: clamp(16px, 2.6vw, 24px);
+    min-width: 0;
+  }
+  .filters > label:has(#map-color) {
+    grid-column: auto;
+  }
+  /* Colonne étroite : les chiffres des statistiques restent dans leur carte. */
+  .market-content .stat b {
+    font-size: 1.375rem;
+  }
+  .map-column {
+    align-self: stretch;
+    min-width: 0;
+  }
+  /* Carte pleine hauteur : elle occupe toute la hauteur sous l'en-tête. */
+  .map-column .map-wrap {
+    position: sticky;
+    top: calc(var(--header-h) + 16px);
+    display: flex;
+    flex-direction: column;
+    height: calc(100vh - var(--header-h) - 32px);
+    min-height: 460px;
+  }
+  .map-column #market-map {
+    flex: 1 1 auto;
+    height: auto;
+    min-height: 0;
+  }
+  .map-column #map-legend {
+    flex: none;
+  }
 }
 .filters {
   display: grid;
@@ -1235,7 +1395,7 @@ details[open] > summary::after {
 }
 #market-map {
   z-index: 0;
-  height: clamp(460px, 75vh, 820px);
+  height: clamp(460px, 88vh, 1000px);
 }
 html[data-vm-theme='sombre'] #market-map .leaflet-tile-pane {
   filter: brightness(0.82) contrast(1.05);
@@ -1278,7 +1438,7 @@ html[data-vm-theme='sombre'] #market-map .leaflet-tile-pane {
   display: flex;
   align-items: stretch;
   gap: 6px;
-  height: 220px;
+  height: 170px;
   padding-top: 8px;
 }
 .hist-bin {
@@ -1308,6 +1468,7 @@ html[data-vm-theme='sombre'] #market-map .leaflet-tile-pane {
 .trend svg {
   display: block;
   width: 100%;
+  max-width: 560px;
   height: auto;
 }
 .trend .grid {
@@ -1480,8 +1641,14 @@ tbody tr:last-child td {
   .hero-art {
     display: none;
   }
+  /* Libellés masqués visuellement, pas avec display: none, pour garder le nom accessible. */
   .header-tools .tool span {
-    display: none;
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
   }
   .header-tools .tool {
     padding: 0 10px;
@@ -1501,11 +1668,19 @@ tbody tr:last-child td {
   .simulation-result {
     grid-template-columns: minmax(0, 1fr);
   }
+  /* Trois indicateurs sur deux colonnes : les montants (« 139 201 € ») ne débordent plus. */
   .stats {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 8px;
+  }
+  .stats > :first-child {
+    grid-column: 1 / -1;
   }
   .stat {
     padding: 12px;
+  }
+  .section-head label {
+    flex-wrap: wrap;
   }
   .stat span {
     font-size: var(--text-xs);
@@ -1539,6 +1714,22 @@ tbody tr:last-child td {
   #result:has(.empty-result) {
     position: sticky;
     top: calc(var(--header-h) + 16px);
+  }
+}
+
+/* Changement de vue : fondu court, en-tête fixe. Sans effet si le visiteur réduit les animations. */
+.site-header {
+  view-transition-name: site-header;
+}
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation-duration: 180ms;
+}
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-group(*),
+  ::view-transition-old(*),
+  ::view-transition-new(*) {
+    animation: none;
   }
 }
 

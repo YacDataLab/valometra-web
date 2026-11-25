@@ -1,7 +1,7 @@
 // Explorateur du marché : filtres, statistiques, carte, graphiques, classement et tableau.
 import { $, state } from './store.js';
 import { hasMap, inView, drawSales, initMap, resetView } from './map.js';
-import { segmented, syncSegmented } from './ui.js';
+import { combobox, segmented, syncChoice } from './ui.js';
 
 const F = window.ValometraFormat;
 const { esc, money, num, median, measure, binEdge, frDate } = F;
@@ -46,7 +46,7 @@ function syncMarketUrl() {
   for (const [key, value] of F.marketQuery(values)) {
     if (!(key === 'couleur' && value === 'm2')) url.searchParams.set(key, value);
   }
-  history.replaceState(null, '', url);
+  history.replaceState(history.state, '', url);
 }
 function applyMarketLink() {
   const shared = F.parseMarket(location.search);
@@ -55,7 +55,7 @@ function applyMarketLink() {
     // Une commune absente de la liste ou une valeur inconnue laisse le filtre vide.
     field.value = value;
     if (field.value !== String(value)) field.value = '';
-    syncSegmented(field);
+    syncChoice(field);
   }
 }
 
@@ -134,6 +134,7 @@ $('town-ranking').addEventListener('click', event => {
   const button = event.target.closest('button[data-code]');
   if (!button) return;
   $('market-town').value = button.dataset.code;
+  syncChoice($('market-town'));
   renderMarket();
   $('market-stats').scrollIntoView({ behavior: 'smooth', block: 'start' });
 });
@@ -156,7 +157,7 @@ function drawHistogram() {
   $('market-hist').innerHTML = counts
     .map(
       (n, i) =>
-        `<div class="hist-bin" title="${num(i * step)} à ${num((i + 1) * step)} : ${n} ventes"><span>${n || ''}</span><div class="bar" style="height:${(n / largest) * 140}px"></div><span>${binEdge(i * step)}</span></div>`,
+        `<div class="hist-bin" title="${num(i * step)} à ${num((i + 1) * step)} : ${n} ventes"><span>${n || ''}</span><div class="bar" style="height:${(n / largest) * 112}px"></div><span>${binEdge(i * step)}</span></div>`,
     )
     .join('');
 }
@@ -202,11 +203,13 @@ $('next-sales').onclick = () => {
 $('reset-market').onclick = () => {
   for (const id of ['market-town', 'min-area', 'max-area', 'min-price', 'max-price', 'market-dpe'])
     $(id).value = '';
+  syncChoice($('market-town'));
+  syncChoice($('market-dpe'));
   $('from-date').value = ValometraConfig.marketStart;
   $('to-date').value = ValometraConfig.referenceDate;
   $('map-color').value = 'm2';
-  syncSegmented($('map-color'));
-  syncSegmented($('hist-measure'));
+  syncChoice($('map-color'));
+  syncChoice($('hist-measure'));
   $('visible-only').checked = false;
   resetView();
   renderMarket();
@@ -239,6 +242,8 @@ export function initMarket(towns) {
     'beforeend',
     towns.map(town => `<option value="${town.code}">${esc(town.name)}</option>`).join(''),
   );
+  combobox($('market-town'));
+  combobox($('market-dpe'), { filterable: false });
   segmented($('map-color'));
   segmented($('hist-measure'));
   applyMarketLink();
