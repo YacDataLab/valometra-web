@@ -103,3 +103,19 @@ export function historicalIris(geometry, contours) {
   }
   return result;
 }
+
+// Recherche d’un point strictement à l’intérieur d’un seul IRIS sur la carte.
+export function irisAtPoint(point, contours) {
+  let result = null;
+  for (const feature of contours.features) {
+    for (const [exterior, ...holes] of polygons(feature.geometry)) {
+      if (!pointInRing(point, exterior) || holes.some(hole => pointInRing(point, hole))) continue;
+      const onBoundary = [exterior, ...holes].some(ring =>
+        ring.slice(1).some((end, i) => segmentsMeet(point, point, ring[i], end)),
+      );
+      if (onBoundary || result !== null) return null;
+      result = feature.properties.CODE_IRIS;
+    }
+  }
+  return result;
+}

@@ -1770,15 +1770,3 @@ tbody tr:last-child td {
     break-inside: avoid;
   }
 }
-
-.market-zone-key {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.35rem;
-}
-
-.market-zone-key i {
-  width: 0.85rem;
-  height: 0.85rem;
-  border-radius: 0.2rem;
-}
