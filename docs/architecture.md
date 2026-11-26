@@ -173,3 +173,15 @@ Scripts classiques, chargés hors du graphe de modules : `shell.js` (lien d'évi
 ## Pistes d'évolution
 
 Aucun lot en cours. `enrichment.js` et `market.js` restent de longs modules à état global : candidats au même découpage.
+
+### Zones de prix dans Marché
+
+La carte applique le même découpage statistique à toutes les communes,
+Grenoble comprise. Elle subdivise l’étendue des ventes filtrées en cellules
+contiguës et ne subdivise que si chaque partie conserve au moins dix ventes.
+Les cellules voisines par un côté qui appartiennent à la même tranche de
+médiane sont fusionnées. La médiane de la zone finale est calculée sur
+toutes ses ventes. Les cinq tranches de couleur sont recalculées avec les
+filtres, et les effectifs inférieurs à dix ne donnent pas de médiane.
+Les zones suivent l’étendue des observations et peuvent englober des espaces
+sans mutation. Le zonage IRIS de l’estimateur garde sa propre source.

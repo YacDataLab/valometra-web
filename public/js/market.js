@@ -3,8 +3,7 @@ import { $ } from './dom.js';
 import * as F from './format.js';
 import { config } from './config.js';
 import { state } from './store.js';
-import { hasMap, inView, drawSales, initMap, resetView } from './map.js';
-import { IRIS_TOWN } from './market-iris.js';
+import { hasMap, inView, drawMarketZones, initMap, resetView } from './map.js';
 import { combobox, segmented, syncChoice } from './ui.js';
 
 const { esc, money, num, median, measure, binEdge, frDate } = F;
@@ -64,13 +63,6 @@ function applyMarketLink() {
 
 function renderMarket() {
   if (!state.metadata) return;
-  const town = $('market-town').value;
-  const mapColor = $('map-color');
-  const outsideGrenoble = town && town !== IRIS_TOWN;
-  if (outsideGrenoble && mapColor.value === 'iris') {
-    mapColor.value = 'm2';
-    syncChoice(mapColor);
-  }
   syncMarketUrl();
   const base = getBase();
   filtered = $('visible-only').checked && hasMap() ? base.filter(inView) : base;
@@ -78,12 +70,7 @@ function renderMarket() {
     m2 = filtered.map(r => r.price / r.surface);
   $('market-stats').innerHTML =
     `<div class="stat"><b>${num(filtered.length)}</b><span>ventes sélectionnées</span></div><div class="stat"><b>${filtered.length ? money(median(m2)) : '—'}</b><span>prix médian / m²</span></div><div class="stat"><b>${filtered.length ? money(median(prices)) : '—'}</b><span>prix médian</span></div>`;
-  $('map-note').textContent = outsideGrenoble
-    ? 'La vue par zones IRIS est disponible pour Grenoble.'
-    : mapColor.value === 'iris'
-      ? 'Cliquez sur une zone ou ouvrez le tableau sous la carte pour consulter ses chiffres.'
-      : 'Les ventes aux mêmes coordonnées sont regroupées. Cliquez sur un point pour les parcourir.';
-  drawSales(base, mapColor.value);
+  drawMarketZones(base, $('map-color').value);
   drawHistogram();
   drawTrend();
   renderRanking();
