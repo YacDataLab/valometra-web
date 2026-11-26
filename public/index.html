@@ -438,6 +438,7 @@
 <option value="m2">Prix au m²</option>
 <option value="price">Prix total</option>
 <option value="surface">Surface</option>
+<option value="iris">Zones IRIS · prix médian au m²</option>
 </select>
 </label>
 <label class="check">
@@ -451,7 +452,7 @@
 </div>
 <p class="hint">Les coordonnées sont celles de la parcelle : un point n’identifie pas un logement précis.</p>
 </aside>
-<p class="hint" id="map-note">Les zones voisines aux médianes similaires sont regroupées. Consultez les chiffres sur la carte ou dans le tableau.</p>
+<p class="hint" id="map-note">Les ventes situées aux mêmes coordonnées sont regroupées ; cliquez sur un point pour les parcourir.</p>
 </div>
 <div class="map-column">
 <div class="map-wrap">
@@ -460,11 +461,11 @@
 <div id="map-legend" aria-live="polite">
 </div>
 </div>
-<details id="market-zone-details" hidden>
-<summary>Données par zone</summary>
+<details id="market-iris-details" hidden>
+<summary>Données par quartier IRIS de Grenoble</summary>
 <table>
-<thead><tr><th scope="col">Zone</th><th scope="col">Ventes</th><th scope="col" id="market-zone-measure">Prix médian au m²</th></tr></thead>
-<tbody id="market-zone-rows"></tbody>
+<thead><tr><th scope="col">IRIS</th><th scope="col">Ventes</th><th scope="col">Prix médian au m²</th></tr></thead>
+<tbody id="market-iris-rows"></tbody>
 </table>
 </details>
 </div>

@@ -158,8 +158,7 @@ const parseMarket = search => {
   const dpe = params.get('dpe');
   if (dpe && /^([A-G]|missing)$/.test(dpe)) out.dpe = dpe;
   const couleur = params.get('couleur');
-  if (['m2', 'price', 'surface', 'iris'].includes(couleur))
-    out.couleur = couleur === 'iris' ? 'm2' : couleur;
+  if (['m2', 'price', 'surface', 'iris'].includes(couleur)) out.couleur = couleur;
   return out;
 };
 
