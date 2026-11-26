@@ -133,22 +133,3 @@ l’erreur absolue médiane et moyenne, et le nombre de ventes pour lesquelles
 chaque règle est la plus proche du prix réel. Présenter séparément les
 cas de désaccord et la taille de ce sous-échantillon. Cette comparaison
 des prix reste à faire.
-
-## Contours utilisés par la carte Marché
-
-La vue **Zones IRIS** utilise les mêmes contours IGN 2022 de Grenoble,
-reprojetés en longitude et latitude pour Leaflet. Le fichier de l’estimateur
-reste en Lambert-93. Pour régénérer la couche cartographique depuis le dépôt,
-exécuter les commandes ci-dessous vers un fichier de sortie vide.
-
-```sh
-ogr2ogr -f GeoJSON -t_srs EPSG:4326 -lco RFC7946=YES \
-  -lco COORDINATE_PRECISION=7 /tmp/iris-grenoble-carte.geojson \
-  public/data/iris-grenoble-2022.geojson
-python3 -c 'import json, sys; print(json.dumps(json.load(sys.stdin), separators=(",", ":")))' \
-  < /tmp/iris-grenoble-carte.geojson > public/data/iris-grenoble-carte.geojson
-```
-
-La couleur de chaque zone représente le prix médian au m² des ventes du
-jeu Marché qui passent les filtres. Le rattachement utilise le point de la
-parcelle. Les zones avec moins de dix ventes restent grises.
