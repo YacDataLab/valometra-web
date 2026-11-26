@@ -1,5 +1,7 @@
 // Carte des ventes (Leaflet, chargé à la demande) : marqueurs, échelle de couleurs et légende.
 import { $ } from './dom.js';
+import { createIrisSummary, MIN_IRIS_SALES } from './market-iris.js';
+import { readJson } from './store.js';
 import { esc, money, num, median, measure, scaleDomain, rampColor, frDate } from './format.js';
 
 const CENTER = [45.18, 5.73];
@@ -94,9 +96,18 @@ const popup = rows =>
     .join('');
 
 // Dessine les ventes avec une échelle continue et met à jour la légende.
+let irisData,
+  renderVersion = 0;
+
 export function drawSales(rows, key) {
   if (!layer) return;
+  const version = ++renderVersion;
   layer.clearLayers();
+  if (key === 'iris') {
+    drawIris(rows, version);
+    return;
+  }
+  $('market-iris-details').hidden = true;
   const stops = readRamp(),
     domain = scaleDomain(rows.map(r => measure(r, key)));
   for (const group of groupByPoint(rows)) {
@@ -117,4 +128,76 @@ export function drawSales(rows, key) {
       `<span>≤ ${formatValue(key, domain.lo)}</span><i class="ramp" style="background:linear-gradient(90deg,${stops.join(',')})"></i><span>≥ ${formatValue(key, domain.hi)}</span></div>` +
       `<span class="legend-note">Taille du point : nombre de ventes à cette adresse</span>`
     : '<span>Aucune vente à afficher.</span>';
+}
+
+async function drawIris(rows, version) {
+  const legend = $('map-legend');
+  $('market-iris-rows').replaceChildren();
+  legend.textContent = 'Chargement des quartiers IRIS de Grenoble…';
+  try {
+    irisData ??= readJson('data/iris-grenoble-carte.geojson')
+      .then(contours => ({ contours, summarize: createIrisSummary(contours) }))
+      .catch(error => {
+        irisData = undefined;
+        throw error;
+      });
+    const { contours, summarize } = await irisData;
+    if (version !== renderVersion) return;
+    const stats = summarize(rows);
+    const stops = readRamp();
+    const domain = scaleDomain(
+      [...stats.values()].flatMap(s => (s.median === null ? [] : [s.median])),
+    );
+    const neutral = '#777';
+    L.geoJSON(contours, {
+      style: feature => {
+        const value = stats.get(feature.properties.CODE_IRIS)?.median;
+        return {
+          color: neutral,
+          weight: 1,
+          fillColor: domain && value != null ? rampColor(value, domain, stops) : neutral,
+          fillOpacity: value == null ? 0.12 : 0.66,
+        };
+      },
+      onEachFeature: (feature, shape) => {
+        const code = feature.properties.CODE_IRIS;
+        const stat = stats.get(code);
+        const info = document.createElement('span');
+        info.textContent =
+          stat?.median == null
+            ? `IRIS ${code} · ${stat?.count ?? 0} ventes · données insuffisantes`
+            : `IRIS ${code} · ${formatValue('m2', stat.median)} · ${stat.count} ventes`;
+        shape.bindPopup(info);
+      },
+    }).addTo(layer);
+    renderIrisTable(contours, stats);
+    legend.innerHTML =
+      '<span>Grenoble · prix médian au m² des ventes filtrées par IRIS (IGN 2022)</span>' +
+      (domain
+        ? `<div class="scale" role="img" aria-label="Prix médian au m² du plus bas au plus haut"><span>≤ ${formatValue('m2', domain.lo)}</span><i class="ramp" style="background:linear-gradient(90deg,${stops.join(',')})"></i><span>≥ ${formatValue('m2', domain.hi)}</span></div>`
+        : '<span>Aucun quartier avec assez de ventes pour ces filtres.</span>') +
+      `<span class="legend-note">Zone grise · moins de ${MIN_IRIS_SALES} ventes</span>`;
+  } catch {
+    if (version !== renderVersion) return;
+    $('market-iris-details').hidden = true;
+    legend.textContent = 'Les quartiers sont indisponibles. La vue par points reste accessible.';
+  }
+}
+
+function renderIrisTable(contours, stats) {
+  const codes = contours.features.map(feature => feature.properties.CODE_IRIS).sort();
+  const rows = codes.map(code => {
+    const stat = stats.get(code);
+    const row = document.createElement('tr');
+    const label = document.createElement('th');
+    label.scope = 'row';
+    label.textContent = code;
+    row.append(label);
+    row.insertCell().textContent = num(stat?.count ?? 0);
+    row.insertCell().textContent =
+      stat?.median == null ? 'Données insuffisantes' : formatValue('m2', stat.median);
+    return row;
+  });
+  $('market-iris-rows').replaceChildren(...rows);
+  $('market-iris-details').hidden = false;
 }
