@@ -10,7 +10,7 @@
   "type": "module",
   "scripts": {
     "build": "python3 scripts/chrome.py && python3 scripts/build.py",
-    "test": "npm run build && node --test tests/service.test.mjs tests/format.test.mjs tests/estimate.test.mjs tests/config.test.mjs tests/contrast.test.mjs tests/accessibility.test.mjs tests/pwa.test.mjs tests/fonts.test.mjs tests/enrichment.test.mjs && python3 tests/model_regression.py && python3 tests/dataviz_data.py",
+    "test": "npm run build && node --test tests/service.test.mjs tests/format.test.mjs tests/estimate.test.mjs tests/config.test.mjs tests/contrast.test.mjs tests/accessibility.test.mjs tests/pwa.test.mjs tests/fonts.test.mjs tests/enrichment.test.mjs tests/market-iris.test.mjs && python3 tests/model_regression.py && python3 tests/dataviz_data.py",
     "format": "npx --yes prettier@3.6.2 --write worker tests/*.mjs public/js/*.js public/sw.js public/*.css",
     "format:check": "npx --yes prettier@3.6.2 --check worker tests/*.mjs public/js/*.js public/sw.js public/*.css"
   },
